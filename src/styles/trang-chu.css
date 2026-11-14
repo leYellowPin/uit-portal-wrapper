@@ -181,6 +181,7 @@
   color: var(--col-pri-text) !important;
   padding-left: 16px !important;
   padding-right: 16px !important;
+  transition: none;
 }
 
 #cd-schedule-content li div {
