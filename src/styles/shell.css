@@ -37,8 +37,9 @@
   height: 84px;
 }
 
-/* Base page offset so both /sinh-vien/* and standalone routes like /khao-sat align cleanly */
-html, body {
+/* Base page offset so /sinh-vien/* routes align cleanly while excluded pages keep native styles */
+html:has(body.with-custom-shell),
+body.with-custom-shell {
   background-color: var(--col-pri-bg) !important;
   color: var(--col-pri-text) !important;
   margin: 0 !important;
@@ -237,133 +238,219 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
   color: var(--col-danger);
 }
 
-/* Theme overrides for all native subpages (/sinh-vien/*, /khao-sat, and cloned widgets) */
-body > div:not(#cd-sidebar):not(#cd-header) main,
-main#main-content {
+/* Theme overrides for all native subpages (/sinh-vien/*) */
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) main,
+body.with-custom-shell:not(.is-trang-chu) main#main-content {
   padding: 24px 32px !important;
   background-color: var(--col-pri-bg) !important;
   color: var(--col-pri-text) !important;
 }
 
-/* Match base backgrounds and Tailwind opacity/state variants */
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-background"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-950"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-950"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-950"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-background"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-950"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-950"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-950"] {
   background-color: var(--col-pri-bg) !important;
   color: var(--col-pri-text) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-card"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-popover"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-white"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-900"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-900"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-900"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-card"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-popover"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-white"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-900"] {
   background-color: var(--col-pri-box) !important;
   border-color: var(--col-out-box) !important;
   color: var(--col-pri-text) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-muted"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-secondary"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-800"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-800"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-800"],
-body > div:not(#cd-sidebar):not(#cd-header) .hover\:bg-accent:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-muted"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-secondary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-200"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-800"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-200"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-800"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-200"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-800"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-neutral-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-neutral-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-stone-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-stone-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) .hover\:bg-accent:hover {
   background-color: var(--col-sec-box) !important;
   color: var(--col-pri-text) !important;
 }
 
-/* Soft accent tints vs solid accent buttons */
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-primary/"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-accent/"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-blue-500/"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-sky-500/"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-emerald-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-emerald-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-emerald-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-green-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-green-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-green-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-teal-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-teal-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-teal-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-cyan-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-cyan-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-cyan-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-sky-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-sky-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-blue-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-blue-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-indigo-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-indigo-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-purple-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-purple-500/"] {
+  background-color: var(--col-sec-box) !important;
+  color: var(--col-pri-text) !important;
+}
+
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-red-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-red-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-red-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-rose-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-rose-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-rose-500/"] {
+  background-color: color-mix(in srgb, var(--col-danger) 14%, var(--col-sec-box)) !important;
+  color: var(--col-pri-text) !important;
+}
+
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-primary/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-accent/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-blue-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-sky-500/"] {
   background-color: var(--col-accent-soft) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) .bg-primary,
-body > div:not(#cd-sidebar):not(#cd-header) button.bg-primary,
-body > div:not(#cd-sidebar):not(#cd-header) a.bg-primary {
-  background-color: var(--col-accent) !important;
-  color: var(--col-pri-bg) !important;
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-amber-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-yellow-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-yellow-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-yellow-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-orange-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-orange-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-orange-500/"] {
+  background-color: var(--col-pri-notification) !important;
+  border-color: var(--col-out-notification) !important;
+  color: var(--col-text-notification) !important;
 }
 
-/* Radix UI / shadcn Tabs (fixes "Cá nhân" and other subpage tab bars) */
-body > div:not(#cd-sidebar):not(#cd-header) [role="tablist"] {
+/* Radix UI / shadcn Tabs */
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [role="tablist"] {
   background-color: var(--col-sec-box) !important;
   border: 1px solid var(--col-out-box) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) [role="tab"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [role="tab"] {
+  background-color: transparent !important;
   color: var(--col-sec-text) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) [role="tab"]:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [role="tab"]:hover {
   color: var(--col-hi-text) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) [role="tab"][data-state="active"],
-body > div:not(#cd-sidebar):not(#cd-header) [role="tab"][aria-selected="true"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [role="tab"][data-state="active"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [role="tab"][aria-selected="true"] {
   background-color: var(--col-pri-box) !important;
   color: var(--col-accent) !important;
   border: 1px solid var(--col-out-box) !important;
 }
 
 /* Typography */
-body > div:not(#cd-sidebar):not(#cd-header) .text-foreground,
-body > div:not(#cd-sidebar):not(#cd-header) h1,
-body > div:not(#cd-sidebar):not(#cd-header) h2,
-body > div:not(#cd-sidebar):not(#cd-header) h3,
-body > div:not(#cd-sidebar):not(#cd-header) h4,
-body > div:not(#cd-sidebar):not(#cd-header) th {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) .text-foreground,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-slate-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-gray-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) h1,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) h2,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) h3,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) h4,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) th {
   color: var(--col-head-text) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) .text-card-foreground,
-body > div:not(#cd-sidebar):not(#cd-header) .text-popover-foreground,
-body > div:not(#cd-sidebar):not(#cd-header) td {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) .text-card-foreground,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) .text-popover-foreground,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) td {
   color: var(--col-pri-text) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) .text-muted-foreground {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) .text-muted-foreground {
   color: var(--col-sec-text) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) [class*="text-primary"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="text-blue-"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="text-sky-"],
-body > div:not(#cd-sidebar):not(#cd-header) .hover\:text-primary:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-primary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-blue-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-sky-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-emerald-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-green-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-teal-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) .hover\:text-primary:hover {
   color: var(--col-accent) !important;
 }
 
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-red-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-rose-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-destructive"] {
+  color: var(--col-danger) !important;
+}
+
+/* Solid accent and danger badges/buttons */
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) .bg-primary,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) button.bg-primary,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) a.bg-primary {
+  background-color: var(--col-accent) !important;
+  color: var(--col-pri-bg) !important;
+}
+
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) .bg-primary *,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-primary-foreground"] {
+  color: var(--col-pri-bg) !important;
+}
+
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) .bg-destructive,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="bg-red-600"] {
+  background-color: var(--col-danger) !important;
+  color: var(--col-hi-text) !important;
+}
+
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) .bg-destructive *,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="text-destructive-foreground"] {
+  color: var(--col-hi-text) !important;
+}
+
 /* Borders, Accent Stripes, Tables, and Form Controls */
-body > div:not(#cd-sidebar):not(#cd-header) [class*="border-"],
-body > div:not(#cd-sidebar):not(#cd-header) .divide-border > :not([hidden]) ~ :not([hidden]),
-body > div:not(#cd-sidebar):not(#cd-header) table,
-body > div:not(#cd-sidebar):not(#cd-header) th,
-body > div:not(#cd-sidebar):not(#cd-header) td {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="border-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) .divide-border > :not([hidden]) ~ :not([hidden]),
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) table,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) th,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) td {
   border-color: var(--col-out-box) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) [class*="border-primary"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="border-l-primary"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="border-blue-"],
-body > div:not(#cd-sidebar):not(#cd-header) [class*="border-sky-"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="border-primary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="border-l-primary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="border-blue-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) [class*="border-sky-"] {
   border-color: var(--col-accent) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) thead,
-body > div:not(#cd-sidebar):not(#cd-header) thead tr,
-body > div:not(#cd-sidebar):not(#cd-header) tbody tr:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) thead,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) thead tr,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) tbody tr:hover {
   background-color: var(--col-sec-box) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) input,
-body > div:not(#cd-sidebar):not(#cd-header) select,
-body > div:not(#cd-sidebar):not(#cd-header) textarea,
-body > div:not(#cd-sidebar):not(#cd-header) button[role="combobox"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) input,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) select,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) textarea,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header) button[role="combobox"] {
   background-color: var(--col-sec-box) !important;
   color: var(--col-pri-text) !important;
   border-color: var(--col-out-box) !important;

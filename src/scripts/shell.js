@@ -1,15 +1,20 @@
 (() => {
-  const isAuthRoute = (pathname) => {
-    return pathname.startsWith('/login') || pathname.startsWith('/api/auth');
+  const isExcludedPage = (pathname) => {
+    return (
+      pathname.startsWith('/login') ||
+      pathname.startsWith('/api/auth') ||
+      pathname.startsWith('/khao-sat')
+    );
   };
 
-  // Apply user-imported custom CSS theme from localStorage
+  // Apply user-imported custom CSS theme from localStorage (disabled on excluded routes)
   const applySavedCustomTheme = () => {
+    const excluded = isExcludedPage(window.location.pathname);
     const savedCss = localStorage.getItem('uit_custom_theme_css');
     const savedName = localStorage.getItem('uit_custom_theme_name');
     let styleEl = document.getElementById('cd-custom-theme-style');
 
-    if (savedCss) {
+    if (savedCss && !excluded) {
       if (!styleEl) {
         styleEl = document.createElement('style');
         styleEl.id = 'cd-custom-theme-style';
@@ -111,7 +116,7 @@
   const applyProfile = (profile) => {
     if (!profile) return;
     cachedProfile = profile;
-    if (!isAuthRoute(window.location.pathname)) {
+    if (!isExcludedPage(window.location.pathname)) {
       const nameEl = document.getElementById('cd-user-name');
       const avatarEl = document.getElementById('cd-user-avatar');
       const metaEl = document.getElementById('cd-user-meta');
@@ -123,7 +128,7 @@
 
   // 2. Idempotent shell mounter (survives Next.js body hydration)
   const mountShell = () => {
-    if (isAuthRoute(window.location.pathname)) return;
+    if (isExcludedPage(window.location.pathname)) return;
     if (!document.getElementById('cd-sidebar') && window.__UIT_SHELL_HTML__) {
       document.body.insertAdjacentHTML('afterbegin', window.__UIT_SHELL_HTML__);
 
@@ -199,7 +204,7 @@
   removeUmaBloat();
 
   // 4. Load user profile from sessionStorage cache or fetch once
-  if (!isAuthRoute(window.location.pathname)) {
+  if (!isExcludedPage(window.location.pathname)) {
     if (cachedProfile) {
       applyProfile(cachedProfile);
     } else {
@@ -233,14 +238,14 @@
   // 5. Route state updater
   window.__updateCustomRouteState = () => {
     const currentPath = window.location.pathname;
-    const onAuth = isAuthRoute(currentPath);
+    const excluded = isExcludedPage(currentPath);
     const isTrangChu = currentPath === '/trang-chu' || currentPath === '/';
 
     if (isTrangChu) {
       initBootCurtain();
     }
 
-    if (!onAuth) {
+    if (!excluded) {
       mountShell();
     }
 
@@ -249,10 +254,13 @@
     const sidebar = document.getElementById('cd-sidebar');
     const header = document.getElementById('cd-header');
 
-    if (onAuth) {
+    if (excluded) {
       if (sidebar) sidebar.style.display = 'none';
       if (header) header.style.display = 'none';
       document.body.classList.remove('with-custom-shell', 'is-trang-chu');
+      Array.from(document.body.classList).forEach(cls => {
+        if (cls.startsWith('route-')) document.body.classList.remove(cls);
+      });
     } else {
       if (sidebar) sidebar.style.display = 'flex';
       if (header) header.style.display = 'flex';
@@ -281,10 +289,10 @@
   // 6. Hydration defender: re-mounts shell and restores classes if React overwrites body
   const enforceBodyClasses = new MutationObserver(() => {
     const currentPath = window.location.pathname;
-    const onAuth = isAuthRoute(currentPath);
+    const excluded = isExcludedPage(currentPath);
     const isTrangChu = currentPath === '/trang-chu' || currentPath === '/';
 
-    if (!onAuth) {
+    if (!excluded) {
       if (!document.getElementById('cd-sidebar')) {
         mountShell();
         window.__updateCustomRouteState();
@@ -298,10 +306,9 @@
       if (isTrangChu && !document.getElementById('cd-trang-chu-view') && window.__renderTrangChuView) {
         window.__renderTrangChuView();
       }
-    }
-
-    if (localStorage.getItem('uit_custom_theme_css') && !document.getElementById('cd-custom-theme-style')) {
-      applySavedCustomTheme();
+      if (localStorage.getItem('uit_custom_theme_css') && !document.getElementById('cd-custom-theme-style')) {
+        applySavedCustomTheme();
+      }
     }
 
     removeUmaBloat();
