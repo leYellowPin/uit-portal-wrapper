@@ -1,5 +1,5 @@
 <aside id="cd-sidebar">
-  <div class="cd-brand"><img id="cd-uit-brand" src="../uit-logo-white.png"></img><span>UIT CLIENT</span></div>
+  <div class="cd-brand"><img id="cd-uit-brand" src="../uit-logo-white.png"><span>UIT CLIENT</span></div>
   <nav class="cd-nav">
     <div class="nav-group">TỔNG QUAN</div>
     <a href="/trang-chu">Trang chủ</a>
@@ -50,5 +50,14 @@
   <div class="cd-user-info">
     <h1 id="cd-user-name">Đang tải dữ liệu...</h1>
     <p id="cd-user-meta">...</p>
+  </div>
+  <div id="cd-theme-controls">
+    <input type="file" id="cd-theme-file-input" accept=".css,text/css" hidden />
+    <button type="button" id="cd-import-theme-btn" class="cd-header-btn" title="Import custom .css file">
+      Import CSS
+    </button>
+    <button type="button" id="cd-reset-theme-btn" class="cd-header-btn cd-header-btn-danger" title="Reset to default theme" style="display: none;">
+      Reset
+    </button>
   </div>
 </header>

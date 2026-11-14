@@ -3,6 +3,35 @@
     return pathname.startsWith('/login') || pathname.startsWith('/api/auth');
   };
 
+  // Apply user-imported custom CSS theme from localStorage
+  const applySavedCustomTheme = () => {
+    const savedCss = localStorage.getItem('uit_custom_theme_css');
+    const savedName = localStorage.getItem('uit_custom_theme_name');
+    let styleEl = document.getElementById('cd-custom-theme-style');
+
+    if (savedCss) {
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'cd-custom-theme-style';
+        (document.head || document.documentElement).appendChild(styleEl);
+      }
+      styleEl.textContent = savedCss;
+    } else if (styleEl) {
+      styleEl.remove();
+    }
+
+    const importBtn = document.getElementById('cd-import-theme-btn');
+    const resetBtn = document.getElementById('cd-reset-theme-btn');
+    if (importBtn) {
+      importBtn.textContent = savedCss && savedName ? `Theme: ${savedName}` : 'Import CSS';
+    }
+    if (resetBtn) {
+      resetBtn.style.display = savedCss ? 'inline-block' : 'none';
+    }
+  };
+
+  applySavedCustomTheme();
+
   // 0. Show color fade curtain on first load into /trang-chu
   const initBootCurtain = () => {
     const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
@@ -35,7 +64,6 @@
     document.documentElement.appendChild(curtain);
     window.__curtainPaintedAt = 0;
 
-    // Wait until Chromium actually commits the opacity: 1 frame to screen
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         window.__curtainPaintedAt = Date.now();
@@ -51,7 +79,6 @@
     const curtain = document.getElementById('cd-boot-curtain');
     if (!curtain || curtain.dataset.fading === '1') return;
 
-    // Wait until the browser has painted at least one visible frame after cold-boot hydration
     if (!window.__curtainPaintedAt) {
       requestAnimationFrame(() => window.__dismissBootCurtain());
       return;
@@ -116,6 +143,41 @@
         });
       });
 
+      // Bind header CSS theme importer controls
+      const importBtn = document.getElementById('cd-import-theme-btn');
+      const resetBtn = document.getElementById('cd-reset-theme-btn');
+      const fileInput = document.getElementById('cd-theme-file-input');
+
+      if (importBtn && fileInput) {
+        importBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const cssContent = ev.target?.result;
+            if (typeof cssContent === 'string') {
+              localStorage.setItem('uit_custom_theme_css', cssContent);
+              localStorage.setItem('uit_custom_theme_name', file.name.replace(/\.css$/i, ''));
+              applySavedCustomTheme();
+            }
+          };
+          reader.readAsText(file);
+          fileInput.value = '';
+        });
+      }
+
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          localStorage.removeItem('uit_custom_theme_css');
+          localStorage.removeItem('uit_custom_theme_name');
+          applySavedCustomTheme();
+        });
+      }
+
+      applySavedCustomTheme();
+
       if (cachedProfile) {
         applyProfile(cachedProfile);
       }
@@ -177,10 +239,12 @@
     if (isTrangChu) {
       initBootCurtain();
     }
-    
+
     if (!onAuth) {
       mountShell();
     }
+
+    applySavedCustomTheme();
 
     const sidebar = document.getElementById('cd-sidebar');
     const header = document.getElementById('cd-header');
@@ -209,7 +273,6 @@
       if (isTrangChu && window.__renderTrangChuView) window.__renderTrangChuView();
     }
 
-    // Reveal page once classes and shell are applied
     document.documentElement.classList.add('uit-shell-ready');
   };
 
@@ -235,6 +298,10 @@
       if (isTrangChu && !document.getElementById('cd-trang-chu-view') && window.__renderTrangChuView) {
         window.__renderTrangChuView();
       }
+    }
+
+    if (localStorage.getItem('uit_custom_theme_css') && !document.getElementById('cd-custom-theme-style')) {
+      applySavedCustomTheme();
     }
 
     removeUmaBloat();

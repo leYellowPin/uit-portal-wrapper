@@ -18,8 +18,8 @@
 }
 
 .cd-stat-card {
-  background-color: var(--col-pri-nav);
-  border: 1px solid var(--col-out-nav);
+  background-color: var(--col-pri-box);
+  border: 1px solid var(--col-out-box);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -29,7 +29,7 @@
 
 .cd-stat-card h4 {
   margin: 0 0 10px 0;
-  color: #8b949e;
+  color: var(--col-sec-text);
   font-size: 0.78rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -40,14 +40,14 @@
   margin: 0 0 6px 0;
   font-size: 1.75rem;
   font-weight: 700;
-  color: #58a6ff;
+  color: var(--col-accent);
   line-height: 1.2;
 }
 
 .cd-stat-card p {
   margin: 0;
   font-size: 0.8rem;
-  color: #8b949e;
+  color: var(--col-sec-text);
 }
 
 /* 2-column Widgets Grid */
@@ -65,12 +65,12 @@
 }
 
 .cd-widget {
-  background-color: var(--col-pri-nav);
-  border: 1px solid var(--col-out-nav);
+  background-color: var(--col-pri-box);
+  border: 1px solid var(--col-out-box);
   border-radius: 12px;
   max-height: 400px;
   overflow-x: hidden;
-  overflow-y: wrap;
+  overflow-y: auto;
 }
 
 .cd-widget::-webkit-scrollbar {
@@ -78,7 +78,7 @@
 }
 
 .cd-widget::-webkit-scrollbar-thumb {
-  background-color: var(--col-out-nav);
+  background-color: var(--col-out-box);
   border-radius: 4px;
 }
 
@@ -87,13 +87,13 @@
   padding: 16px 20px;
   font-size: 1rem;
   font-weight: 600;
-  color: #f0f6fc;
-  border-bottom: 1px solid var(--col-out-nav);
+  color: var(--col-head-text);
+  border-bottom: 1px solid var(--col-out-box);
 }
 
 .cd-widget-body {
   padding: 20px;
-  color: #c9d1d9;
+  color: var(--col-pri-text);
   font-size: 0.9rem;
 }
 
@@ -105,16 +105,19 @@
 .cd-widget-body p {
   padding: 0 !important;
   margin: 0;
-  color: #8b949e;
+  color: var(--col-sec-text);
 }
+
 #cd-widget-schedule {
   height: 100%;
   max-height: 400px;
 }
+
 #cd-schedule-content {
   min-height: 161px;
   align-items: center;
 }
+
 #cd-widget-schedule ul {
   padding-left: 0px;
   padding-right: 0px;
@@ -122,6 +125,7 @@
   container-type: inline-size;
   container-name: widget-schedule;
 }
+
 #cd-widget-schedule li {
   height: 100%;
   padding-top: 20px;
@@ -133,4 +137,69 @@
     flex-direction: column;
     justify-items: flex-start;
   }
+}
+
+/* Notification divs fix */
+#cd-announcements-content article {
+  background-color: var(--col-pri-notification) !important;
+  border: 1px solid var(--col-out-notification) !important;
+  color: var(--col-text-notification) !important;
+  border-radius: 10px !important;
+}
+
+#cd-announcements-content article header {
+  border-bottom: none !important;
+}
+
+#cd-announcements-content article h3 {
+  color: var(--col-head-text) !important;
+}
+
+#cd-announcements-content article svg {
+  color: var(--col-accent-notification) !important;
+}
+
+#cd-announcements-content article p,
+#cd-announcements-content article .prose {
+  color: var(--col-text-notification) !important;
+}
+
+#cd-announcements-content article a {
+  color: var(--col-accent-notification) !important;
+}
+
+#cd-announcements-content article span {
+  color: var(--col-sec-text) !important;
+}
+
+/* TKB div fix */
+#cd-schedule-content li {
+  background-color: var(--col-sec-box) !important;
+  border: 1px solid var(--col-out-box) !important;
+
+  border-radius: 10px !important;
+  color: var(--col-pri-text) !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+#cd-schedule-content li div {
+  background-color: transparent !important;
+}
+
+#cd-schedule-content li .text-foreground,
+#cd-schedule-content li strong,
+#cd-schedule-content li p:first-child {
+  color: var(--col-head-text) !important;
+}
+
+#cd-schedule-content li .text-muted-foreground {
+  color: var(--col-sec-text) !important;
+}
+
+#cd-schedule-content li span[class*="rounded"],
+#cd-schedule-content li [class*="badge"] {
+  background-color: var(--col-pri-box) !important;
+  color: var(--col-accent) !important;
+  border: 1px solid var(--col-out-box) !important;
 }

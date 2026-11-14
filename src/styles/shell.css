@@ -1,18 +1,36 @@
 :root {
+  /* Core Surfaces */
   --col-pri-bg: #0d1117;
   --col-pri-box: #161b22;
   --col-sec-box: #21262d;
   --col-out-box: #30363d;
 
+  /* Navigation & Header Surfaces */
   --col-pri-nav: var(--col-pri-box);
   --col-sec-nav: var(--col-sec-box);
   --col-out-nav: var(--col-out-box);
+
+  /* Typography */
+  --col-pri-text: #c9d1d9;
+  --col-sec-text: #8b949e;
+  --col-head-text: #f0f6fc;
+  --col-hi-text: #ffffff;
+
+  /* Accents & Status */
+  --col-accent: #58a6ff;
+  --col-accent-soft: rgba(88, 166, 255, 0.15);
+  --col-danger: #f85149;
+
+  /* Notification / Announcement Card */
+  --col-pri-notification: rgba(245, 158, 11, 0.12);
+  --col-out-notification: rgba(245, 158, 11, 0.4);
+  --col-accent-notification: #fbbf24;
+  --col-text-notification: var(--col-pri-text);
 }
 
 #cd-window {
   width: 100%;
-  height: 12px;
-  background-color: red;
+  background-color: var(--col-danger);
   top: 0;
   left: 260px;
   right: 0;
@@ -22,7 +40,7 @@
 /* Base page offset so both /sinh-vien/* and standalone routes like /khao-sat align cleanly */
 html, body {
   background-color: var(--col-pri-bg) !important;
-  color: #c9d1d9 !important;
+  color: var(--col-pri-text) !important;
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -78,6 +96,7 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
   z-index: 50;
   font-family: 'Segoe UI', system-ui, sans-serif;
 }
+
 #cd-sidebar::before {
   content: '';
   position: fixed;
@@ -85,7 +104,7 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
   top: 75%;
   bottom: 0;
   pointer-events: none;
-  background-image:  linear-gradient(to bottom, rgba(0, 0, 0, 0), var(--col-pri-nav) 90%);
+  background-image: linear-gradient(to bottom, transparent, var(--col-pri-nav) 90%);
 }
 
 .cd-brand {
@@ -96,7 +115,7 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
   padding: 0 24px;
   font-size: 1.15rem;
   font-weight: 700;
-  color: #58a6ff;
+  color: var(--col-accent);
   border-bottom: 1px solid var(--col-out-nav);
   box-sizing: border-box;
 }
@@ -114,14 +133,14 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #8b949e;
+  color: var(--col-sec-text);
   letter-spacing: 0.5px;
 }
 
 .cd-nav a {
   padding: 9px 24px;
   padding-left: 40px !important;
-  color: #c9d1d9;
+  color: var(--col-pri-text);
   text-decoration: none;
   font-size: 0.88rem;
   font-weight: 500;
@@ -131,8 +150,8 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
 
 .cd-nav a:hover, .cd-nav a.active {
   background-color: var(--col-sec-nav);
-  color: #ffffff;
-  border-left: 3px solid #58a6ff;
+  color: var(--col-hi-text);
+  border-left: 3px solid var(--col-accent);
 }
 
 .cd-nav::-webkit-scrollbar {
@@ -156,10 +175,11 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 0 32px;
+  padding: 0 156px 0 32px;
   z-index: 45;
   box-sizing: border-box;
   font-family: 'Segoe UI', system-ui, sans-serif;
+  -webkit-app-region: drag;
 }
 
 #cd-user-avatar {
@@ -175,46 +195,178 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
   margin: 0 0 2px 0;
   font-size: 1.2rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--col-hi-text);
 }
 
 #cd-user-meta {
   margin: 0;
-  color: #8b949e;
+  color: var(--col-sec-text);
   font-size: 0.85rem;
 }
 
-/* Dark theme overrides for native subpages (/sinh-vien/* and standalone /khao-sat) */
+/* Header Theme Importer Controls */
+#cd-theme-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.cd-header-btn {
+  background-color: var(--col-sec-nav);
+  color: var(--col-pri-text);
+  border: 1px solid var(--col-out-nav);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  -webkit-app-region: no-drag;
+}
+
+.cd-header-btn:hover {
+  background-color: var(--col-out-nav);
+  border-color: var(--col-accent);
+  color: var(--col-hi-text);
+}
+
+.cd-header-btn-danger:hover {
+  border-color: var(--col-danger);
+  color: var(--col-danger);
+}
+
+/* Theme overrides for all native subpages (/sinh-vien/*, /khao-sat, and cloned widgets) */
 body > div:not(#cd-sidebar):not(#cd-header) main,
 main#main-content {
   padding: 24px 32px !important;
-  color: #c9d1d9 !important;
+  background-color: var(--col-pri-bg) !important;
+  color: var(--col-pri-text) !important;
 }
 
-body > div:not(#cd-sidebar):not(#cd-header) .bg-card,
-body > div:not(#cd-sidebar):not(#cd-header) .bg-background,
-body > div:not(#cd-sidebar):not(#cd-header) .bg-white,
-body > div:not(#cd-sidebar):not(#cd-header) .bg-muted\/30 {
-  background-color: var(--col-pri-nav) !important;
-  border-color: var(--col-out-nav) !important;
-  color: #c9d1d9 !important;
+/* Match base backgrounds and Tailwind opacity/state variants */
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-background"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-950"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-950"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-950"] {
+  background-color: var(--col-pri-bg) !important;
+  color: var(--col-pri-text) !important;
 }
 
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-card"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-popover"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-white"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-900"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-900"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-900"] {
+  background-color: var(--col-pri-box) !important;
+  border-color: var(--col-out-box) !important;
+  color: var(--col-pri-text) !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-muted"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-secondary"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-slate-800"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-gray-800"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-zinc-800"],
+body > div:not(#cd-sidebar):not(#cd-header) .hover\:bg-accent:hover {
+  background-color: var(--col-sec-box) !important;
+  color: var(--col-pri-text) !important;
+}
+
+/* Soft accent tints vs solid accent buttons */
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-primary/"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-accent/"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-blue-500/"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="bg-sky-500/"] {
+  background-color: var(--col-accent-soft) !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) .bg-primary,
+body > div:not(#cd-sidebar):not(#cd-header) button.bg-primary,
+body > div:not(#cd-sidebar):not(#cd-header) a.bg-primary {
+  background-color: var(--col-accent) !important;
+  color: var(--col-pri-bg) !important;
+}
+
+/* Radix UI / shadcn Tabs (fixes "Cá nhân" and other subpage tab bars) */
+body > div:not(#cd-sidebar):not(#cd-header) [role="tablist"] {
+  background-color: var(--col-sec-box) !important;
+  border: 1px solid var(--col-out-box) !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) [role="tab"] {
+  color: var(--col-sec-text) !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) [role="tab"]:hover {
+  color: var(--col-hi-text) !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) [role="tab"][data-state="active"],
+body > div:not(#cd-sidebar):not(#cd-header) [role="tab"][aria-selected="true"] {
+  background-color: var(--col-pri-box) !important;
+  color: var(--col-accent) !important;
+  border: 1px solid var(--col-out-box) !important;
+}
+
+/* Typography */
 body > div:not(#cd-sidebar):not(#cd-header) .text-foreground,
 body > div:not(#cd-sidebar):not(#cd-header) h1,
 body > div:not(#cd-sidebar):not(#cd-header) h2,
-body > div:not(#cd-sidebar):not(#cd-header) h3 {
-  color: #f0f6fc !important;
+body > div:not(#cd-sidebar):not(#cd-header) h3,
+body > div:not(#cd-sidebar):not(#cd-header) h4,
+body > div:not(#cd-sidebar):not(#cd-header) th {
+  color: var(--col-head-text) !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) .text-card-foreground,
+body > div:not(#cd-sidebar):not(#cd-header) .text-popover-foreground,
+body > div:not(#cd-sidebar):not(#cd-header) td {
+  color: var(--col-pri-text) !important;
 }
 
 body > div:not(#cd-sidebar):not(#cd-header) .text-muted-foreground {
-  color: #8b949e !important;
+  color: var(--col-sec-text) !important;
 }
 
+body > div:not(#cd-sidebar):not(#cd-header) [class*="text-primary"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="text-blue-"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="text-sky-"],
+body > div:not(#cd-sidebar):not(#cd-header) .hover\:text-primary:hover {
+  color: var(--col-accent) !important;
+}
+
+/* Borders, Accent Stripes, Tables, and Form Controls */
+body > div:not(#cd-sidebar):not(#cd-header) [class*="border-"],
+body > div:not(#cd-sidebar):not(#cd-header) .divide-border > :not([hidden]) ~ :not([hidden]),
 body > div:not(#cd-sidebar):not(#cd-header) table,
 body > div:not(#cd-sidebar):not(#cd-header) th,
 body > div:not(#cd-sidebar):not(#cd-header) td {
-  border-color:  var(--col-out-nav) !important;
+  border-color: var(--col-out-box) !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) [class*="border-primary"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="border-l-primary"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="border-blue-"],
+body > div:not(#cd-sidebar):not(#cd-header) [class*="border-sky-"] {
+  border-color: var(--col-accent) !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) thead,
+body > div:not(#cd-sidebar):not(#cd-header) thead tr,
+body > div:not(#cd-sidebar):not(#cd-header) tbody tr:hover {
+  background-color: var(--col-sec-box) !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) input,
+body > div:not(#cd-sidebar):not(#cd-header) select,
+body > div:not(#cd-sidebar):not(#cd-header) textarea,
+body > div:not(#cd-sidebar):not(#cd-header) button[role="combobox"] {
+  background-color: var(--col-sec-box) !important;
+  color: var(--col-pri-text) !important;
+  border-color: var(--col-out-box) !important;
 }
 
 /* First-load loading screen for /trang-chu */

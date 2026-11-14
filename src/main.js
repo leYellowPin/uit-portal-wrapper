@@ -104,7 +104,7 @@ function createWindow() {
     (details, callback) => callback({ cancel: true })
   );
 
-  mainWindow.loadURL('https://portal.uit.edu.vn/api/auth/login');
+  mainWindow.loadURL('https://portal.uit.edu.vn/login');
 
   // Inject CSS before first paint on every navigation
   mainWindow.webContents.on('did-commit-navigation', (event, url) => {
