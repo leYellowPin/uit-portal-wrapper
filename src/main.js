@@ -7,6 +7,39 @@ function readAsset(relativePath) {
   return fs.existsSync(fullPath) ? fs.readFileSync(fullPath, 'utf8') : '';
 }
 
+function getCombinedCss() {
+  const prePaintHide = `
+    html:not(.uit-shell-ready) body > * {
+      opacity: 0 !important;
+      visibility: hidden !important;
+    }
+  `;
+
+  return [
+    prePaintHide,
+    readAsset('styles/shell.css'),
+    readAsset('styles/trang-chu.css'),
+    readAsset('styles/login.css'),
+    readAsset('styles/ho-so.css'),
+  ].join('\n');
+}
+
+function injectEarlyCss(webContents, targetUrl) {
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(targetUrl || webContents.getURL());
+  } catch {
+    return;
+  }
+
+  if (parsedUrl.hostname !== 'portal.uit.edu.vn') return;
+
+  const combinedCss = getCombinedCss();
+  if (combinedCss.trim()) {
+    webContents.insertCSS(combinedCss).catch(console.error);
+  }
+}
+
 function injectCustomUI(webContents) {
   const currentUrl = webContents.getURL();
   let parsedUrl;
@@ -18,16 +51,7 @@ function injectCustomUI(webContents) {
 
   if (parsedUrl.hostname !== 'portal.uit.edu.vn') return;
 
-  const combinedCss = [
-    readAsset('styles/shell.css'),
-    readAsset('styles/trang-chu.css'),
-    readAsset('styles/login.css'),
-    readAsset('styles/ho-so.css'),
-  ].join('\n');
-
-  if (combinedCss.trim()) {
-    webContents.insertCSS(combinedCss).catch(console.error);
-  }
+  injectEarlyCss(webContents, currentUrl);
 
   // UIT Logo
   const brandPath = path.join(__dirname, 'assets/uit-logo-white.png');
@@ -57,6 +81,7 @@ function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 720,
+    backgroundColor: '#0d1117',
     titleBarStyle: 'hidden',
     ...(process.platform !== 'darwin' ? { 
       titleBarOverlay: 
@@ -80,6 +105,11 @@ function createWindow() {
   );
 
   mainWindow.loadURL('https://portal.uit.edu.vn/api/auth/login');
+
+  // Inject CSS before first paint on every navigation
+  mainWindow.webContents.on('did-commit-navigation', (event, url) => {
+    injectEarlyCss(mainWindow.webContents, url);
+  });
 
   mainWindow.webContents.on('dom-ready', () => {
     injectCustomUI(mainWindow.webContents);

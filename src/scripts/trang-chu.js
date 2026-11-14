@@ -54,18 +54,20 @@
 
       extractWidgetContent('Thông báo từ nhà trường', 'cd-announcements-content');
       extractWidgetContent('Thời khóa biểu', 'cd-schedule-content');
+
+      if (window.__dismissBootCurtain) {
+        window.__dismissBootCurtain();
+      }
       return true;
     };
 
     // Populate immediately if SSR HTML is ready, otherwise wait for hydration
     if (!populateFromDom()) {
-      const mainEl = document.querySelector('main#main-content');
-      if (mainEl) {
-        const observer = new MutationObserver(() => {
-          if (populateFromDom()) observer.disconnect();
-        });
-        observer.observe(mainEl, { childList: true, subtree: true });
-      }
+      const targetNode = document.querySelector('main#main-content') || document.body;
+      const observer = new MutationObserver(() => {
+        if (populateFromDom()) observer.disconnect();
+      });
+      observer.observe(targetNode, { childList: true, subtree: true });
     }
   };
 
