@@ -1,5 +1,8 @@
 (() => {
+  const isPortalHost = window.location.hostname === 'portal.uit.edu.vn';
+
   const isExcludedPage = (pathname) => {
+    if (!isPortalHost) return true;
     return (
       pathname.startsWith('/login') ||
       pathname.startsWith('/api/auth') ||
@@ -7,14 +10,46 @@
     );
   };
 
-  // Apply user-imported custom CSS theme from localStorage (disabled on excluded routes)
+  // Mount global custom window title bar on all sites
+  const mountTitlebar = () => {
+    if (!document.body) return;
+    let titlebar = document.getElementById('cd-titlebar');
+    if (!titlebar) {
+      titlebar = document.createElement('div');
+      titlebar.id = 'cd-titlebar';
+      titlebar.innerHTML = `
+        <img id="cd-titlebar-icon" alt="UIT" />
+        <span id="cd-titlebar-title">UIT Portal wrapper</span>
+      `;
+      document.body.insertAdjacentElement('afterbegin', titlebar);
+    }
+
+    const iconEl = document.getElementById('cd-titlebar-icon');
+    if (iconEl) {
+      if (window.__UIT_BRAND__) {
+        iconEl.src = window.__UIT_BRAND__;
+        iconEl.style.display = 'block';
+      } else {
+        iconEl.style.display = 'none';
+      }
+    }
+  };
+
+  mountTitlebar();
+
+  // Apply user-imported custom CSS theme from localStorage (disabled on /khao-sat and /login)
   const applySavedCustomTheme = () => {
-    const excluded = isExcludedPage(window.location.pathname);
+    const pathname = window.location.pathname;
+    const disableTheme = isPortalHost && (
+      pathname.startsWith('/login') ||
+      pathname.startsWith('/api/auth') ||
+      pathname.startsWith('/khao-sat')
+    );
     const savedCss = localStorage.getItem('uit_custom_theme_css');
     const savedName = localStorage.getItem('uit_custom_theme_name');
     let styleEl = document.getElementById('cd-custom-theme-style');
 
-    if (savedCss && !excluded) {
+    if (savedCss && !disableTheme) {
       if (!styleEl) {
         styleEl = document.createElement('style');
         styleEl.id = 'cd-custom-theme-style';
@@ -37,8 +72,63 @@
 
   applySavedCustomTheme();
 
+  // Sync sidebar and header visibility states
+  const syncShellToggles = () => {
+    if (!document.body) return;
+    const sidebarHidden = localStorage.getItem('uit_sidebar_hidden') === '1';
+    const headerHidden = localStorage.getItem('uit_header_hidden') === '1';
+
+    document.body.classList.toggle('cd-sidebar-hidden', sidebarHidden);
+    document.body.classList.toggle('cd-header-hidden', headerHidden);
+
+    const sidebarBtn = document.getElementById('cd-toggle-sidebar-btn');
+    const headerBtn = document.getElementById('cd-toggle-header-btn');
+    if (sidebarBtn) sidebarBtn.classList.toggle('is-active', !sidebarHidden);
+    if (headerBtn) headerBtn.classList.toggle('is-active', !headerHidden);
+  };
+
+  // Mount two fixed toggle buttons at the bottom of the sidebar
+  const mountSidebarControls = () => {
+    if (isExcludedPage(window.location.pathname)) return;
+    if (!document.getElementById('cd-sidebar-footer') && document.body) {
+      const footer = document.createElement('div');
+      footer.id = 'cd-sidebar-footer';
+      footer.innerHTML = `
+        <button type="button" id="cd-toggle-sidebar-btn" class="cd-sidebar-toggle-btn" title="Toggle Sidebar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+        </button>
+        <button type="button" id="cd-toggle-header-btn" class="cd-sidebar-toggle-btn" title="Toggle Header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+        </button>
+      `;
+      document.body.appendChild(footer);
+
+      const sidebarBtn = document.getElementById('cd-toggle-sidebar-btn');
+      const headerBtn = document.getElementById('cd-toggle-header-btn');
+
+      if (sidebarBtn) {
+        sidebarBtn.addEventListener('click', () => {
+          const next = localStorage.getItem('uit_sidebar_hidden') !== '1';
+          localStorage.setItem('uit_sidebar_hidden', next ? '1' : '0');
+          syncShellToggles();
+        });
+      }
+
+      if (headerBtn) {
+        headerBtn.addEventListener('click', () => {
+          const next = localStorage.getItem('uit_header_hidden') !== '1';
+          localStorage.setItem('uit_header_hidden', next ? '1' : '0');
+          syncShellToggles();
+        });
+      }
+    }
+
+    syncShellToggles();
+  };
+
   // 0. Show color fade curtain on first load into /trang-chu
   const initBootCurtain = () => {
+    if (!isPortalHost) return;
     const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
     if (currentPath !== '/trang-chu' || sessionStorage.getItem('uit_trang_chu_faded')) return;
     if (document.getElementById('cd-boot-curtain')) return;
@@ -128,6 +218,7 @@
 
   // 2. Idempotent shell mounter (survives Next.js body hydration)
   const mountShell = () => {
+    mountTitlebar();
     if (isExcludedPage(window.location.pathname)) return;
     if (!document.getElementById('cd-sidebar') && window.__UIT_SHELL_HTML__) {
       document.body.insertAdjacentHTML('afterbegin', window.__UIT_SHELL_HTML__);
@@ -187,12 +278,15 @@
         applyProfile(cachedProfile);
       }
     }
+
+    mountSidebarControls();
   };
 
   mountShell();
 
-  // 3. Remove any UMA assistant elements from DOM
+  // 3. Remove any UMA assistant elements from DOM on portal
   const removeUmaBloat = () => {
+    if (!isPortalHost) return;
     document.querySelectorAll('[data-uma-nhung], script[src*="uma.uit.edu.vn"], link[href*="uma.uit.edu.vn"], iframe[src*="uma.uit.edu.vn"]').forEach(el => el.remove());
     document.querySelectorAll('button, a, div').forEach(el => {
       if (el.children.length <= 2 && el.textContent && el.textContent.trim() === 'Hỏi UMA') {
@@ -239,7 +333,9 @@
   window.__updateCustomRouteState = () => {
     const currentPath = window.location.pathname;
     const excluded = isExcludedPage(currentPath);
-    const isTrangChu = currentPath === '/trang-chu' || currentPath === '/';
+    const isTrangChu = isPortalHost && (currentPath === '/trang-chu' || currentPath === '/');
+
+    mountTitlebar();
 
     if (isTrangChu) {
       initBootCurtain();
@@ -252,21 +348,25 @@
     applySavedCustomTheme();
 
     const sidebar = document.getElementById('cd-sidebar');
+    const sidebarFooter = document.getElementById('cd-sidebar-footer');
     const header = document.getElementById('cd-header');
 
     if (excluded) {
       if (sidebar) sidebar.style.display = 'none';
+      if (sidebarFooter) sidebarFooter.style.display = 'none';
       if (header) header.style.display = 'none';
-      document.body.classList.remove('with-custom-shell', 'is-trang-chu');
+      document.body.classList.remove('with-custom-shell', 'is-trang-chu', 'cd-sidebar-hidden', 'cd-header-hidden');
       Array.from(document.body.classList).forEach(cls => {
         if (cls.startsWith('route-')) document.body.classList.remove(cls);
       });
     } else {
       if (sidebar) sidebar.style.display = 'flex';
+      if (sidebarFooter) sidebarFooter.style.display = 'flex';
       if (header) header.style.display = 'flex';
       
       document.body.classList.add('with-custom-shell');
       document.body.classList.toggle('is-trang-chu', isTrangChu);
+      syncShellToggles();
 
       Array.from(document.body.classList).forEach(cls => {
         if (cls.startsWith('route-')) document.body.classList.remove(cls);
@@ -286,14 +386,18 @@
 
   window.__updateCustomRouteState();
 
-  // 6. Hydration defender: re-mounts shell and restores classes if React overwrites body
+  // 6. Hydration defender: re-mounts titlebar/shell and restores classes if React overwrites body
   const enforceBodyClasses = new MutationObserver(() => {
     const currentPath = window.location.pathname;
     const excluded = isExcludedPage(currentPath);
-    const isTrangChu = currentPath === '/trang-chu' || currentPath === '/';
+    const isTrangChu = isPortalHost && (currentPath === '/trang-chu' || currentPath === '/');
+
+    if (!document.getElementById('cd-titlebar')) {
+      mountTitlebar();
+    }
 
     if (!excluded) {
-      if (!document.getElementById('cd-sidebar')) {
+      if (!document.getElementById('cd-sidebar') || !document.getElementById('cd-sidebar-footer')) {
         mountShell();
         window.__updateCustomRouteState();
       }
@@ -306,13 +410,22 @@
       if (isTrangChu && !document.getElementById('cd-trang-chu-view') && window.__renderTrangChuView) {
         window.__renderTrangChuView();
       }
-      if (localStorage.getItem('uit_custom_theme_css') && !document.getElementById('cd-custom-theme-style')) {
-        applySavedCustomTheme();
-      }
+      syncShellToggles();
+    }
+
+    const disableTheme = isPortalHost && (
+      currentPath.startsWith('/login') ||
+      currentPath.startsWith('/api/auth') ||
+      currentPath.startsWith('/khao-sat')
+    );
+    if (!disableTheme && localStorage.getItem('uit_custom_theme_css') && !document.getElementById('cd-custom-theme-style')) {
+      applySavedCustomTheme();
     }
 
     removeUmaBloat();
   });
 
-  enforceBodyClasses.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
+  if (document.body) {
+    enforceBodyClasses.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
+  }
 })();

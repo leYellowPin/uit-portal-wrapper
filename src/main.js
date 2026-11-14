@@ -7,7 +7,57 @@ function readAsset(relativePath) {
   return fs.existsSync(fullPath) ? fs.readFileSync(fullPath, 'utf8') : '';
 }
 
-function getCombinedCss() {
+function getGlobalTitlebarCss() {
+  return `
+    #cd-titlebar {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      height: 36px !important;
+      background-color: var(--col-pri-nav, #161b22) !important;
+      border-bottom: 1px solid var(--col-out-nav, #30363d) !important;
+      color: var(--col-head-text, #f0f6fc) !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      padding: 0 148px 0 14px !important;
+      z-index: 2147483647 !important;
+      box-sizing: border-box !important;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+      user-select: none !important;
+      -webkit-app-region: drag !important;
+    }
+
+    #cd-titlebar-icon {
+      width: 18px !important;
+      height: 18px !important;
+      object-fit: contain !important;
+      flex-shrink: 0 !important;
+    }
+
+    #cd-titlebar-title {
+      font-size: 0.82rem !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.2px !important;
+      color: var(--col-head-text, #f0f6fc) !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    body:not(.with-custom-shell) {
+      padding-top: 36px !important;
+      box-sizing: border-box !important;
+    }
+  `;
+}
+
+function getCombinedCss(isPortalHost) {
+  if (!isPortalHost) {
+    return getGlobalTitlebarCss();
+  }
+
   const prePaintHide = `
     html:not(.uit-shell-ready) body > * {
       opacity: 0 !important;
@@ -17,6 +67,7 @@ function getCombinedCss() {
 
   return [
     prePaintHide,
+    getGlobalTitlebarCss(),
     readAsset('styles/shell.css'),
     readAsset('styles/trang-chu.css'),
     readAsset('styles/login.css'),
@@ -32,9 +83,10 @@ function injectEarlyCss(webContents, targetUrl) {
     return;
   }
 
-  if (parsedUrl.hostname !== 'portal.uit.edu.vn') return;
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') return;
 
-  const combinedCss = getCombinedCss();
+  const isPortalHost = parsedUrl.hostname === 'portal.uit.edu.vn';
+  const combinedCss = getCombinedCss(isPortalHost);
   if (combinedCss.trim()) {
     webContents.insertCSS(combinedCss).catch(console.error);
   }
@@ -49,8 +101,9 @@ function injectCustomUI(webContents) {
     return;
   }
 
-  if (parsedUrl.hostname !== 'portal.uit.edu.vn') return;
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') return;
 
+  const isPortalHost = parsedUrl.hostname === 'portal.uit.edu.vn';
   injectEarlyCss(webContents, currentUrl);
 
   // UIT Logo
@@ -61,9 +114,9 @@ function injectCustomUI(webContents) {
     brandBase = `data:image/png;base64,${bitmap.toString('base64')}`;
   }
 
-  const shellHtml = readAsset('layouts/shell.html');
+  const shellHtml = isPortalHost ? readAsset('layouts/shell.html') : '';
   const shellJs = readAsset('scripts/shell.js');
-  const trangChuJs = readAsset('scripts/trang-chu.js');
+  const trangChuJs = isPortalHost ? readAsset('scripts/trang-chu.js') : '';
 
   const bootstrapCode = `
     (() => {
@@ -88,7 +141,7 @@ function createWindow() {
       {
         color: 'rgba(0,0,0,0)',
         symbolColor: '#74b1be',
-        height: 82
+        height: 36
       },
     } : {}),
     webPreferences: {
