@@ -1,0 +1,53 @@
+:root {
+	/* Base colors */
+	--col-pri-bg: #e4ebf1;
+	--col-pri-box: #ffffff;
+	--col-sec-box: #e3e9f4;
+	--col-out-box: #cbd5e2;
+
+	/* Navigation & Header */
+	--col-pri-nav: var(--col-pri-box);
+	--col-sec-nav: var(--col-sec-box);
+	--col-out-nav: var(--col-out-box);
+
+	/* Typography */
+	--col-pri-text: #0f1729;
+	--col-sec-text: #65758b;
+	--col-head-text: #0f1729;
+	--col-hi-text: #2E6BFF ;
+
+	/* Accents */
+	--col-accent: #2f6bff;
+	--col-accent-soft: #f0f0f0; /* used for highlights */
+	--col-danger: #ff4848;
+
+	/* Notification / Announcement Card */
+	--col-pri-notification: rgba(217, 194, 43, 0.245);
+	--col-out-notification: rgba(228, 149, 40, 0.627);
+	--col-accent-notification: #bb8013;
+	--col-text-notification: var(--col-pri-text);
+	
+	/* Scrollbar*/
+	--col-accent-scroll: var(--col-out-box);
+}
+
+/* Big logo */
+#cd-uit-brand{
+	/* either try to recolor the logo or replace them with a new one */
+	/*
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	background: url(insert_url) no-repeat;
+	width: 220px;
+	height: 220px;
+	padding-left: 220px;
+	*/
+	/*set padding-left = width*/
+	/* filter generated from https://codepen.io/sosuke/pen/Pjoqqp */
+	filter: invert(43%) sepia(73%) saturate(5419%) hue-rotate(216deg) brightness(102%) contrast(102%);
+}
+
+/* Titlebar icon */
+#cd-titlebar-icon {
+	filter: invert(100%);
+}
