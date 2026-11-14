@@ -1,0 +1,136 @@
+#cd-trang-chu-view {
+  padding: 24px 32px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* 4-column Overview Stats Grid */
+#cd-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1100px) {
+  #cd-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cd-stat-card {
+  background-color: var(--col-pri-nav);
+  border: 1px solid var(--col-out-nav);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cd-stat-card h4 {
+  margin: 0 0 10px 0;
+  color: #8b949e;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cd-stat-card h2 {
+  margin: 0 0 6px 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #58a6ff;
+  line-height: 1.2;
+}
+
+.cd-stat-card p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #8b949e;
+}
+
+/* 2-column Widgets Grid */
+#cd-widgets-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  #cd-widgets-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cd-widget {
+  background-color: var(--col-pri-nav);
+  border: 1px solid var(--col-out-nav);
+  border-radius: 12px;
+  max-height: 400px;
+  overflow-x: hidden;
+  overflow-y: wrap;
+}
+
+.cd-widget::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cd-widget::-webkit-scrollbar-thumb {
+  background-color: var(--col-out-nav);
+  border-radius: 4px;
+}
+
+.cd-widget h3 {
+  margin: 0;
+  padding: 16px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f0f6fc;
+  border-bottom: 1px solid var(--col-out-nav);
+}
+
+.cd-widget-body {
+  padding: 20px;
+  color: #c9d1d9;
+  font-size: 0.9rem;
+}
+
+/* Normalize Tailwind padding inside cloned portal blocks */
+.cd-widget-body > div {
+  padding: 0 !important;
+}
+
+.cd-widget-body p {
+  padding: 0 !important;
+  margin: 0;
+  color: #8b949e;
+}
+#cd-widget-schedule {
+  height: 100%;
+  max-height: 400px;
+}
+#cd-schedule-content {
+  min-height: 161px;
+  align-items: center;
+}
+#cd-widget-schedule ul {
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-bottom: 0px;
+  container-type: inline-size;
+  container-name: widget-schedule;
+}
+#cd-widget-schedule li {
+  height: 100%;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+@container widget-schedule (width < 380px) {
+  #cd-widget-schedule li {
+    flex-direction: column;
+    justify-items: flex-start;
+  }
+}

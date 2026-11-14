@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Electron Build & Packaging Outputs (electron-builder / electron-forge)
+dist/
+out/
+release/
+release-builds/
+*.dmg
+*.exe
+*.app
+*.AppImage
+*.deb
+*.rpm
+*.snap
+*.nupkg
+*.zip
+*.tar.gz
+*.7z
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.p12
+*.pfx
+
+# Logs & Debug Files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cache & Temporary Files
+.cache/
+.tmp/
+.temp/
+.eslintcache
+.parcel-cache/
+.vite/
+coverage/
+
+# IDE & Editor Directories
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini

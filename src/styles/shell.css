@@ -1,0 +1,218 @@
+:root {
+  --col-pri-bg: #0d1117;
+  --col-pri-box: #161b22;
+  --col-sec-box: #21262d;
+  --col-out-box: #30363d;
+
+  --col-pri-nav: var(--col-pri-box);
+  --col-sec-nav: var(--col-sec-box);
+  --col-out-nav: var(--col-out-box);
+}
+
+#cd-window {
+  width: 100%;
+  height: 12px;
+  background-color: red;
+  top: 0;
+  left: 260px;
+  right: 0;
+  height: 84px;
+}
+
+/* Base page offset so both /sinh-vien/* and standalone routes like /khao-sat align cleanly */
+html, body {
+  background-color: var(--col-pri-bg) !important;
+  color: #c9d1d9 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.with-custom-shell {
+  padding-left: 260px !important;
+  padding-top: 84px !important;
+  min-height: 100vh !important;
+  box-sizing: border-box !important;
+}
+
+/* Hide original Next.js sidebar, top banner, top navbar, and UMA assistant elements */
+body.with-custom-shell > div.sticky.top-0.z-40,
+body.with-custom-shell > div.flex.min-h-screen > div.hidden.shrink-0,
+body.with-custom-shell > div.flex.min-h-screen > div.flex.min-w-0 > header.sticky.top-0.z-30,
+[data-uma-nhung],
+iframe[src*="uma.uit.edu.vn"],
+[id*="uma-"],
+[class*="uma-"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body.with-custom-shell > div.flex.min-h-screen {
+  background-color: var(--col-pri-bg) !important;
+  min-height: calc(100vh - 84px) !important;
+}
+
+/* Toggle between custom /trang-chu view and native React subpages */
+body.is-trang-chu main#main-content {
+  display: none !important;
+}
+
+body:not(.is-trang-chu) #cd-trang-chu-view {
+  display: none !important;
+}
+
+#cd-uit-brand {
+  height: 48px;
+}
+
+/* Fixed Custom Sidebar */
+#cd-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  background-color: var(--col-pri-nav);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+#cd-sidebar::before {
+  content: '';
+  position: fixed;
+  width: 260px;
+  top: 75%;
+  bottom: 0;
+  pointer-events: none;
+  background-image:  linear-gradient(to bottom, rgba(0, 0, 0, 0), var(--col-pri-nav) 90%);
+}
+
+.cd-brand {
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 0 24px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #58a6ff;
+  border-bottom: 1px solid var(--col-out-nav);
+  box-sizing: border-box;
+}
+
+.cd-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.nav-group {
+  padding: 14px 24px 6px 24px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #8b949e;
+  letter-spacing: 0.5px;
+}
+
+.cd-nav a {
+  padding: 9px 24px;
+  padding-left: 40px !important;
+  color: #c9d1d9;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.cd-nav a:hover, .cd-nav a.active {
+  background-color: var(--col-sec-nav);
+  color: #ffffff;
+  border-left: 3px solid #58a6ff;
+}
+
+.cd-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cd-nav::-webkit-scrollbar-thumb {
+  background-color: var(--col-out-nav);
+  border-radius: 4px;
+}
+
+/* Fixed Custom Top Header */
+#cd-header {
+  position: fixed;
+  top: 0;
+  left: 260px;
+  right: 0;
+  height: 84px;
+  background-color: var(--col-pri-nav);
+  border-bottom: 1px solid var(--col-out-nav);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 32px;
+  z-index: 45;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+#cd-user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--col-out-nav);
+  background-color: var(--col-sec-nav);
+}
+
+#cd-user-name {
+  margin: 0 0 2px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+#cd-user-meta {
+  margin: 0;
+  color: #8b949e;
+  font-size: 0.85rem;
+}
+
+/* Dark theme overrides for native subpages (/sinh-vien/* and standalone /khao-sat) */
+body > div:not(#cd-sidebar):not(#cd-header) main,
+main#main-content {
+  padding: 24px 32px !important;
+  color: #c9d1d9 !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) .bg-card,
+body > div:not(#cd-sidebar):not(#cd-header) .bg-background,
+body > div:not(#cd-sidebar):not(#cd-header) .bg-white,
+body > div:not(#cd-sidebar):not(#cd-header) .bg-muted\/30 {
+  background-color: var(--col-pri-nav) !important;
+  border-color: var(--col-out-nav) !important;
+  color: #c9d1d9 !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) .text-foreground,
+body > div:not(#cd-sidebar):not(#cd-header) h1,
+body > div:not(#cd-sidebar):not(#cd-header) h2,
+body > div:not(#cd-sidebar):not(#cd-header) h3 {
+  color: #f0f6fc !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) .text-muted-foreground {
+  color: #8b949e !important;
+}
+
+body > div:not(#cd-sidebar):not(#cd-header) table,
+body > div:not(#cd-sidebar):not(#cd-header) th,
+body > div:not(#cd-sidebar):not(#cd-header) td {
+  border-color:  var(--col-out-nav) !important;
+}

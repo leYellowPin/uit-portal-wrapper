@@ -1,0 +1,15 @@
+{
+  "name": "uit-portal-wrapper",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "Desktop wrapper for UIT portal",
+  "devDependencies": {
+    "electron": "^45.3.1"
+  }
+}
