@@ -27,6 +27,12 @@ A desktop wrapper for the UIT portal built with Electron.
    npm start
    ```
 
+## Building from Source
+
+   ```bash
+   npm run make
+   ```
+
 ## License
 
 This project is licensed under the MIT License.

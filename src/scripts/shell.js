@@ -10,6 +10,12 @@
     );
   };
 
+  // In-memory state caches to avoid storage reads inside MutationObserver
+  let isSidebarHidden = localStorage.getItem('uit_sidebar_hidden') === '1';
+  let isHeaderHidden = localStorage.getItem('uit_header_hidden') === '1';
+  let hasCustomTheme = Boolean(localStorage.getItem('uit_custom_theme_css'));
+  let cachedPortalVersion = sessionStorage.getItem('uit_portal_version') || '';
+
   const rgbToHex = (colorStr) => {
     if (!colorStr) return '';
     const trimmed = colorStr.trim();
@@ -36,11 +42,8 @@
   // Sync sidebar and header visibility states
   const syncShellToggles = () => {
     if (!document.body) return;
-    const sidebarHidden = localStorage.getItem('uit_sidebar_hidden') === '1';
-    const headerHidden = localStorage.getItem('uit_header_hidden') === '1';
-
-    document.body.classList.toggle('cd-sidebar-hidden', sidebarHidden);
-    document.body.classList.toggle('cd-header-hidden', headerHidden);
+    document.body.classList.toggle('cd-sidebar-hidden', isSidebarHidden);
+    document.body.classList.toggle('cd-header-hidden', isHeaderHidden);
   };
 
   // Show color fade curtain on startup and full page reloads
@@ -166,16 +169,16 @@
 
       if (sidebarBtn) {
         sidebarBtn.addEventListener('click', () => {
-          const next = localStorage.getItem('uit_sidebar_hidden') !== '1';
-          localStorage.setItem('uit_sidebar_hidden', next ? '1' : '0');
+          isSidebarHidden = !isSidebarHidden;
+          localStorage.setItem('uit_sidebar_hidden', isSidebarHidden ? '1' : '0');
           syncShellToggles();
         });
       }
 
       if (headerBtn) {
         headerBtn.addEventListener('click', () => {
-          const next = localStorage.getItem('uit_header_hidden') !== '1';
-          localStorage.setItem('uit_header_hidden', next ? '1' : '0');
+          isHeaderHidden = !isHeaderHidden;
+          localStorage.setItem('uit_header_hidden', isHeaderHidden ? '1' : '0');
           syncShellToggles();
         });
       }
@@ -220,10 +223,15 @@
     return '';
   };
 
+  const savePortalVersion = (version) => {
+    cachedPortalVersion = version;
+    sessionStorage.setItem('uit_portal_version', version);
+    return version;
+  };
+
   // Detect portal site version from native sidebar, footer, meta tags, or Next.js payload
   const detectPortalVersion = () => {
-    const cached = sessionStorage.getItem('uit_portal_version');
-    if (cached) return cached;
+    if (cachedPortalVersion) return cachedPortalVersion;
 
     const nativeNav = document.querySelector('nav[aria-label="Điều hướng chính"]');
     const nativeSidebarWrapper = nativeNav
@@ -244,10 +252,7 @@
       for (const el of elements) {
         if (el.closest('#cd-sidebar, #cd-header, #cd-titlebar, #cd-sidebar-footer')) continue;
         const found = extractVersionToken(el.textContent);
-        if (found) {
-          sessionStorage.setItem('uit_portal_version', found);
-          return found;
-        }
+        if (found) return savePortalVersion(found);
       }
     }
 
@@ -257,10 +262,7 @@
       for (const el of rootShell.querySelectorAll('span, p, small, div, a')) {
         if (el.closest('main#main-content, #cd-trang-chu-view, #cd-sidebar, #cd-header')) continue;
         const found = extractVersionToken(el.textContent);
-        if (found) {
-          sessionStorage.setItem('uit_portal_version', found);
-          return found;
-        }
+        if (found) return savePortalVersion(found);
       }
     }
 
@@ -268,10 +270,7 @@
     const metaVer = document.querySelector('meta[name*="version" i]')?.getAttribute('content');
     if (metaVer) {
       const found = extractVersionToken(metaVer) || (/^\d/.test(metaVer.trim()) ? `v${metaVer.trim()}` : metaVer.trim());
-      if (found) {
-        sessionStorage.setItem('uit_portal_version', found);
-        return found;
-      }
+      if (found) return savePortalVersion(found);
     }
 
     const scripts = document.querySelectorAll('script:not([src])');
@@ -280,11 +279,7 @@
       if (!content) continue;
       const scriptMatch = content.match(/"(?:appVersion|portalVersion|siteVersion|version)"\s*:\s*"v?(\d+\.\d+(?:\.\d+)*(?:[-+][\w.]+)?)"/i)
         || content.match(/(?:Phiên bản|UIT Portal)\s*[:\-]?\s*v?(\d+\.\d+(?:\.\d+)*(?:[-+][\w.]+)?)/i);
-      if (scriptMatch) {
-        const found = `v${scriptMatch[1]}`;
-        sessionStorage.setItem('uit_portal_version', found);
-        return found;
-      }
+      if (scriptMatch) return savePortalVersion(`v${scriptMatch[1]}`);
     }
 
     return '';
@@ -322,6 +317,7 @@
     );
     const savedCss = localStorage.getItem('uit_custom_theme_css');
     const savedName = localStorage.getItem('uit_custom_theme_name');
+    hasCustomTheme = Boolean(savedCss);
     let styleEl = document.getElementById('cd-custom-theme-style');
 
     if (savedCss && !disableTheme) {
@@ -471,18 +467,12 @@
 
   mountShell();
 
-  // 3. Remove any UMA assistant elements from DOM on portal
-  const removeUmaBloat = () => {
-    if (!isPortalHost) return;
-    document.querySelectorAll('[data-uma-nhung], script[src*="uma.uit.edu.vn"], link[href*="uma.uit.edu.vn"], iframe[src*="uma.uit.edu.vn"]').forEach(el => el.remove());
-    document.querySelectorAll('button, a, div').forEach(el => {
-      if (el.children.length <= 2 && el.textContent && el.textContent.trim() === 'Hỏi UMA') {
-        const container = el.closest('.fixed') || el;
-        container.remove();
-      }
-    });
-  };
-  removeUmaBloat();
+  // 3. Remove any static UMA assistant containers on initial load
+  if (isPortalHost) {
+    document
+      .querySelectorAll('[data-uma-nhung], script[src*="uma.uit.edu.vn"], link[href*="uma.uit.edu.vn"], iframe[src*="uma.uit.edu.vn"]')
+      .forEach((el) => el.remove());
+  }
 
   // 4. Load user profile from sessionStorage cache or fetch once
   if (!isExcludedPage(window.location.pathname)) {
@@ -603,21 +593,14 @@
         window.__renderTrangChuView();
       }
       syncShellToggles();
-      if (!sessionStorage.getItem('uit_portal_version')) {
+      if (!cachedPortalVersion) {
         updateSidebarVersionDisplay();
       }
     }
 
-    const disableTheme = isPortalHost && (
-      currentPath.startsWith('/login') ||
-      currentPath.startsWith('/api/auth') ||
-      currentPath.startsWith('/khao-sat')
-    );
-    if (!disableTheme && localStorage.getItem('uit_custom_theme_css') && !document.getElementById('cd-custom-theme-style')) {
+    if (!excluded && hasCustomTheme && !document.getElementById('cd-custom-theme-style')) {
       applySavedCustomTheme();
     }
-
-    removeUmaBloat();
   });
 
   if (document.body) {

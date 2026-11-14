@@ -149,7 +149,6 @@ function getCombinedCss(isPortalHost) {
     getGlobalTitlebarCss(),
     readAsset('styles/shell.css'),
     readAsset('styles/trang-chu.css'),
-    readAsset('styles/login.css'),
     readAsset('styles/ho-so.css'),
   ].join('\n');
 }
@@ -384,6 +383,16 @@ function createWindow() {
     `).catch(console.error);
   });
 }
+
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch(
+  'disable-features',
+  'BackForwardCache,MediaRouter,OptimizationHints,Translate,CalculateNativeWinOcclusion','DirectCompositionVideoOverlays'
+);
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=192');
+app.commandLine.appendSwitch('enable-low-end-device-mode');
+app.commandLine.appendSwitch('force-color-profile', 'srgb');
+app.commandLine.appendSwitch('disable-direct-composition');
 
 app.whenReady().then(createWindow);
 

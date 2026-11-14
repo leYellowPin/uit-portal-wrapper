@@ -241,6 +241,9 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
   flex-direction: column;
   z-index: 50;
   box-sizing: border-box;
+  user-select: none;
+  -webkit-user-drag: none;
+  -moz-user-select: none;
   font-family: 'Segoe UI', system-ui, sans-serif;
   transition: transform 0.2s ease;
 }
@@ -253,7 +256,7 @@ body.with-custom-shell.cd-sidebar-hidden #cd-sidebar {
 #cd-sidebar::before {
   content: '';
   position: fixed;
-  width: 259px;
+  width: 253.5px;
   top: 75%;
   bottom: 42px;
   pointer-events: none;
