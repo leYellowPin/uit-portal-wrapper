@@ -1,11 +1,11 @@
 :root {
-  /* Core Surfaces */
+  /* Base colors */
   --col-pri-bg: #0d1117;
   --col-pri-box: #161b22;
   --col-sec-box: #21262d;
   --col-out-box: #30363d;
 
-  /* Navigation & Header Surfaces */
+  /* Navigation & Header */
   --col-pri-nav: var(--col-pri-box);
   --col-sec-nav: var(--col-sec-box);
   --col-out-nav: var(--col-out-box);
@@ -16,7 +16,7 @@
   --col-head-text: #f0f6fc;
   --col-hi-text: #ffffff;
 
-  /* Accents & Status */
+  /* Accents */
   --col-accent: #58a6ff;
   --col-accent-soft: rgba(88, 166, 255, 0.15);
   --col-danger: #f85149;
@@ -34,6 +34,8 @@
 /* Match page and container scrollbars to the sidebar scrollbar */
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
+html.uit-custom-shell body > div.flex.min-h-screen::-webkit-scrollbar,
+html.uit-custom-shell *::-webkit-scrollbar,
 body.with-custom-shell > div.flex.min-h-screen::-webkit-scrollbar,
 body.with-custom-shell *::-webkit-scrollbar {
   width: 6px;
@@ -42,6 +44,8 @@ body.with-custom-shell *::-webkit-scrollbar {
 
 html::-webkit-scrollbar-track,
 body::-webkit-scrollbar-track,
+html.uit-custom-shell body > div.flex.min-h-screen::-webkit-scrollbar-track,
+html.uit-custom-shell *::-webkit-scrollbar-track,
 body.with-custom-shell > div.flex.min-h-screen::-webkit-scrollbar-track,
 body.with-custom-shell *::-webkit-scrollbar-track {
   background: transparent;
@@ -49,6 +53,8 @@ body.with-custom-shell *::-webkit-scrollbar-track {
 
 html::-webkit-scrollbar-thumb,
 body::-webkit-scrollbar-thumb,
+html.uit-custom-shell body > div.flex.min-h-screen::-webkit-scrollbar-thumb,
+html.uit-custom-shell *::-webkit-scrollbar-thumb,
 body.with-custom-shell > div.flex.min-h-screen::-webkit-scrollbar-thumb,
 body.with-custom-shell *::-webkit-scrollbar-thumb {
   background-color: var(--col-accent-scroll);
@@ -139,10 +145,8 @@ body.with-custom-shell *::-webkit-scrollbar-thumb {
   color: var(--col-hi-text) !important;
 }
 
-html:not(:has(body.with-custom-shell)) #cd-toggle-sidebar-btn,
-html:not(:has(body.with-custom-shell)) #cd-toggle-header-btn,
-body:not(.with-custom-shell) #cd-toggle-sidebar-btn,
-body:not(.with-custom-shell) #cd-toggle-header-btn {
+html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-sidebar-btn,
+html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-header-btn {
   display: none !important;
 }
 
@@ -155,7 +159,7 @@ body {
   overflow: hidden !important;
 }
 
-body:not(.with-custom-shell) {
+html:not(.uit-custom-shell) body:not(.with-custom-shell) {
   position: fixed !important;
   top: 36px !important;
   left: 0 !important;
@@ -169,6 +173,8 @@ body:not(.with-custom-shell) {
   box-sizing: border-box !important;
 }
 
+html.uit-custom-shell,
+html.uit-custom-shell body,
 html:has(body.with-custom-shell),
 body.with-custom-shell {
   background-color: var(--col-pri-bg) !important;
@@ -177,6 +183,7 @@ body.with-custom-shell {
 }
 
 /* Scrollable page container positioned below titlebar and header */
+html.uit-custom-shell body > div.flex.min-h-screen,
 body.with-custom-shell > div.flex.min-h-screen {
   position: fixed !important;
   top: 120px !important;
@@ -191,15 +198,20 @@ body.with-custom-shell > div.flex.min-h-screen {
   transition: top 0.2s ease, left 0.2s ease;
 }
 
+html.uit-custom-shell body.cd-header-hidden > div.flex.min-h-screen,
 body.with-custom-shell.cd-header-hidden > div.flex.min-h-screen {
   top: 36px !important;
 }
 
+html.uit-custom-shell body.cd-sidebar-hidden > div.flex.min-h-screen,
 body.with-custom-shell.cd-sidebar-hidden > div.flex.min-h-screen {
   left: 0 !important;
 }
 
 /* Hide original Next.js sidebar, top banner, top navbar, and UMA assistant elements */
+html.uit-custom-shell body > div.sticky.top-0.z-40,
+html.uit-custom-shell body > div.flex.min-h-screen > div.hidden.shrink-0,
+html.uit-custom-shell body > div.flex.min-h-screen > div.flex.min-w-0 > header.sticky.top-0.z-30,
 body.with-custom-shell > div.sticky.top-0.z-40,
 body.with-custom-shell > div.flex.min-h-screen > div.hidden.shrink-0,
 body.with-custom-shell > div.flex.min-h-screen > div.flex.min-w-0 > header.sticky.top-0.z-30,
@@ -309,6 +321,10 @@ body.with-custom-shell.cd-sidebar-hidden #cd-sidebar {
   background-color: var(--col-sec-nav);
   color: var(--col-hi-text);
   border-left: 3px solid var(--col-accent);
+}
+
+.cd-nav a.active {
+  pointer-events: none;
 }
 
 .cd-nav::-webkit-scrollbar {
@@ -770,4 +786,60 @@ body.with-custom-shell.route-sinh-vien-hoc-bong:not(.is-trang-chu) > div:not(#cd
 @keyframes cd-curtain-pulse {
   0%, 100% { opacity: 0.55; transform: scale(0.97); }
   50% { opacity: 1; transform: scale(1.0); }
+}
+
+/* Route transition loader for uncached /sinh-vien/ho-so navigation */
+body.cd-route-loading main#main-content,
+body.cd-route-loading #cd-trang-chu-view {
+  display: none !important;
+}
+
+#cd-route-loader {
+  position: sticky;
+  top: 96px;
+  height: calc(100vh - 96px);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  background-color: var(--col-bg, transparent);
+  color: var(--col-hi-text, inherit);
+  z-index: 40;
+  opacity: 1;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+
+body.cd-header-hidden #cd-route-loader {
+  top: 32px;
+  height: calc(100vh - 32px);
+}
+
+#cd-route-loader.is-hiding {
+  opacity: 0;
+}
+
+.cd-route-loader-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--col-hi-text, #64748b) 18%, transparent);
+  border-top-color: var(--col-accent, #2563eb);
+  animation: cd-route-spin 0.75s linear infinite;
+}
+
+.cd-route-loader-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.8;
+  letter-spacing: 0.01em;
+}
+
+@keyframes cd-route-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

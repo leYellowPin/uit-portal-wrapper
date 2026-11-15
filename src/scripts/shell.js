@@ -1,6 +1,11 @@
 (() => {
   const isPortalHost = window.location.hostname === 'portal.uit.edu.vn';
 
+  const normalizePath = (pathname) => {
+    const cleaned = (pathname || '/').replace(/\/+$/, '') || '/';
+    return cleaned === '/' ? '/trang-chu' : cleaned;
+  };
+
   const isExcludedPage = (pathname) => {
     if (!isPortalHost) return true;
     return (
@@ -10,12 +15,145 @@
     );
   };
 
-  // In-memory state caches to avoid storage reads inside MutationObserver
   let isSidebarHidden = localStorage.getItem('uit_sidebar_hidden') === '1';
   let isHeaderHidden = localStorage.getItem('uit_header_hidden') === '1';
   let hasCustomTheme = Boolean(localStorage.getItem('uit_custom_theme_css'));
   let cachedPortalVersion = sessionStorage.getItem('uit_portal_version') || '';
 
+  let cachedProfile = null;
+  try {
+    cachedProfile = JSON.parse(sessionStorage.getItem('uit_user_profile'));
+  } catch {}
+  let profileFetchSettled = Boolean(cachedProfile) || isExcludedPage(window.location.pathname);
+
+  // 1. Single-pass boot curtain controller
+  const curtainState = {
+    shownAt: 0,
+    finished: false,
+    settleTimer: null,
+    fallbackTimer: null
+  };
+
+  const dismissBootCurtainNow = () => {
+    curtainState.finished = true;
+    clearTimeout(curtainState.settleTimer);
+    clearTimeout(curtainState.fallbackTimer);
+    curtainState.settleTimer = null;
+    curtainState.fallbackTimer = null;
+
+    const curtain = document.getElementById('cd-boot-curtain');
+    if (!curtain || curtain.dataset.dismissed === '1') return;
+
+    curtain.dataset.dismissed = '1';
+    const waitMs = Math.max(0, 450 - (Date.now() - (curtainState.shownAt || Date.now())));
+    setTimeout(() => {
+      curtain.style.opacity = '0';
+      setTimeout(() => curtain.remove(), 650);
+    }, waitMs);
+  };
+
+  const isPageReadyForReveal = () => {
+    const pathname = window.location.pathname || '';
+    if (isExcludedPage(pathname)) return true;
+    if (document.readyState !== 'complete') return false;
+    if ((window.__uitActiveNetworkCount || 0) > 0) return false;
+    if (!profileFetchSettled && !cachedProfile) return false;
+
+    const sidebar = document.getElementById('cd-sidebar');
+    const header = document.getElementById('cd-header');
+    if (!document.body || !sidebar || !header) return false;
+    if (!document.body.classList.contains('with-custom-shell')) return false;
+
+    // Wait until Next.js hydrates the native nav and shell.css hides the native sidebar
+    const nativeNav = document.querySelector('nav[aria-label="Điều hướng chính"]');
+    if (!nativeNav) return false;
+    const nativeSidebarWrapper = nativeNav.closest('div.shrink-0') || nativeNav.parentElement?.parentElement;
+    if (nativeSidebarWrapper && getComputedStyle(nativeSidebarWrapper).display !== 'none') {
+      return false;
+    }
+
+    if (normalizePath(pathname) === '/trang-chu') {
+      const statGrid = document.getElementById('cd-stats-grid');
+      if (!window.__trangChuPopulated || !statGrid || statGrid.children.length === 0) return false;
+    } else {
+      const mainContent = document.querySelector('main#main-content') || document.querySelector('main');
+      if (!mainContent || mainContent.textContent.trim().length === 0) return false;
+    }
+
+    return true;
+  };
+
+  window.__scheduleBootCurtainCheck = () => {
+    if (isExcludedPage(window.location.pathname)) {
+      dismissBootCurtainNow();
+      return;
+    }
+    if (curtainState.finished) return;
+
+    const curtain = document.getElementById('cd-boot-curtain');
+    if (!curtain || curtain.dataset.dismissed === '1') return;
+
+    clearTimeout(curtainState.settleTimer);
+    curtainState.settleTimer = null;
+
+    if (!isPageReadyForReveal()) return;
+
+    curtainState.settleTimer = setTimeout(() => {
+      curtainState.settleTimer = null;
+      if (!curtainState.finished && isPageReadyForReveal()) {
+        dismissBootCurtainNow();
+      }
+    }, 500);
+  };
+
+  const showBootCurtain = (force = false) => {
+    if (!isPortalHost || !document.documentElement) return;
+    if (isExcludedPage(window.location.pathname)) {
+      dismissBootCurtainNow();
+      return;
+    }
+    if (curtainState.finished && !force) return;
+
+    if (force) {
+      curtainState.finished = false;
+    }
+
+    let curtain = document.getElementById('cd-boot-curtain');
+    if (curtain && !force) {
+      if (!curtainState.shownAt) curtainState.shownAt = Date.now();
+      if (!curtainState.fallbackTimer) {
+        curtainState.fallbackTimer = setTimeout(dismissBootCurtainNow, 8000);
+      }
+      window.__scheduleBootCurtainCheck();
+      return;
+    }
+
+    curtain?.remove();
+    if (window.__UIT_BOOT_CURTAIN_HTML__) {
+      document.documentElement.insertAdjacentHTML('beforeend', window.__UIT_BOOT_CURTAIN_HTML__);
+      curtain = document.getElementById('cd-boot-curtain');
+      if (curtain) {
+        curtain.style.cssText =
+          'position:fixed;inset:0;z-index:2147483646;background-color:var(--col-pri-bg, #0d1117);' +
+          'opacity:1;display:flex;align-items:center;justify-content:center;pointer-events:none;';
+      }
+      const logo = document.getElementById('cd-boot-curtain-logo');
+      if (logo) {
+        if (window.__UIT_BRAND__) logo.src = window.__UIT_BRAND__;
+        else logo.remove();
+      }
+    }
+
+    curtainState.shownAt = Date.now();
+    clearTimeout(curtainState.fallbackTimer);
+    curtainState.fallbackTimer = setTimeout(dismissBootCurtainNow, 8000);
+    window.__scheduleBootCurtainCheck();
+  };
+
+  showBootCurtain(false);
+  window.addEventListener('load', () => window.__scheduleBootCurtainCheck(), { once: true });
+
+  // 2. Titlebar overlay & layout toggles
   const rgbToHex = (colorStr) => {
     if (!colorStr) return '';
     const trimmed = colorStr.trim();
@@ -39,149 +177,119 @@
     }
   };
 
-  // Sync sidebar and header visibility states
   const syncShellToggles = () => {
     if (!document.body) return;
     document.body.classList.toggle('cd-sidebar-hidden', isSidebarHidden);
     document.body.classList.toggle('cd-header-hidden', isHeaderHidden);
   };
 
-  // Show color fade curtain on startup and full page reloads
-  const initBootCurtain = (force = false) => {
-    if (!isPortalHost || !document.documentElement) return;
-    if (!force && window.__bootCurtainPlayed) return;
-    window.__bootCurtainPlayed = true;
+  // 3. Route transition loader for uncached /sinh-vien/ho-so SPA navigation
+  let pendingRouteHref = '';
+  let routeLoaderSafetyTimer = null;
+  let routeLoaderHideTimer = null;
 
-    let curtain = document.getElementById('cd-boot-curtain');
-    if (!curtain) {
-      curtain = document.createElement('div');
-      curtain.id = 'cd-boot-curtain';
-      curtain.style.cssText = [
-        'position: fixed',
-        'inset: 0',
-        'z-index: 99999',
-        'background-color: var(--col-pri-bg, #0d1117)',
-        'display: flex',
-        'align-items: center',
-        'justify-content: center',
-        'opacity: 1',
-        'transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1)',
-        'pointer-events: none'
-      ].join(';');
-
-      if (window.__UIT_BRAND__) {
-        const logo = document.createElement('img');
-        logo.src = window.__UIT_BRAND__;
-        logo.alt = 'UIT';
-        logo.style.cssText = 'width: 56px; height: 56px; object-fit: contain;';
-        curtain.appendChild(logo);
-      }
-
-      document.documentElement.appendChild(curtain);
-      window.__curtainPaintedAt = 0;
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          window.__curtainPaintedAt = Date.now();
-        });
-      });
-    }
-
-    if (!window.__curtainFallbackTimer) {
-      window.__curtainFallbackTimer = setTimeout(() => {
-        if (window.__dismissBootCurtain) window.__dismissBootCurtain();
-      }, 2500);
-    }
+  const syncSidebarActiveLinks = (activeHref) => {
+    document.querySelectorAll('#cd-sidebar .cd-nav a').forEach(link => {
+      const isActive = normalizePath(link.getAttribute('href')) === activeHref;
+      link.classList.toggle('active', isActive);
+      link.setAttribute('aria-current', isActive ? 'page' : 'false');
+      link.setAttribute('aria-disabled', isActive ? 'true' : 'false');
+      link.tabIndex = isActive ? -1 : 0;
+    });
   };
 
-  window.__dismissBootCurtain = () => {
-    const curtain = document.getElementById('cd-boot-curtain');
-    if (!curtain || curtain.dataset.fading === '1') return;
+  window.__showHoSoRouteLoader = (targetHref = '/sinh-vien/ho-so') => {
+    if (!isPortalHost || isExcludedPage(window.location.pathname)) return;
+    if (normalizePath(window.location.pathname) === normalizePath(targetHref)) return;
 
-    if (!window.__curtainPaintedAt) {
-      requestAnimationFrame(() => window.__dismissBootCurtain());
-      return;
+    clearTimeout(routeLoaderHideTimer);
+    pendingRouteHref = normalizePath(targetHref);
+    syncSidebarActiveLinks(pendingRouteHref);
+    document.body.classList.add('cd-route-loading');
+
+    const reactRightColumn = document.querySelector('body > div.flex.min-h-screen > div.flex.min-w-0.flex-1');
+    if (!reactRightColumn) return;
+
+    let loader = document.getElementById('cd-route-loader');
+    if (!loader) {
+      loader = document.createElement('div');
+      loader.id = 'cd-route-loader';
+      loader.setAttribute('role', 'status');
+      loader.setAttribute('aria-live', 'polite');
+      loader.innerHTML = `
+        <div class="cd-route-loader-spinner" aria-hidden="true"></div>
+        <div class="cd-route-loader-text">Đang tải hồ sơ cá nhân...</div>
+      `;
+      reactRightColumn.prepend(loader);
+    } else {
+      loader.classList.remove('is-hiding');
     }
 
-    curtain.dataset.fading = '1';
-    if (window.__curtainFallbackTimer) {
-      clearTimeout(window.__curtainFallbackTimer);
-      window.__curtainFallbackTimer = null;
+    clearTimeout(routeLoaderSafetyTimer);
+    routeLoaderSafetyTimer = setTimeout(() => window.__hideHoSoRouteLoader(true), 15000);
+  };
+
+  window.__hideHoSoRouteLoader = (restoreCurrentActive = false) => {
+    clearTimeout(routeLoaderSafetyTimer);
+    clearTimeout(routeLoaderHideTimer);
+    const wasPending = Boolean(pendingRouteHref);
+    pendingRouteHref = '';
+    document.body.classList.remove('cd-route-loading');
+
+    if (restoreCurrentActive && wasPending) {
+      syncSidebarActiveLinks(normalizePath(window.location.pathname));
     }
 
-    const minHoldMs = 780;
-    const elapsed = Date.now() - window.__curtainPaintedAt;
-    const waitMs = Math.max(0, minHoldMs - elapsed);
-
+    const loader = document.getElementById('cd-route-loader');
+    if (!loader) return;
+    loader.classList.add('is-hiding');
     setTimeout(() => {
-      void curtain.offsetHeight;
-      requestAnimationFrame(() => {
-        curtain.style.opacity = '0';
-        setTimeout(() => curtain.remove(), 700);
-      });
-    }, waitMs);
+      if (!pendingRouteHref) loader.remove();
+    }, 190);
   };
 
-  initBootCurtain();
+  window.__scheduleHideHoSoRouteLoader = () => {
+    clearTimeout(routeLoaderHideTimer);
+    routeLoaderHideTimer = setTimeout(() => {
+      requestAnimationFrame(() => window.__hideHoSoRouteLoader(true));
+    }, 120);
+  };
 
-  // Mount global custom window title bar with Refresh, Sidebar, and Header toggles
+  // 4. Mount custom titlebar
   const mountTitlebar = () => {
     const target = document.body || document.documentElement;
     if (!target) return;
 
     let titlebar = document.getElementById('cd-titlebar');
-    if (!titlebar) {
-      titlebar = document.createElement('div');
-      titlebar.id = 'cd-titlebar';
-      titlebar.innerHTML = `
-        <img id="cd-titlebar-icon" alt="UIT" />
-        <span id="cd-titlebar-title">UIT Portal Wrapper</span>
-        <div id="cd-titlebar-controls">
-          <button type="button" id="cd-refresh-btn" class="cd-titlebar-btn" title="Refresh Page">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-          </button>
-          <button type="button" id="cd-toggle-sidebar-btn" class="cd-titlebar-btn" title="Toggle Sidebar">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-          </button>
-          <button type="button" id="cd-toggle-header-btn" class="cd-titlebar-btn" title="Toggle Header">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
-          </button>
-        </div>
-      `;
-      target.insertAdjacentElement('afterbegin', titlebar);
-    } else if (document.body && titlebar.parentElement !== document.body) {
+    if (!titlebar && window.__UIT_TITLEBAR_HTML__) {
+      target.insertAdjacentHTML('afterbegin', window.__UIT_TITLEBAR_HTML__);
+      titlebar = document.getElementById('cd-titlebar');
+    } else if (titlebar && document.body && titlebar.parentElement !== document.body) {
       document.body.insertAdjacentElement('afterbegin', titlebar);
     }
+
+    if (!titlebar) return;
 
     if (titlebar.dataset.bound !== '1') {
       titlebar.dataset.bound = '1';
 
-      const refreshBtn = document.getElementById('cd-refresh-btn');
-      const sidebarBtn = document.getElementById('cd-toggle-sidebar-btn');
-      const headerBtn = document.getElementById('cd-toggle-header-btn');
+      document.getElementById('cd-refresh-btn')?.addEventListener('click', () => {
+        if (window.__clearHoSoRscCache) window.__clearHoSoRscCache();
+        showBootCurtain(true);
+        requestAnimationFrame(() => window.location.reload());
+      });
 
-      if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => {
-          initBootCurtain(true);
-          window.location.reload();
-        });
-      }
+      document.getElementById('cd-toggle-sidebar-btn')?.addEventListener('click', () => {
+        isSidebarHidden = !isSidebarHidden;
+        localStorage.setItem('uit_sidebar_hidden', isSidebarHidden ? '1' : '0');
+        syncShellToggles();
+      });
 
-      if (sidebarBtn) {
-        sidebarBtn.addEventListener('click', () => {
-          isSidebarHidden = !isSidebarHidden;
-          localStorage.setItem('uit_sidebar_hidden', isSidebarHidden ? '1' : '0');
-          syncShellToggles();
-        });
-      }
-
-      if (headerBtn) {
-        headerBtn.addEventListener('click', () => {
-          isHeaderHidden = !isHeaderHidden;
-          localStorage.setItem('uit_header_hidden', isHeaderHidden ? '1' : '0');
-          syncShellToggles();
-        });
-      }
+      document.getElementById('cd-toggle-header-btn')?.addEventListener('click', () => {
+        isHeaderHidden = !isHeaderHidden;
+        localStorage.setItem('uit_header_hidden', isHeaderHidden ? '1' : '0');
+        syncShellToggles();
+      });
     }
 
     const iconEl = document.getElementById('cd-titlebar-icon');
@@ -199,7 +307,7 @@
 
   mountTitlebar();
 
-  // Extract portal revision or semantic version token
+  // 5. Portal version detection
   const extractVersionToken = (rawText) => {
     if (!rawText) return '';
     const text = rawText.replace(/\s+/g, ' ').trim();
@@ -223,13 +331,6 @@
     return '';
   };
 
-  const savePortalVersion = (version) => {
-    cachedPortalVersion = version;
-    sessionStorage.setItem('uit_portal_version', version);
-    return version;
-  };
-
-  // Detect portal site version from native sidebar, footer, meta tags, or Next.js payload
   const detectPortalVersion = () => {
     if (cachedPortalVersion) return cachedPortalVersion;
 
@@ -248,38 +349,15 @@
     ].filter(Boolean);
 
     for (const container of containers) {
-      const elements = [container, ...container.querySelectorAll('*')];
-      for (const el of elements) {
+      for (const el of [container, ...container.querySelectorAll('*')]) {
         if (el.closest('#cd-sidebar, #cd-header, #cd-titlebar, #cd-sidebar-footer')) continue;
         const found = extractVersionToken(el.textContent);
-        if (found) return savePortalVersion(found);
+        if (found) {
+          cachedPortalVersion = found;
+          sessionStorage.setItem('uit_portal_version', found);
+          return found;
+        }
       }
-    }
-
-    // Fallback: check any non-main layout element in the Next.js root shell
-    const rootShell = document.querySelector('body > div.flex.min-h-screen');
-    if (rootShell) {
-      for (const el of rootShell.querySelectorAll('span, p, small, div, a')) {
-        if (el.closest('main#main-content, #cd-trang-chu-view, #cd-sidebar, #cd-header')) continue;
-        const found = extractVersionToken(el.textContent);
-        if (found) return savePortalVersion(found);
-      }
-    }
-
-    // Fallback: check meta tags or inline Next.js App Router scripts
-    const metaVer = document.querySelector('meta[name*="version" i]')?.getAttribute('content');
-    if (metaVer) {
-      const found = extractVersionToken(metaVer) || (/^\d/.test(metaVer.trim()) ? `v${metaVer.trim()}` : metaVer.trim());
-      if (found) return savePortalVersion(found);
-    }
-
-    const scripts = document.querySelectorAll('script:not([src])');
-    for (let i = scripts.length - 1; i >= 0; i--) {
-      const content = scripts[i].textContent || '';
-      if (!content) continue;
-      const scriptMatch = content.match(/"(?:appVersion|portalVersion|siteVersion|version)"\s*:\s*"v?(\d+\.\d+(?:\.\d+)*(?:[-+][\w.]+)?)"/i)
-        || content.match(/(?:Phiên bản|UIT Portal)\s*[:\-]?\s*v?(\d+\.\d+(?:\.\d+)*(?:[-+][\w.]+)?)/i);
-      if (scriptMatch) return savePortalVersion(`v${scriptMatch[1]}`);
     }
 
     return '';
@@ -290,31 +368,12 @@
     if (!versionEl) return;
     const portalVer = detectPortalVersion();
     const appVer = window.__UIT_APP_VERSION__ ? `v${window.__UIT_APP_VERSION__}` : 'v1.0.0';
-    versionEl.textContent = portalVer
-      ? `UIT Portal ${portalVer} | Wrapper ${appVer}`
-      : `Wrapper ${appVer}`;
+    versionEl.textContent = portalVer ? `UIT Portal ${portalVer} | Wrapper ${appVer}` : `Wrapper ${appVer}`;
   };
 
-  // Mount fixed version display bar at the bottom of the sidebar
-  const mountSidebarFooter = () => {
-    if (isExcludedPage(window.location.pathname)) return;
-    if (!document.getElementById('cd-sidebar-footer') && document.body) {
-      const footer = document.createElement('div');
-      footer.id = 'cd-sidebar-footer';
-      footer.innerHTML = `<span id="cd-version-info"></span>`;
-      document.body.appendChild(footer);
-    }
-    updateSidebarVersionDisplay();
-  };
-
-  // Apply user-imported custom CSS theme from localStorage (disabled on /khao-sat and /login)
+  // 6. Custom CSS theme management
   const applySavedCustomTheme = () => {
-    const pathname = window.location.pathname;
-    const disableTheme = isPortalHost && (
-      pathname.startsWith('/login') ||
-      pathname.startsWith('/api/auth') ||
-      pathname.startsWith('/khao-sat')
-    );
+    const disableTheme = isExcludedPage(window.location.pathname);
     const savedCss = localStorage.getItem('uit_custom_theme_css');
     const savedName = localStorage.getItem('uit_custom_theme_name');
     hasCustomTheme = Boolean(savedCss);
@@ -333,38 +392,30 @@
 
     const importBtn = document.getElementById('cd-import-theme-btn');
     const resetBtn = document.getElementById('cd-reset-theme-btn');
-    if (importBtn) {
-      importBtn.textContent = savedCss && savedName ? `Theme: ${savedName}` : 'Import CSS';
-    }
-    if (resetBtn) {
-      resetBtn.style.display = savedCss ? 'inline-block' : 'none';
-    }
+    if (importBtn) importBtn.textContent = savedCss && savedName ? `Theme: ${savedName}` : 'Import CSS';
+    if (resetBtn) resetBtn.style.display = savedCss ? 'inline-block' : 'none';
 
     syncTitlebarOverlayColor();
   };
 
   applySavedCustomTheme();
 
-  // 1. Profile state & helper
-  let cachedProfile = null;
-  try {
-    cachedProfile = JSON.parse(sessionStorage.getItem('uit_user_profile'));
-  } catch {}
-
+  // 7. Profile state
   const applyProfile = (profile) => {
     if (!profile) return;
     cachedProfile = profile;
+    profileFetchSettled = true;
     if (!isExcludedPage(window.location.pathname)) {
       const nameEl = document.getElementById('cd-user-name');
       const avatarEl = document.getElementById('cd-user-avatar');
       const metaEl = document.getElementById('cd-user-meta');
-      if (nameEl && profile.name)     nameEl.textContent = profile.name;
+      if (nameEl && profile.name) nameEl.textContent = profile.name;
       if (avatarEl && profile.avatar) avatarEl.src = profile.avatar;
-      if (metaEl && profile.meta)     metaEl.textContent = profile.meta;
+      if (metaEl && profile.meta) metaEl.textContent = profile.meta;
     }
+    window.__scheduleBootCurtainCheck();
   };
 
-  // Global outside-click & Escape listener for header three-dot menu
   if (!window.__cdMenuDismissBound) {
     window.__cdMenuDismissBound = true;
     document.addEventListener('click', (e) => {
@@ -386,11 +437,14 @@
     });
   }
 
-  // 2. Idempotent shell mounter (survives Next.js body hydration)
+  // 8. Shell mounter
   const mountShell = () => {
     mountTitlebar();
     if (isExcludedPage(window.location.pathname)) return;
-    if (!document.getElementById('cd-sidebar') && window.__UIT_SHELL_HTML__) {
+    if ((!document.getElementById('cd-sidebar') || !document.getElementById('cd-sidebar-footer')) && window.__UIT_SHELL_HTML__) {
+      document.getElementById('cd-sidebar')?.remove();
+      document.getElementById('cd-header')?.remove();
+      document.getElementById('cd-sidebar-footer')?.remove();
       document.body.insertAdjacentHTML('afterbegin', window.__UIT_SHELL_HTML__);
 
       const brand01Element = document.getElementById('cd-uit-brand');
@@ -399,8 +453,27 @@
       }
 
       document.querySelectorAll('#cd-sidebar .cd-nav a').forEach(link => {
+        const href = normalizePath(link.getAttribute('href'));
+
+        link.addEventListener('mouseenter', () => {
+          if (link.classList.contains('active')) return;
+          const nextLink = document.querySelector(`nav[aria-label="Điều hướng chính"] a[href="${href}"]`);
+          nextLink?.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window }));
+        });
+
         link.addEventListener('click', (e) => {
-          const href = link.getAttribute('href');
+          if (href === normalizePath(window.location.pathname) || link.classList.contains('active')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+
+          if (href === '/sinh-vien/ho-so' && !window.__uitHoSoRscCache) {
+            window.__showHoSoRouteLoader('/sinh-vien/ho-so');
+          } else if (pendingRouteHref) {
+            window.__hideHoSoRouteLoader(false);
+          }
+
           const nextLink = document.querySelector(`nav[aria-label="Điều hướng chính"] a[href="${href}"]`);
           if (nextLink) {
             e.preventDefault();
@@ -409,7 +482,6 @@
         });
       });
 
-      // Bind header CSS theme importer controls
       const importBtn = document.getElementById('cd-import-theme-btn');
       const resetBtn = document.getElementById('cd-reset-theme-btn');
       const fileInput = document.getElementById('cd-theme-file-input');
@@ -417,14 +489,12 @@
       if (importBtn && fileInput) {
         importBtn.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
-          const file = e.target.files && e.target.files[0];
+          const file = e.target.files?.[0];
           if (!file) return;
-
           const reader = new FileReader();
           reader.onload = (ev) => {
-            const cssContent = ev.target?.result;
-            if (typeof cssContent === 'string') {
-              localStorage.setItem('uit_custom_theme_css', cssContent);
+            if (typeof ev.target?.result === 'string') {
+              localStorage.setItem('uit_custom_theme_css', ev.target.result);
               localStorage.setItem('uit_custom_theme_name', file.name.replace(/\.css$/i, ''));
               applySavedCustomTheme();
             }
@@ -434,15 +504,12 @@
         });
       }
 
-      if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-          localStorage.removeItem('uit_custom_theme_css');
-          localStorage.removeItem('uit_custom_theme_name');
-          applySavedCustomTheme();
-        });
-      }
+      resetBtn?.addEventListener('click', () => {
+        localStorage.removeItem('uit_custom_theme_css');
+        localStorage.removeItem('uit_custom_theme_name');
+        applySavedCustomTheme();
+      });
 
-      // Bind header three-dot dropdown menu
       const moreBtn = document.getElementById('cd-more-menu-btn');
       const moreDropdown = document.getElementById('cd-more-dropdown');
       if (moreBtn && moreDropdown) {
@@ -455,26 +522,19 @@
       }
 
       applySavedCustomTheme();
-
-      if (cachedProfile) {
-        applyProfile(cachedProfile);
-      }
+      if (cachedProfile) applyProfile(cachedProfile);
     }
 
-    mountSidebarFooter();
+    updateSidebarVersionDisplay();
     syncShellToggles();
   };
 
-  mountShell();
-
-  // 3. Remove any static UMA assistant containers on initial load
   if (isPortalHost) {
     document
       .querySelectorAll('[data-uma-nhung], script[src*="uma.uit.edu.vn"], link[href*="uma.uit.edu.vn"], iframe[src*="uma.uit.edu.vn"]')
       .forEach((el) => el.remove());
   }
 
-  // 4. Load user profile from sessionStorage cache or fetch once
   if (!isExcludedPage(window.location.pathname)) {
     if (cachedProfile) {
       applyProfile(cachedProfile);
@@ -502,22 +562,22 @@
         .catch(() => {
           const nameEl = document.getElementById('cd-user-name');
           if (nameEl) nameEl.textContent = 'Sinh viên UIT';
+          profileFetchSettled = true;
+          window.__scheduleBootCurtainCheck();
         });
     }
   }
 
-  // 5. Route state updater
+  // 9. Route state updater
   window.__updateCustomRouteState = () => {
     const currentPath = window.location.pathname;
     const excluded = isExcludedPage(currentPath);
-    const isTrangChu = isPortalHost && (currentPath === '/trang-chu' || currentPath === '/');
+    const normalizedPath = normalizePath(currentPath);
+    const isTrangChu = isPortalHost && normalizedPath === '/trang-chu';
 
+    document.documentElement?.classList.toggle('uit-custom-shell', !excluded);
     mountTitlebar();
-
-    if (!excluded) {
-      mountShell();
-    }
-
+    if (!excluded) mountShell();
     applySavedCustomTheme();
 
     const sidebar = document.getElementById('cd-sidebar');
@@ -525,6 +585,8 @@
     const header = document.getElementById('cd-header');
 
     if (excluded) {
+      profileFetchSettled = true;
+      dismissBootCurtainNow();
       if (sidebar) sidebar.style.display = 'none';
       if (sidebarFooter) sidebarFooter.style.display = 'none';
       if (header) header.style.display = 'none';
@@ -548,31 +610,33 @@
       const slug = currentPath.replace(/^\/|\/$/g, '').replace(/\//g, '-') || 'trang-chu';
       document.body.classList.add(`route-${slug}`);
 
-      document.querySelectorAll('#cd-sidebar .cd-nav a').forEach(link => {
-        link.classList.toggle('active', link.getAttribute('href') === currentPath);
-      });
+      syncSidebarActiveLinks(pendingRouteHref || normalizedPath);
+
+      if (pendingRouteHref && normalizedPath === pendingRouteHref) {
+        requestAnimationFrame(() => window.__hideHoSoRouteLoader(false));
+      } else if (!pendingRouteHref && document.body.classList.contains('cd-route-loading')) {
+        window.__hideHoSoRouteLoader(false);
+      }
 
       if (isTrangChu && window.__renderTrangChuView) {
         window.__renderTrangChuView();
-      } else if (!isTrangChu && window.__dismissBootCurtain) {
-        window.__dismissBootCurtain();
       }
     }
 
-    if (excluded && window.__dismissBootCurtain) {
-      window.__dismissBootCurtain();
-    }
-
-    document.documentElement.classList.add('uit-shell-ready');
+    window.__scheduleBootCurtainCheck();
   };
 
   window.__updateCustomRouteState();
 
-  // 6. Hydration defender: re-mounts titlebar/shell and restores classes if React overwrites body
-  const enforceBodyClasses = new MutationObserver(() => {
+  // 10. Hydration defender
+  const enforceBodyClasses = new MutationObserver((mutations) => {
     const currentPath = window.location.pathname;
     const excluded = isExcludedPage(currentPath);
-    const isTrangChu = isPortalHost && (currentPath === '/trang-chu' || currentPath === '/');
+    const isTrangChu = isPortalHost && normalizePath(currentPath) === '/trang-chu';
+
+    if (document.documentElement) {
+      document.documentElement.classList.toggle('uit-custom-shell', !excluded);
+    }
 
     if (!document.getElementById('cd-titlebar')) {
       mountTitlebar();
@@ -589,6 +653,9 @@
       if (isTrangChu && !document.body.classList.contains('is-trang-chu')) {
         document.body.classList.add('is-trang-chu');
       }
+      if (pendingRouteHref && !document.body.classList.contains('cd-route-loading')) {
+        document.body.classList.add('cd-route-loading');
+      }
       if (isTrangChu && !document.getElementById('cd-trang-chu-view') && window.__renderTrangChuView) {
         window.__renderTrangChuView();
       }
@@ -596,14 +663,20 @@
       if (!cachedPortalVersion) {
         updateSidebarVersionDisplay();
       }
-    }
+      if (hasCustomTheme && !document.getElementById('cd-custom-theme-style')) {
+        applySavedCustomTheme();
+      }
 
-    if (!excluded && hasCustomTheme && !document.getElementById('cd-custom-theme-style')) {
-      applySavedCustomTheme();
+      const mainChanged = mutations.some(
+        (m) => m.type === 'childList' && m.target instanceof Element && m.target.closest('main')
+      );
+      if (mainChanged) {
+        window.__scheduleBootCurtainCheck();
+      }
     }
   });
 
   if (document.body) {
-    enforceBodyClasses.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
+    enforceBodyClasses.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
   }
 })();

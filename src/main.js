@@ -1,4 +1,4 @@
-const { app, BrowserWindow, session } = require('electron');
+const { app, BrowserWindow, session, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -15,6 +15,18 @@ function readImageBase64(relativePath) {
 
 const BRAND_WHITE_BASE64 = readImageBase64('assets/uit-logo-white.png');
 const BRAND_DETAIL_BASE64 = readImageBase64('assets/uit-logo-detail.png');
+
+const ASSETS = {
+  titlebarHtml: readAsset('layouts/titlebar.html'),
+  bootCurtainHtml: readAsset('layouts/boot-curtain.html'),
+  shellHtml: readAsset('layouts/shell.html'),
+  trangChuHtml: readAsset('layouts/trang-chu.html'),
+  shellCss: readAsset('styles/shell.css'),
+  trangChuCss: readAsset('styles/trang-chu.css'),
+  hoSoCss: readAsset('styles/ho-so.css'),
+  shellJs: readAsset('scripts/shell.js'),
+  trangChuJs: readAsset('scripts/trang-chu.js')
+};
 
 function getGlobalTitlebarCss() {
   return `
@@ -101,10 +113,8 @@ function getGlobalTitlebarCss() {
       color: var(--col-hi-text, #ffffff) !important;
     }
 
-    html:not(:has(body.with-custom-shell)) #cd-toggle-sidebar-btn,
-    html:not(:has(body.with-custom-shell)) #cd-toggle-header-btn,
-    body:not(.with-custom-shell) #cd-toggle-sidebar-btn,
-    body:not(.with-custom-shell) #cd-toggle-header-btn {
+    html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-sidebar-btn,
+    html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-header-btn {
       display: none !important;
     }
 
@@ -116,7 +126,7 @@ function getGlobalTitlebarCss() {
       overflow: hidden !important;
     }
 
-    body:not(.with-custom-shell) {
+    html:not(.uit-custom-shell) body:not(.with-custom-shell) {
       position: fixed !important;
       top: 36px !important;
       left: 0 !important;
@@ -132,118 +142,199 @@ function getGlobalTitlebarCss() {
   `;
 }
 
-function getCombinedCss(isPortalHost) {
-  if (!isPortalHost) {
-    return getGlobalTitlebarCss();
-  }
-
-  const prePaintHide = `
-    html:not(.uit-shell-ready) body > *:not(#cd-titlebar):not(#cd-boot-curtain) {
-      opacity: 0 !important;
-      visibility: hidden !important;
+const PORTAL_COMBINED_CSS = [
+  `
+    #cd-boot-curtain {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 2147483646 !important;
+      background-color: var(--col-pri-bg, #0d1117) !important;
     }
-  `;
+  `,
+  getGlobalTitlebarCss(),
+  ASSETS.shellCss,
+  ASSETS.trangChuCss,
+  ASSETS.hoSoCss
+].join('\n');
 
-  return [
-    prePaintHide,
-    getGlobalTitlebarCss(),
-    readAsset('styles/shell.css'),
-    readAsset('styles/trang-chu.css'),
-    readAsset('styles/ho-so.css'),
-  ].join('\n');
-}
+const EXTERNAL_COMBINED_CSS = getGlobalTitlebarCss();
 
 function getEarlyBootstrapScript(isPortalHost) {
   return `
     (() => {
-      if (!window.__UIT_BRAND__) {
-        window.__UIT_BRAND__ = ${JSON.stringify(BRAND_WHITE_BASE64)};
-      }
+      if (!window.__UIT_BRAND__)             { window.__UIT_BRAND__ = ${JSON.stringify(BRAND_WHITE_BASE64)}; }
+      if (!window.__UIT_TITLEBAR_HTML__)     { window.__UIT_TITLEBAR_HTML__ = ${JSON.stringify(ASSETS.titlebarHtml)}; }
+      if (!window.__UIT_BOOT_CURTAIN_HTML__) { window.__UIT_BOOT_CURTAIN_HTML__ = ${JSON.stringify(ASSETS.bootCurtainHtml)}; }
       const isPortalHost = ${JSON.stringify(isPortalHost)};
 
-      const applyEarlyTheme = () => {
-        try {
-          const pathname = window.location.pathname || '';
-          const disableTheme = isPortalHost && (
-            pathname.startsWith('/login') ||
-            pathname.startsWith('/api/auth') ||
-            pathname.startsWith('/khao-sat')
-          );
-          const savedCss = localStorage.getItem('uit_custom_theme_css');
-          if (savedCss && !disableTheme && !document.getElementById('cd-custom-theme-style')) {
-            const styleEl = document.createElement('style');
-            styleEl.id = 'cd-custom-theme-style';
-            styleEl.textContent = savedCss;
-            (document.head || document.documentElement).appendChild(styleEl);
-          }
-        } catch {}
+      const isExcludedRoute = (pathname) => {
+        if (!isPortalHost) return true;
+        const p = pathname || '';
+        return p.startsWith('/login') || p.startsWith('/api/auth') || p.startsWith('/khao-sat');
       };
 
-      const ensureEarlyBootCurtain = () => {
-        if (!isPortalHost || window.__bootCurtainPlayed || !document.documentElement) return;
-        window.__bootCurtainPlayed = true;
-        if (document.getElementById('cd-boot-curtain')) return;
+      const excluded = isExcludedRoute(window.location.pathname);
 
-        const curtain = document.createElement('div');
-        curtain.id = 'cd-boot-curtain';
-        curtain.style.cssText = [
-          'position: fixed',
-          'inset: 0',
-          'z-index: 99999',
-          'background-color: var(--col-pri-bg, #0d1117)',
-          'display: flex',
-          'align-items: center',
-          'justify-content: center',
-          'opacity: 1',
-          'transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1)',
-          'pointer-events: none'
-        ].join(';');
+      if (document.documentElement) {
+        document.documentElement.classList.toggle('uit-custom-shell', !excluded);
+      }
 
-        if (window.__UIT_BRAND__) {
-          const logo = document.createElement('img');
-          logo.src = window.__UIT_BRAND__;
-          logo.alt = 'UIT';
-          logo.style.cssText = 'width: 56px; height: 56px; object-fit: contain;';
-          curtain.appendChild(logo);
+      try {
+        const savedCss = localStorage.getItem('uit_custom_theme_css');
+        if (savedCss && !excluded && !document.getElementById('cd-custom-theme-style')) {
+          const styleEl = document.createElement('style');
+          styleEl.id = 'cd-custom-theme-style';
+          styleEl.textContent = savedCss;
+          (document.head || document.documentElement).appendChild(styleEl);
         }
+      } catch {}
 
-        document.documentElement.appendChild(curtain);
-        window.__curtainPaintedAt = 0;
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            window.__curtainPaintedAt = Date.now();
-          });
+      // Track same-origin fetch and XHR calls so the boot curtain waits until data loads
+      if (!window.__uitNetworkHooked) {
+        window.__uitNetworkHooked = true;
+        window.__uitActiveNetworkCount = 0;
+        window.__uitHoSoRscCache = null;
+        window.__uitHoSoRscInFlight = null;
+
+        const trackStart = () => {
+          window.__uitActiveNetworkCount += 1;
+          if (window.__scheduleBootCurtainCheck) window.__scheduleBootCurtainCheck();
+          let done = false;
+          const finish = () => {
+            if (done) return;
+            done = true;
+            window.__uitActiveNetworkCount = Math.max(0, window.__uitActiveNetworkCount - 1);
+            if (window.__scheduleBootCurtainCheck) window.__scheduleBootCurtainCheck();
+          };
+          setTimeout(finish, 6000);
+          return finish;
+        };
+
+        const origXhrSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.send = function (...args) {
+          if (!this.__uitTracked) {
+            this.__uitTracked = true;
+            const finish = trackStart();
+            this.addEventListener('loadend', () => {
+              this.__uitTracked = false;
+              finish();
+            }, { once: true });
+          }
+          return origXhrSend.apply(this, args);
+        };
+
+        const origFetch = window.fetch.bind(window);
+
+        const buildCachedResponse = (cached) => new Response(cached.body.slice(0), {
+          status: cached.status,
+          statusText: cached.statusText,
+          headers: new Headers(cached.headers)
         });
-      };
 
-      const ensureEarlyTitlebar = () => {
+        const fetchHoSoRsc = (url, stateTree, nextUrl) => {
+          if (window.__uitHoSoRscCache) return Promise.resolve(window.__uitHoSoRscCache);
+          if (window.__uitHoSoRscInFlight) return window.__uitHoSoRscInFlight;
+
+          const headers = new Headers({
+            'RSC': '1',
+            'Accept': 'text/x-component',
+            'Next-Url': nextUrl || window.location.pathname || '/trang-chu'
+          });
+          if (stateTree) headers.set('Next-Router-State-Tree', stateTree);
+
+          const finish = trackStart();
+          const task = origFetch(url, { method: 'GET', credentials: 'include', headers })
+            .then(async (res) => {
+              if (!res.ok) return null;
+              const body = await res.arrayBuffer();
+              if (body.byteLength < 50 * 1024) return null;
+              const safeHeaders = [];
+              res.headers.forEach((v, k) => {
+                const l = k.toLowerCase();
+                if (l !== 'content-encoding' && l !== 'content-length') safeHeaders.push([k, v]);
+              });
+              window.__uitHoSoRscCache = { body, status: res.status, statusText: res.statusText, headers: safeHeaders };
+              return window.__uitHoSoRscCache;
+            })
+            .catch(() => null)
+            .finally(() => {
+              window.__uitHoSoRscInFlight = null;
+              finish();
+            });
+
+          window.__uitHoSoRscInFlight = task;
+          return task;
+        };
+
+        window.__preloadHoSoRsc = (stateTree, nextUrl) => fetchHoSoRsc('/sinh-vien/ho-so?_rsc=preload', stateTree, nextUrl);
+        window.__clearHoSoRscCache = () => {
+          window.__uitHoSoRscCache = null;
+          window.__uitHoSoRscInFlight = null;
+        };
+
+        window.fetch = async (input, init) => {
+          const isReq = typeof Request !== 'undefined' && input instanceof Request;
+          const rawUrl = typeof input === 'string' ? input : (input instanceof URL ? input.href : input?.url);
+          const method = (init?.method || (isReq ? input.method : 'GET') || 'GET').toUpperCase();
+
+          let parsed = null;
+          let sameOrigin = false;
+          if (rawUrl) {
+            try {
+              parsed = new URL(rawUrl, window.location.origin);
+              sameOrigin = parsed.origin === window.location.origin;
+            } catch {}
+          }
+
+          if (isPortalHost && parsed) {
+            if (parsed.pathname.startsWith('/api/auth') || parsed.pathname === '/login' || (method !== 'GET' && parsed.pathname.startsWith('/sinh-vien/ho-so'))) {
+              window.__clearHoSoRscCache();
+            }
+
+            if (method === 'GET' && sameOrigin && parsed.pathname === '/sinh-vien/ho-so' && parsed.searchParams.has('_rsc')) {
+              const reqHeaders = new Headers(isReq ? input.headers : undefined);
+              if (init?.headers) new Headers(init.headers).forEach((v, k) => reqHeaders.set(k, v));
+
+              const isPrefetch = reqHeaders.has('Next-Router-Prefetch') || reqHeaders.has('Next-Router-Segment-Prefetch');
+              if (isPrefetch) {
+                if (!window.__uitHoSoRscCache && !window.__uitHoSoRscInFlight) {
+                  fetchHoSoRsc(parsed.pathname + parsed.search, reqHeaders.get('Next-Router-State-Tree'), reqHeaders.get('Next-Url'));
+                }
+                const finish = trackStart();
+                try { return await origFetch(input, init); } finally { finish(); }
+              }
+
+              if (window.__uitHoSoRscCache) return buildCachedResponse(window.__uitHoSoRscCache);
+
+              if (window.__showHoSoRouteLoader) window.__showHoSoRouteLoader('/sinh-vien/ho-so');
+              try {
+                const cached = await (window.__uitHoSoRscInFlight || fetchHoSoRsc(parsed.pathname + parsed.search, reqHeaders.get('Next-Router-State-Tree'), reqHeaders.get('Next-Url')));
+                if (cached) return buildCachedResponse(cached);
+              } finally {
+                if (window.__scheduleHideHoSoRouteLoader) window.__scheduleHideHoSoRouteLoader();
+              }
+            }
+          }
+
+          if (sameOrigin) {
+            const finish = trackStart();
+            try { return await origFetch(input, init); } finally { finish(); }
+          }
+          return origFetch(input, init);
+        };
+      }
+
+      // Mount early titlebar as soon as <body> exists
+      const mountEarlyTitlebar = () => {
         const target = document.body || document.documentElement;
         if (!target) return false;
-
         let titlebar = document.getElementById('cd-titlebar');
-        if (!titlebar) {
-          titlebar = document.createElement('div');
-          titlebar.id = 'cd-titlebar';
-          titlebar.innerHTML = \`
-            <img id="cd-titlebar-icon" alt="UIT" />
-            <span id="cd-titlebar-title">UIT Portal wrapper</span>
-            <div id="cd-titlebar-controls">
-              <button type="button" id="cd-refresh-btn" class="cd-titlebar-btn" title="Refresh Page">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-              </button>
-              <button type="button" id="cd-toggle-sidebar-btn" class="cd-titlebar-btn" title="Toggle Sidebar">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-              </button>
-              <button type="button" id="cd-toggle-header-btn" class="cd-titlebar-btn" title="Toggle Header">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
-              </button>
-            </div>
-          \`;
-          target.insertAdjacentElement('afterbegin', titlebar);
-        } else if (document.body && titlebar.parentElement !== document.body) {
+        if (!titlebar && window.__UIT_TITLEBAR_HTML__) {
+          target.insertAdjacentHTML('afterbegin', window.__UIT_TITLEBAR_HTML__);
+          titlebar = document.getElementById('cd-titlebar');
+        } else if (titlebar && document.body && titlebar.parentElement !== document.body) {
           document.body.insertAdjacentElement('afterbegin', titlebar);
         }
-
         const iconEl = document.getElementById('cd-titlebar-icon');
         if (iconEl) {
           if (window.__UIT_BRAND__) {
@@ -253,43 +344,42 @@ function getEarlyBootstrapScript(isPortalHost) {
             iconEl.style.display = 'none';
           }
         }
-
         return Boolean(document.body);
       };
 
-      applyEarlyTheme();
-      ensureEarlyBootCurtain();
-      if (!ensureEarlyTitlebar()) {
-        const earlyObserver = new MutationObserver(() => {
-          applyEarlyTheme();
-          ensureEarlyBootCurtain();
-          if (ensureEarlyTitlebar()) {
-            earlyObserver.disconnect();
-          }
+      if (!mountEarlyTitlebar()) {
+        const obs = new MutationObserver(() => {
+          if (mountEarlyTitlebar()) obs.disconnect();
         });
-        earlyObserver.observe(document, { childList: true, subtree: true });
+        obs.observe(document, { childList: true, subtree: true });
       }
     })();
   `;
 }
 
-function injectEarlyShell(webContents, targetUrl) {
+ipcMain.on('uit:get-bootstrap-data', (event, targetUrl) => {
   let parsedUrl;
   try {
-    parsedUrl = new URL(targetUrl || webContents.getURL());
+    parsedUrl = new URL(targetUrl);
   } catch {
+    event.returnValue = null;
     return;
   }
 
-  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') return;
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    event.returnValue = null;
+    return;
+  }
 
   const isPortalHost = parsedUrl.hostname === 'portal.uit.edu.vn';
-  const combinedCss = getCombinedCss(isPortalHost);
-  if (combinedCss.trim()) {
-    webContents.insertCSS(combinedCss).catch(console.error);
-  }
-  webContents.executeJavaScript(getEarlyBootstrapScript(isPortalHost)).catch(console.error);
-}
+  event.returnValue = {
+    isPortalHost,
+    combinedCss: isPortalHost ? PORTAL_COMBINED_CSS : EXTERNAL_COMBINED_CSS,
+    bootCurtainHtml: isPortalHost ? ASSETS.bootCurtainHtml : '',
+    brandWhite: BRAND_WHITE_BASE64,
+    earlyBootstrapScript: getEarlyBootstrapScript(isPortalHost)
+  };
+});
 
 function injectCustomUI(webContents) {
   const currentUrl = webContents.getURL();
@@ -303,20 +393,29 @@ function injectCustomUI(webContents) {
   if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') return;
 
   const isPortalHost = parsedUrl.hostname === 'portal.uit.edu.vn';
-  injectEarlyShell(webContents, currentUrl);
-
-  const shellHtml = isPortalHost ? readAsset('layouts/shell.html') : '';
-  const shellJs = readAsset('scripts/shell.js');
-  const trangChuJs = isPortalHost ? readAsset('scripts/trang-chu.js') : '';
+  const combinedCss = isPortalHost ? PORTAL_COMBINED_CSS : EXTERNAL_COMBINED_CSS;
+  const shellHtml = isPortalHost ? ASSETS.shellHtml : '';
+  const trangChuHtml = isPortalHost ? ASSETS.trangChuHtml : '';
+  const trangChuJs = isPortalHost ? ASSETS.trangChuJs : '';
   const appVersion = app.getVersion();
 
   const bootstrapCode = `
     (() => {
-      if (!window.__UIT_SHELL_HTML__)   { window.__UIT_SHELL_HTML__ = ${JSON.stringify(shellHtml)}; }
-      if (!window.__UIT_BRAND__)        { window.__UIT_BRAND__ = ${JSON.stringify(BRAND_WHITE_BASE64)}; }
-      if (!window.__UIT_BRAND_DETAIL__) { window.__UIT_BRAND_DETAIL__ = ${JSON.stringify(BRAND_DETAIL_BASE64)}; }
-      if (!window.__UIT_APP_VERSION__)  { window.__UIT_APP_VERSION__ = ${JSON.stringify(appVersion)}; }
-      ${shellJs}
+      if (!document.getElementById('cd-early-css') && document.documentElement) {
+        const s = document.createElement('style');
+        s.id = 'cd-early-css';
+        s.textContent = ${JSON.stringify(combinedCss)};
+        document.documentElement.appendChild(s);
+      }
+      if (!window.__UIT_TITLEBAR_HTML__)     { window.__UIT_TITLEBAR_HTML__ = ${JSON.stringify(ASSETS.titlebarHtml)}; }
+      if (!window.__UIT_BOOT_CURTAIN_HTML__) { window.__UIT_BOOT_CURTAIN_HTML__ = ${JSON.stringify(ASSETS.bootCurtainHtml)}; }
+      if (!window.__UIT_SHELL_HTML__)        { window.__UIT_SHELL_HTML__ = ${JSON.stringify(shellHtml)}; }
+      if (!window.__UIT_TRANG_CHU_HTML__)    { window.__UIT_TRANG_CHU_HTML__ = ${JSON.stringify(trangChuHtml)}; }
+      if (!window.__UIT_BRAND__)             { window.__UIT_BRAND__ = ${JSON.stringify(BRAND_WHITE_BASE64)}; }
+      if (!window.__UIT_BRAND_DETAIL__)      { window.__UIT_BRAND_DETAIL__ = ${JSON.stringify(BRAND_DETAIL_BASE64)}; }
+      if (!window.__UIT_APP_VERSION__)       { window.__UIT_APP_VERSION__ = ${JSON.stringify(appVersion)}; }
+      ${getEarlyBootstrapScript(isPortalHost)}
+      ${ASSETS.shellJs}
       ${trangChuJs}
     })();
   `;
@@ -338,13 +437,13 @@ function createWindow() {
       },
     } : {}),
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true
     },
     frame: true
   });
 
-  // Sync native titleBarOverlay symbol color with active CSS theme variables
   mainWindow.webContents.on('console-message', (event, level, message) => {
     if (process.platform === 'darwin' || typeof mainWindow.setTitleBarOverlay !== 'function') return;
     if (typeof message !== 'string' || !message.startsWith('__UIT_TITLEBAR_OVERLAY__')) return;
@@ -360,18 +459,10 @@ function createWindow() {
     } catch {}
   });
 
-  // Block UMA assistant scripts, styles, and API calls
   session.defaultSession.webRequest.onBeforeRequest(
     { urls: ['*://uma.uit.edu.vn/*', '*://*.uma.uit.edu.vn/*'] },
     (details, callback) => callback({ cancel: true })
   );
-
-  mainWindow.loadURL('https://portal.uit.edu.vn/login');
-
-  // Inject CSS, titlebar, and boot curtain before first paint on every navigation
-  mainWindow.webContents.on('did-commit-navigation', (event, url) => {
-    injectEarlyShell(mainWindow.webContents, url);
-  });
 
   mainWindow.webContents.on('dom-ready', () => {
     injectCustomUI(mainWindow.webContents);
@@ -382,12 +473,14 @@ function createWindow() {
       if (window.__updateCustomRouteState) window.__updateCustomRouteState();
     `).catch(console.error);
   });
+
+  mainWindow.loadURL('https://portal.uit.edu.vn/login');
 }
 
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch(
   'disable-features',
-  'BackForwardCache,MediaRouter,OptimizationHints,Translate,CalculateNativeWinOcclusion','DirectCompositionVideoOverlays'
+  'BackForwardCache,MediaRouter,OptimizationHints,Translate,CalculateNativeWinOcclusion,DirectCompositionVideoOverlays'
 );
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=192');
 app.commandLine.appendSwitch('enable-low-end-device-mode');
