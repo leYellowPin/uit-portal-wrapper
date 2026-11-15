@@ -8,6 +8,7 @@ dist/
 out/
 release/
 release-builds/
+build/sizes
 *.dmg
 *.exe
 *.app
