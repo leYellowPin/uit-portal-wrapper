@@ -5,115 +5,143 @@
             "sub": "Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Cá nhân",
-            "keywords": "thong tin cccd cmnd ngay sinh gioi tinh dan toc ho chieu"
+            "keywords": ["thong tin ca nhan", "cccd cmnd ngay sinh gioi tinh dan toc ho chieu"]
         },
         {
             "title": "Thông tin liên hệ & Địa chỉ",
             "sub": "Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Liên hệ",
-            "keywords": "thong tin so dien thoai sdt email dia chi thuong tru tam tru"
+            "keywords": ["thong tin ca nhan", "so dien thoai sdt email dia chi thuong tru tam tru doi tuong doan vien dang vien"]
         },
         {
             "title": "Thông tin gia đình",
             "sub": "Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Gia đình",
-            "keywords": "thong tin cha me phu huynh nguoi than anh chi em"
+            "keywords": ["thong tin ca nhan", "cha me phu huynh nguoi than anh chi em"]
+        },
+        {
+            "title": "Thông tin học vụ",
+            "sub": "Hồ sơ cá nhân",
+            "href": "/sinh-vien/ho-so",
+            "tabMatch": "Học vụ",
+            "keywords": ["thong tin ca nhan", "tien do hoc tap", "ho so nhap hoc thpt"]
         },
         {
             "title": "Hồ sơ scan",
             "sub": "Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Hồ sơ scan",
-            "keywords": "thong tin ho so scan anh chup giay to anh the cccd khai sinh hoc ba thpt bang tot nghiep"
+            "keywords": ["thong tin ca nhan", "ho so scan", "anh chup giay to anh the cccd khai sinh hoc ba thpt bang tot nghiep thanh tich khen thuong"]
         },
         {
             "title": "Thông tin sức khỏe",
             "sub": "Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Sức khỏe",
-            "keywords": "thong tin suc khoe chieu cao can nang huyet ap tong quat nang khieu the thao thanh tich"
+            "keywords": ["thong tin ca nhan", "suc khoe chieu cao can nang huyet ap tong quat nang khieu the thao thanh tich"]
         },
         {
             "title": "Tài khoản ngân hàng",
             "sub": "Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Cá nhân",
-            "keywords": "thong tin ngan hang atm pvcombank hoc bong"
+            "keywords": ["thong tin ca nhan", "ngan hang", "atm", "pvcombank", "hoc bong"]
         },
         {
-            "title": "Tài khoản",
+            "title": "Khen thưởng",
+            "sub": "Hồ sơ cá nhân",
+            "href": "/sinh-vien/ho-so",
+            "tabMatch": "Khen thưởng",
+            "keywords": "thong tin ca nhan"
+        },
+        {
+            "title": "Tài khoản được cấp",
             "sub": "Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Tài khoản",
-            "keywords": "thong tin tai khoan da duoc cap mac dinh mat khau mk 365 ms microsoft gmail email sinh vien mail dang nhap uit"
+            "keywords": ["thong tin ca nhan", "tai khoan da duoc cap", "tk", "mac dinh", "mat khau", "mk", "365 ms microsoft gmail email sinh vien mail dang nhap"]
         },
         {
             "title": "Bảo hiểm y tế",
             "sub": "Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "BHYT",
-            "keywords": "thong tin dang ky bao hiem y te bhyt"
-        },
-        {
-            "title": "Điểm môn học",
-            "sub": "Bảng điểm",
-            "href": "/sinh-vien/bang-diem",
-            "tabMatch": "Chi tiết môn học",
-            "keywords": "chi tiet bang diem mon hoc gpa diem thi hoc ki diem thi hk"
-        },
-        {
-            "title": "Điểm tổng kết",
-            "sub": "Bảng điểm",
-            "href": "/sinh-vien/bang-diem",
-            "tabMatch": "Tổng kết theo kỳ",
-            "keywords": "chi tiet bang diem tong ket hoc ki gpa hk"
-        },
-        {
-            "title": "Bảng điểm theo CTĐT",
-            "sub": "Bảng điểm",
-            "href": "/sinh-vien/bang-diem",
-            "tabMatch": "Theo CTĐT",
-            "keywords": "chi tiet danh sach mon hoc tien do tin chi thong ke ngoai ngu gpa ctdt"
-        },
-        {
-            "title": "Đăng ký bảng điểm",
-            "sub": "Trang chính",
-            "href": "/sinh-vien/xin-bang-diem",
-            "tabMatch": null,
-            "keywords": "dang ky bang diem mon hoc gpa ccdt"
+            "keywords": ["thong tin ca nhan", "dang ky bao hiem y te", "bhyt"]
         },
         {
             "title": "Thời khóa biểu theo ĐKHP",
             "sub": "Thời khóa biểu",
             "href": "/sinh-vien/tkb",
             "tabMatch": "Theo ĐKHP",
-            "keywords": "tkb thoi khoa bieo dkhp"
+            "keywords": ["tkb", "thoi khoa bieu", "dkhp", "de cuong mon hoc", "google calendar"]
         },
         {
             "title": "Lịch tuần",
             "sub": "Thời khóa biểu",
             "href": "/sinh-vien/tkb",
             "tabMatch": "Lịch tuần",
-            "keywords": "tkb thoi khoa bieu lich tuan mon hoc hom nay"
+            "keywords": ["tkb", "thoi khoa bieu", "lich tuan", "mon hoc hom nay"]
+        },
+        {
+            "title": "Lịch sinh hoạt lớp",
+            "sub": "Lịch sinh hoạt",
+            "href": "/sinh-vien/tkb",
+            "tabMatch": "Sinh hoạt lớp",
+            "keywords": ""
+        },
+        {
+            "title": "Lịch sinh hoạt đoàn",
+            "sub": "Lịch sinh hoạt",
+            "href": "/sinh-vien/tkb",
+            "tabMatch": "Sinh hoạt đoàn",
+            "keywords": ""
+        },
+        {
+            "title": "Lịch gặp CVHT",
+            "sub": "Lịch sinh hoạt",
+            "href": "/sinh-vien/tkb",
+            "tabMatch": "CVHT",
+            "keywords": ["lich gap mat cvht", "co van hoc tap"]
+        },
+        {
+            "title": "Điểm môn học",
+            "sub": "Bảng điểm",
+            "href": "/sinh-vien/bang-diem",
+            "tabMatch": "Chi tiết môn học",
+            "keywords": ["chi tiet mon hoc", "bang diem mon hoc", "gpa", "diem thi", "hoc ki", "giua hoc ki", "cuoi ki", "hk", "gk", "ck", "hoc ki he"]
+        },
+        {
+            "title": "Điểm tổng kết",
+            "sub": "Bảng điểm",
+            "href": "/sinh-vien/bang-diem",
+            "tabMatch": "Tổng kết theo kỳ",
+            "keywords": ["bang diem tong ket", "hoc ki", "giua hoc ki", "giua ki", "cuoi hoc ki", "cuoi ki", "gpa", "hk", "gk", "ck", "hoc ki he"]
+        },
+        {
+            "title": "Bảng điểm theo CTĐT",
+            "sub": "Bảng điểm",
+            "href": "/sinh-vien/bang-diem",
+            "tabMatch": "Theo CTĐT",
+            "keywords": ["danh sach mon hoc", "tien do tin chi", "thong ke mon hoc", "ngoai ngu", "gpa", "ctdt"]
+        },
+        {
+            "title": "Đăng ký bảng điểm",
+            "sub": "Trang chính",
+            "href": "/sinh-vien/xin-bang-diem",
+            "tabMatch": null,
+            "keywords": ["dang ky", "bang diem mon hoc", "gpa", "ctdt"]
         },
         {
             "title": "Điểm rèn luyện",
             "sub": "Trang chính",
             "href": "/sinh-vien/diem-ren-luyen",
             "tabMatch": null,
-            "keywords": "diem ren luyen drl"
-        },
-        {
-            "title": "67",
-            "sub": "67",
-            "href": "/trang-chu",
-            "tabMatch": null,
-            "keywords": "67 six seven sau bay sau muoi bay 69-2"
+            "keywords": ["diem ren luyen", "drl"]
         }
     ],
     "excludeTitles": [
-        "Bảng điểm", "Thời khóa biểu", "Điểm rèn luyện"
+        "Bảng điểm", "Thời khóa biểu", "Điểm rèn luyện", "Lịch sinh hoạt"
     ]
 }

@@ -378,7 +378,10 @@
       }
 
       currentMatches = buildSearchIndex().filter((item) => {
-        const haystack = normalizeText(`${item.title} ${item.sub} ${item.keywords}`);
+        const keywordsText = Array.isArray(item.keywords)
+          ? item.keywords.join(' ')
+          : (item.keywords || '');
+        const haystack = normalizeText(`${item.title} ${item.sub} ${keywordsText}`);
         return haystack.includes(q);
       }).slice(0, 8);
 
@@ -397,7 +400,7 @@
         btn.className = `cd-search-item${idx === 0 ? ' is-selected' : ''}`;
         btn.innerHTML = `
           <span class="cd-search-item-title">${item.title}</span>
-          <span class="cd-search-item-sub">${item.sub}</span>
+          <span class="cd-search-item-sub">trong: ${item.sub}</span>
         `;
         btn.addEventListener('mousedown', (e) => {
           e.preventDefault();
