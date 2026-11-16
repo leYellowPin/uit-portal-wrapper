@@ -68,7 +68,7 @@
             "sub": "Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "BHYT",
-            "keywords": ["thong tin ca nhan", "dang ky bao hiem y te", "bhyt"]
+            "keywords": ["thong tin ca nhan", "bao hiem y te", "bhyt"]
         },
         {
             "title": "Thời khóa biểu theo ĐKHP",
@@ -139,6 +139,20 @@
             "href": "/sinh-vien/diem-ren-luyen",
             "tabMatch": null,
             "keywords": ["diem ren luyen", "drl"]
+        },
+        {
+            "title": "Đăng ký bảo hiểm",
+            "sub": "Bảo hiểm",
+            "href": "/sinh-vien/bao-hiem",
+            "tabMatch": null,
+            "keywords": ["bao hiem", "y te", "tai nan", "bhyt", "bhtn", "dang ky mua"]
+        },
+        {
+            "title": "Yêu cầu hỗ trợ",
+            "sub": "Hỗ trợ",
+            "href": "/sinh-vien/ho-tro",
+            "tabMatch": null,
+            "keywords": ["ho tro", "helpdesk", "help", "ticket"]
         }
     ],
     "excludeTitles": [
