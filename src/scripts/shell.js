@@ -168,9 +168,20 @@
   };
 
   const syncTitlebarOverlayColor = () => {
-    const btn = document.getElementById('cd-refresh-btn');
-    if (!btn) return;
-    const hex = rgbToHex(getComputedStyle(btn).color);
+    const titlebar = document.getElementById('cd-titlebar');
+    if (!titlebar) return;
+
+    let probe = document.getElementById('cd-overlay-color-probe');
+    if (!probe) {
+      probe = document.createElement('span');
+      probe.id = 'cd-overlay-color-probe';
+      probe.setAttribute('aria-hidden', 'true');
+      probe.style.cssText =
+        'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;color:var(--col-sec-text, #8b949e) !important;';
+      titlebar.appendChild(probe);
+    }
+
+    const hex = rgbToHex(getComputedStyle(probe).color);
     if (hex && hex !== window.__lastOverlaySymbolColor) {
       window.__lastOverlaySymbolColor = hex;
       console.debug('__UIT_TITLEBAR_OVERLAY__' + JSON.stringify({ symbolColor: hex }));
@@ -181,6 +192,8 @@
     if (!document.body) return;
     document.body.classList.toggle('cd-sidebar-hidden', isSidebarHidden);
     document.body.classList.toggle('cd-header-hidden', isHeaderHidden);
+    document.getElementById('cd-toggle-sidebar-btn')?.setAttribute('aria-pressed', isSidebarHidden ? 'true' : 'false');
+    document.getElementById('cd-toggle-header-btn')?.setAttribute('aria-pressed', isHeaderHidden ? 'true' : 'false');
   };
 
   // 3. Route transition loader for uncached /sinh-vien/ho-so SPA navigation
@@ -255,7 +268,193 @@
     }, 120);
   };
 
-  // 4. Mount custom titlebar
+  // 4. Titlebar Search & Tab Activation
+  const RAW_SEARCH_CONFIG = window.__UIT_SEARCH_ITEMS__;
+  const DEEP_SEARCH_ITEMS = Array.isArray(RAW_SEARCH_CONFIG)
+    ? RAW_SEARCH_CONFIG
+    : (Array.isArray(RAW_SEARCH_CONFIG?.items) ? RAW_SEARCH_CONFIG.items : []);
+  const EXCLUDED_SEARCH_TITLES = Array.isArray(RAW_SEARCH_CONFIG?.excludeTitles)
+    ? RAW_SEARCH_CONFIG.excludeTitles
+    : [];
+
+  const normalizeText = (str) =>
+    (str || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd');
+
+  const activatePortalTab = (tabLabel) => {
+    if (!tabLabel) return;
+    const targetNorm = normalizeText(tabLabel);
+
+    const tryClickTab = () => {
+      const tabs = Array.from(document.querySelectorAll('main [role="tab"]'));
+      const match = tabs.find((t) => normalizeText(t.textContent).includes(targetNorm));
+      if (!match) return false;
+
+      if (match.getAttribute('data-state') !== 'active') {
+        match.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, view: window }));
+        match.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+        match.click();
+      }
+      match.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return true;
+    };
+
+    if (tryClickTab()) return;
+
+    const observer = new MutationObserver(() => {
+      if (tryClickTab()) observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    setTimeout(() => observer.disconnect(), 10000);
+  };
+
+  const navigateAndSelectTab = (href, tabMatch) => {
+    const targetPath = normalizePath(href);
+    const currentPath = normalizePath(window.location.pathname);
+
+    if (currentPath === targetPath) {
+      activatePortalTab(tabMatch);
+      return;
+    }
+
+    const sidebarLink = Array.from(document.querySelectorAll('#cd-sidebar .cd-nav a'))
+      .find((a) => normalizePath(a.getAttribute('href')) === targetPath);
+
+    if (sidebarLink) {
+      sidebarLink.click();
+    } else {
+      const nativeLink = document.querySelector(`nav[aria-label="Điều hướng chính"] a[href="${targetPath}"]`);
+      if (nativeLink) nativeLink.click();
+      else window.location.href = targetPath;
+    }
+
+    if (tabMatch) {
+      activatePortalTab(tabMatch);
+    }
+  };
+
+  const buildSearchIndex = () => {
+    const customPageHrefs = new Set(
+      DEEP_SEARCH_ITEMS.filter((item) => !item.tabMatch).map((item) => normalizePath(item.href))
+    );
+    const excludedTitleSet = new Set(
+      EXCLUDED_SEARCH_TITLES.map((t) => normalizeText(String(t).trim())).filter(Boolean)
+    );
+
+    const navItems = Array.from(document.querySelectorAll('#cd-sidebar .cd-nav a'))
+      .filter((a) => {
+        const href = normalizePath(a.getAttribute('href'));
+        const titleNorm = normalizeText(a.textContent.trim());
+        return !customPageHrefs.has(href) && !excludedTitleSet.has(titleNorm);
+      })
+      .map((a) => ({
+        title: a.textContent.trim(),
+        sub: 'Trang chính',
+        href: a.getAttribute('href'),
+        tabMatch: null,
+        keywords: ''
+      }));
+
+    return [...DEEP_SEARCH_ITEMS, ...navItems];
+  };
+
+  const bindTitlebarSearch = () => {
+    const searchInput = document.getElementById('cd-search-input');
+    const searchResults = document.getElementById('cd-search-results');
+    if (!searchInput || !searchResults || searchInput.dataset.bound === '1') return;
+
+    searchInput.dataset.bound = '1';
+    let activeIndex = 0;
+    let currentMatches = [];
+
+    const renderResults = (query) => {
+      const q = normalizeText(query.trim());
+      if (!q) {
+        searchResults.hidden = true;
+        return;
+      }
+
+      currentMatches = buildSearchIndex().filter((item) => {
+        const haystack = normalizeText(`${item.title} ${item.sub} ${item.keywords}`);
+        return haystack.includes(q);
+      }).slice(0, 8);
+
+      activeIndex = 0;
+      searchResults.innerHTML = '';
+
+      if (currentMatches.length === 0) {
+        searchResults.innerHTML = `<div class="cd-search-item"><span class="cd-search-item-sub">Không tìm thấy kết quả</span></div>`;
+        searchResults.hidden = false;
+        return;
+      }
+
+      currentMatches.forEach((item, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `cd-search-item${idx === 0 ? ' is-selected' : ''}`;
+        btn.innerHTML = `
+          <span class="cd-search-item-title">${item.title}</span>
+          <span class="cd-search-item-sub">${item.sub}</span>
+        `;
+        btn.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          searchResults.hidden = true;
+          searchInput.value = '';
+          navigateAndSelectTab(item.href, item.tabMatch);
+        });
+        searchResults.appendChild(btn);
+      });
+
+      searchResults.hidden = false;
+    };
+
+    searchInput.addEventListener('input', (e) => renderResults(e.target.value));
+    searchInput.addEventListener('focus', (e) => renderResults(e.target.value));
+    searchInput.addEventListener('blur', () => {
+      setTimeout(() => { searchResults.hidden = true; }, 150);
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (searchResults.hidden || currentMatches.length === 0) return;
+
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const delta = e.key === 'ArrowDown' ? 1 : -1;
+        activeIndex = (activeIndex + delta + currentMatches.length) % currentMatches.length;
+        searchResults.querySelectorAll('.cd-search-item').forEach((el, i) => {
+          el.classList.toggle('is-selected', i === activeIndex);
+        });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const chosen = currentMatches[activeIndex];
+        if (chosen) {
+          searchResults.hidden = true;
+          searchInput.value = '';
+          searchInput.blur();
+          navigateAndSelectTab(chosen.href, chosen.tabMatch);
+        }
+      } else if (e.key === 'Escape') {
+        searchResults.hidden = true;
+        searchInput.blur();
+      }
+    });
+
+    if (!window.__cdSearchShortcutBound) {
+      window.__cdSearchShortcutBound = true;
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          if (!document.documentElement.classList.contains('uit-custom-shell')) return;
+          e.preventDefault();
+          document.getElementById('cd-search-input')?.focus();
+        }
+      });
+    }
+  };
+
+  // 5. Mount custom titlebar
   const mountTitlebar = () => {
     const target = document.body || document.documentElement;
     if (!target) return;
@@ -292,6 +491,8 @@
       });
     }
 
+    bindTitlebarSearch();
+
     const iconEl = document.getElementById('cd-titlebar-icon');
     if (iconEl) {
       if (window.__UIT_BRAND__) {
@@ -307,7 +508,7 @@
 
   mountTitlebar();
 
-  // 5. Portal version detection
+  // 6. Portal version detection
   const extractVersionToken = (rawText) => {
     if (!rawText) return '';
     const text = rawText.replace(/\s+/g, ' ').trim();
@@ -350,7 +551,7 @@
 
     for (const container of containers) {
       for (const el of [container, ...container.querySelectorAll('*')]) {
-        if (el.closest('#cd-sidebar, #cd-header, #cd-titlebar, #cd-sidebar-footer')) continue;
+        if (el.closest('#cd-sidebar, #cd-header, #cd-titlebar')) continue;
         const found = extractVersionToken(el.textContent);
         if (found) {
           cachedPortalVersion = found;
@@ -371,7 +572,7 @@
     versionEl.textContent = portalVer ? `UIT Portal ${portalVer} | Wrapper ${appVer}` : `Wrapper ${appVer}`;
   };
 
-  // 6. Custom CSS theme management
+  // 7. Custom CSS theme management
   const applySavedCustomTheme = () => {
     const disableTheme = isExcludedPage(window.location.pathname);
     const savedCss = localStorage.getItem('uit_custom_theme_css');
@@ -383,9 +584,11 @@
       if (!styleEl) {
         styleEl = document.createElement('style');
         styleEl.id = 'cd-custom-theme-style';
-        (document.head || document.documentElement).appendChild(styleEl);
       }
       styleEl.textContent = savedCss;
+      if (document.documentElement) {
+        document.documentElement.appendChild(styleEl);
+      }
     } else if (styleEl) {
       styleEl.remove();
     }
@@ -400,7 +603,7 @@
 
   applySavedCustomTheme();
 
-  // 7. Profile state
+  // 8. Profile state
   const applyProfile = (profile) => {
     if (!profile) return;
     cachedProfile = profile;
@@ -437,14 +640,13 @@
     });
   }
 
-  // 8. Shell mounter
+  // 9. Shell mounter
   const mountShell = () => {
     mountTitlebar();
     if (isExcludedPage(window.location.pathname)) return;
-    if ((!document.getElementById('cd-sidebar') || !document.getElementById('cd-sidebar-footer')) && window.__UIT_SHELL_HTML__) {
+    if (!document.querySelector('#cd-sidebar #cd-sidebar-footer') && window.__UIT_SHELL_HTML__) {
       document.getElementById('cd-sidebar')?.remove();
       document.getElementById('cd-header')?.remove();
-      document.getElementById('cd-sidebar-footer')?.remove();
       document.body.insertAdjacentHTML('afterbegin', window.__UIT_SHELL_HTML__);
 
       const brand01Element = document.getElementById('cd-uit-brand');
@@ -568,7 +770,7 @@
     }
   }
 
-  // 9. Route state updater
+  // 10. Route state updater
   window.__updateCustomRouteState = () => {
     const currentPath = window.location.pathname;
     const excluded = isExcludedPage(currentPath);
@@ -581,14 +783,12 @@
     applySavedCustomTheme();
 
     const sidebar = document.getElementById('cd-sidebar');
-    const sidebarFooter = document.getElementById('cd-sidebar-footer');
     const header = document.getElementById('cd-header');
 
     if (excluded) {
       profileFetchSettled = true;
       dismissBootCurtainNow();
       if (sidebar) sidebar.style.display = 'none';
-      if (sidebarFooter) sidebarFooter.style.display = 'none';
       if (header) header.style.display = 'none';
       document.body.classList.remove('with-custom-shell', 'is-trang-chu', 'cd-sidebar-hidden', 'cd-header-hidden');
       Array.from(document.body.classList).forEach(cls => {
@@ -596,7 +796,6 @@
       });
     } else {
       if (sidebar) sidebar.style.display = 'flex';
-      if (sidebarFooter) sidebarFooter.style.display = 'flex';
       if (header) header.style.display = 'flex';
 
       document.body.classList.add('with-custom-shell');
@@ -628,7 +827,7 @@
 
   window.__updateCustomRouteState();
 
-  // 10. Hydration defender
+  // 11. Hydration defender
   const enforceBodyClasses = new MutationObserver((mutations) => {
     const currentPath = window.location.pathname;
     const excluded = isExcludedPage(currentPath);
@@ -643,7 +842,7 @@
     }
 
     if (!excluded) {
-      if (!document.getElementById('cd-sidebar') || !document.getElementById('cd-sidebar-footer')) {
+      if (!document.querySelector('#cd-sidebar #cd-sidebar-footer')) {
         mountShell();
         window.__updateCustomRouteState();
       }

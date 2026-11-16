@@ -32,14 +32,21 @@
 }
 
 /* Match page and container scrollbars to the sidebar scrollbar */
+html.uit-custom-shell *,
+body.with-custom-shell * {
+  scrollbar-width: auto !important;
+  scrollbar-color: auto !important;
+}
+
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
 html.uit-custom-shell body > div.flex.min-h-screen::-webkit-scrollbar,
 html.uit-custom-shell *::-webkit-scrollbar,
 body.with-custom-shell > div.flex.min-h-screen::-webkit-scrollbar,
-body.with-custom-shell *::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+body.with-custom-shell *::-webkit-scrollbar,
+[role="tablist"]::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
 }
 
 html::-webkit-scrollbar-track,
@@ -47,8 +54,9 @@ body::-webkit-scrollbar-track,
 html.uit-custom-shell body > div.flex.min-h-screen::-webkit-scrollbar-track,
 html.uit-custom-shell *::-webkit-scrollbar-track,
 body.with-custom-shell > div.flex.min-h-screen::-webkit-scrollbar-track,
-body.with-custom-shell *::-webkit-scrollbar-track {
-  background: transparent;
+body.with-custom-shell *::-webkit-scrollbar-track,
+[role="tablist"]::-webkit-scrollbar-track {
+  background: transparent !important;
 }
 
 html::-webkit-scrollbar-thumb,
@@ -56,9 +64,10 @@ body::-webkit-scrollbar-thumb,
 html.uit-custom-shell body > div.flex.min-h-screen::-webkit-scrollbar-thumb,
 html.uit-custom-shell *::-webkit-scrollbar-thumb,
 body.with-custom-shell > div.flex.min-h-screen::-webkit-scrollbar-thumb,
-body.with-custom-shell *::-webkit-scrollbar-thumb {
-  background-color: var(--col-accent-scroll);
-  border-radius: 4px;
+body.with-custom-shell *::-webkit-scrollbar-thumb,
+[role="tablist"]::-webkit-scrollbar-thumb {
+  background-color: var(--col-accent-scroll) !important;
+  border-radius: 4px !important;
 }
 
 /* Custom Window Title Bar */
@@ -71,15 +80,25 @@ body.with-custom-shell *::-webkit-scrollbar-thumb {
   background-color: var(--col-pri-nav) !important;
   border-bottom: 1px solid var(--col-out-nav) !important;
   color: var(--col-head-text) !important;
-  display: flex !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
   align-items: center !important;
-  gap: 10px !important;
+  column-gap: 12px !important;
   padding: 0 138px 0 14px !important;
   z-index: 2147483647 !important;
   box-sizing: border-box !important;
   font-family: 'Segoe UI', system-ui, sans-serif !important;
   user-select: none !important;
   -webkit-app-region: drag !important;
+}
+
+#cd-titlebar-left {
+  grid-column: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  justify-self: start !important;
 }
 
 #cd-titlebar-icon {
@@ -99,8 +118,123 @@ body.with-custom-shell *::-webkit-scrollbar-thumb {
   text-overflow: ellipsis !important;
 }
 
+/* Titlebar Search Bar */
+#cd-search-wrap {
+  grid-column: 2 !important;
+  position: relative !important;
+  width: 360px !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  justify-self: center !important;
+  display: flex !important;
+  align-items: center !important;
+  -webkit-app-region: no-drag !important;
+}
+
+#cd-search-icon {
+  position: absolute !important;
+  left: 12px !important;
+  width: 14px !important;
+  height: 14px !important;
+  color: var(--col-sec-text) !important;
+  pointer-events: none !important;
+  transition: color 0.15s ease !important;
+}
+
+#cd-search-input {
+  width: 100% !important;
+  height: 100% !important;
+  background-color: transparent !important;
+  color: var(--col-sec-text) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 12px 0 34px !important;
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  line-height: 36px !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease !important;
+  -webkit-app-region: no-drag !important;
+}
+
+#cd-search-input::placeholder {
+  color: var(--col-sec-text) !important;
+  opacity: 0.85 !important;
+  transition: color 0.15s ease !important;
+}
+
+#cd-search-wrap:hover #cd-search-input {
+  background-color: color-mix(in srgb, var(--col-head-text) 10%, transparent) !important;
+  color: var(--col-head-text) !important;
+}
+
+#cd-search-wrap:hover #cd-search-icon,
+#cd-search-wrap:hover #cd-search-input::placeholder {
+  color: var(--col-head-text) !important;
+}
+
+#cd-search-input:focus {
+  background-color: color-mix(in srgb, var(--col-head-text) 14%, transparent) !important;
+  color: var(--col-hi-text) !important;
+  box-shadow: inset 0 -2px 0 var(--col-accent) !important;
+}
+
+#cd-search-wrap:focus-within #cd-search-icon {
+  color: var(--col-accent) !important;
+}
+
+#cd-search-results {
+  position: absolute !important;
+  top: calc(100% + 4px) !important;
+  left: 0 !important;
+  right: auto !important;
+  width: 100% !important;
+  min-width: 360px !important;
+  max-height: 340px !important;
+  overflow-y: auto !important;
+  z-index: 2147483647 !important;
+  -webkit-app-region: no-drag !important;
+}
+
+.cd-search-item {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: none !important;
+  text-align: left !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+.cd-search-item:hover,
+.cd-search-item.is-selected {
+  background-color: var(--col-sec-nav) !important;
+}
+
+.cd-search-item-title {
+  font-size: 0.82rem !important;
+  font-weight: 500 !important;
+  color: var(--col-hi-text) !important;
+}
+
+.cd-search-item-sub {
+  font-size: 0.72rem !important;
+  color: var(--col-sec-text) !important;
+}
+
 #cd-titlebar-controls {
-  margin-left: auto !important;
+  grid-column: 3 !important;
+  margin-left: 0 !important;
+  justify-self: end !important;
   height: 100% !important;
   display: flex !important;
   align-items: stretch !important;
@@ -145,8 +279,15 @@ body.with-custom-shell *::-webkit-scrollbar-thumb {
   color: var(--col-hi-text) !important;
 }
 
+body.cd-sidebar-hidden #cd-toggle-sidebar-btn,
+body.cd-header-hidden #cd-toggle-header-btn {
+  color: var(--col-accent) !important;
+}
+
 html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-sidebar-btn,
-html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-header-btn {
+html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-header-btn,
+html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-search-wrap,
+body:not(.with-custom-shell) #cd-search-wrap {
   display: none !important;
 }
 
@@ -267,7 +408,8 @@ body.with-custom-shell.cd-sidebar-hidden #cd-sidebar {
 
 #cd-sidebar::before {
   content: '';
-  position: fixed;
+  position: absolute;
+  left: 0;
   width: 253.5px;
   top: 75%;
   bottom: 42px;
@@ -277,6 +419,7 @@ body.with-custom-shell.cd-sidebar-hidden #cd-sidebar {
 
 .cd-brand {
   height: 84px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-evenly;
@@ -291,9 +434,10 @@ body.with-custom-shell.cd-sidebar-hidden #cd-sidebar {
 .cd-nav {
   display: flex;
   flex-direction: column;
-  padding: 12px 0 54px 0;
+  padding: 12px 0 28px 0;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
   box-sizing: border-box;
 }
 
@@ -336,30 +480,18 @@ body.with-custom-shell.cd-sidebar-hidden #cd-sidebar {
   border-radius: 4px;
 }
 
-/* Fixed Bottom Sidebar Version Footer */
+/* Bottom Sidebar Version Footer */
 #cd-sidebar-footer {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 260px;
   height: 42px;
+  flex-shrink: 0;
   padding: 0 16px;
   background-color: var(--col-pri-nav);
   border-top: 1px solid var(--col-out-nav);
-  border-right: 1px solid var(--col-out-nav);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 60;
   box-sizing: border-box;
-  font-family: 'Segoe UI', system-ui, sans-serif;
   user-select: none;
-  transition: transform 0.2s ease;
-}
-
-body.with-custom-shell.cd-sidebar-hidden #cd-sidebar-footer {
-  transform: translateX(-100%);
-  pointer-events: none;
 }
 
 #cd-version-info {
@@ -412,7 +544,8 @@ body.with-custom-shell:not(.cd-sidebar-hidden):not(.cd-header-hidden) #cd-sideba
   border-right-color: transparent !important;
 }
 
-body.with-custom-shell:not(.cd-sidebar-hidden):not(.cd-header-hidden) #cd-sidebar .cd-nav {
+body.with-custom-shell:not(.cd-sidebar-hidden):not(.cd-header-hidden) #cd-sidebar .cd-nav,
+body.with-custom-shell:not(.cd-sidebar-hidden):not(.cd-header-hidden) #cd-sidebar #cd-sidebar-footer {
   border-right: 1px solid var(--col-out-nav);
   margin-right: -1px;
 }
@@ -641,6 +774,8 @@ body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header)
 
 body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [role="tab"] {
   color: var(--col-sec-text) !important;
+  border: 1px solid transparent !important;
+  box-sizing: border-box !important;
 }
 
 body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [role="tab"]:hover {
@@ -651,7 +786,7 @@ body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header)
 body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [role="tab"][aria-selected="true"] {
   background-color: var(--col-pri-box) !important;
   color: var(--col-accent) !important;
-  border: 1px solid var(--col-out-box) !important;
+  border-color: var(--col-out-box) !important;
 }
 
 /* Typography */
@@ -717,7 +852,7 @@ body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header)
 }
 
 /* Borders, Accent Stripes, Tables, and Form Controls */
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="border-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="border-"]:not([role="tab"]),
 body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .divide-border > :not([hidden]) ~ :not([hidden]),
 body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) table,
 body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) th,
