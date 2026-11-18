@@ -18,6 +18,7 @@
 
   /* Accents */
   --col-accent: #58a6ff;
+  --col--accent: var(--col-accent);
   --col-accent-soft: rgba(88, 166, 255, 0.15);
   --col-danger: #f85149;
 
@@ -491,6 +492,11 @@ body.with-custom-shell.cd-sidebar-hidden #cd-sidebar {
 
 .cd-nav a.active {
   pointer-events: none;
+}
+
+.nav-group.cd-nav-disabled,
+.cd-nav a.cd-nav-disabled {
+  display: none !important;
 }
 
 .cd-nav::-webkit-scrollbar {

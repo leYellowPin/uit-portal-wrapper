@@ -3,6 +3,11 @@ body.route-sinh-vien-ho-so #main-content > div > div:nth-child(2) {
   display: none !important;
 }
 
+body.route-sinh-vien-ho-so #main-content [role="tab"][hidden],
+body.route-sinh-vien-ho-so #main-content [role="tab"][data-cd-hidden-tab="1"] {
+  display: none !important;
+}
+
 body.with-custom-shell.route-sinh-vien-ho-so #main-content#main-content#main-content#main-content > div > form > div:last-child {
   background: linear-gradient(to bottom, transparent, var(--col-pri-bg) 50%) !important;
   filter: none !important;

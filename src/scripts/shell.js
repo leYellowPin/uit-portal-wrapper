@@ -71,8 +71,8 @@
     }
 
     if (normalizePath(pathname) === '/trang-chu') {
-      const statGrid = document.getElementById('cd-stats-grid');
-      if (!window.__trangChuPopulated || !statGrid || statGrid.children.length === 0) return false;
+      const userStatsEl = document.getElementById('cd-user-stats');
+      if (!window.__trangChuPopulated || !userStatsEl) return false;
     } else {
       const mainContent = document.querySelector('main#main-content') || document.querySelector('main');
       if (!mainContent || mainContent.textContent.trim().length === 0) return false;
@@ -199,11 +199,12 @@
 
   const syncSidebarActiveLinks = (activeHref) => {
     document.querySelectorAll('#cd-sidebar .cd-nav a').forEach(link => {
-      const isActive = normalizePath(link.getAttribute('href')) === activeHref;
+      const isDisabled = link.classList.contains('cd-nav-disabled');
+      const isActive = !isDisabled && normalizePath(link.getAttribute('href')) === activeHref;
       link.classList.toggle('active', isActive);
       link.setAttribute('aria-current', isActive ? 'page' : 'false');
-      link.setAttribute('aria-disabled', isActive ? 'true' : 'false');
-      link.tabIndex = isActive ? -1 : 0;
+      link.setAttribute('aria-disabled', isActive || isDisabled ? 'true' : 'false');
+      link.tabIndex = isActive || isDisabled ? -1 : 0;
     });
   };
 
@@ -264,7 +265,7 @@
     }, 120);
   };
 
-  // 4. Titlebar Search & Tab Activation
+  // 4. Titlebar Search, Tab Activation, and Student Year Checks
   const RAW_SEARCH_CONFIG = window.__UIT_SEARCH_ITEMS__;
   const DEEP_SEARCH_ITEMS = Array.isArray(RAW_SEARCH_CONFIG)
     ? RAW_SEARCH_CONFIG
@@ -280,12 +281,119 @@
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/đ/g, 'd');
 
+  const FIRST_YEAR_DISABLED_HREFS = new Set([
+    '/sinh-vien/khoa-luan',
+    '/sinh-vien/tot-nghiep'
+  ]);
+
+  const getStudentYearStatus = (metaText) => {
+    const raw = metaText || cachedProfile?.meta || '';
+    // Course code format: <course-name><enrollment-year><class-number> (e.g. "KHMT2026.2")
+    const match = raw.match(/\b([A-Za-zÀ-ỹ]{2,})(20\d{2})(?:\.\d+|\d+)\b/);
+    if (!match) {
+      return { courseCode: '', enrollmentYear: null, yearDiff: null, isFirstYear: false };
+    }
+    const enrollmentYear = Number(match[2]);
+    const currentYear = new Date().getFullYear();
+    const yearDiff = currentYear - enrollmentYear;
+    return {
+      courseCode: match[0],
+      enrollmentYear,
+      yearDiff,
+      isFirstYear: yearDiff <= 0
+    };
+  };
+
+  const isFirstYearStudent = () => getStudentYearStatus().isFirstYear;
+
+  const updateFirstYearNavState = () => {
+    const nav = document.querySelector('#cd-sidebar .cd-nav');
+    if (!nav) return;
+
+    const disableGraduation = isFirstYearStudent();
+    const groups = Array.from(nav.querySelectorAll('.nav-group'));
+    const totNghiepGroup = groups.find(
+      (g) => normalizeText(g.textContent.trim()) === 'tot nghiep'
+    );
+
+    if (!totNghiepGroup) return;
+
+    totNghiepGroup.classList.toggle('cd-nav-disabled', disableGraduation);
+    totNghiepGroup.hidden = disableGraduation;
+    if (disableGraduation) {
+      totNghiepGroup.setAttribute('aria-disabled', 'true');
+    } else {
+      totNghiepGroup.removeAttribute('aria-disabled');
+    }
+
+    const followingTabs = [];
+    let nextEl = totNghiepGroup.nextElementSibling;
+    while (nextEl && followingTabs.length < 2) {
+      if (nextEl.tagName === 'A') {
+        followingTabs.push(nextEl);
+      } else if (nextEl.classList.contains('nav-group')) {
+        break;
+      }
+      nextEl = nextEl.nextElementSibling;
+    }
+
+    followingTabs.forEach((link) => {
+      link.classList.toggle('cd-nav-disabled', disableGraduation);
+      link.hidden = disableGraduation;
+      if (disableGraduation) {
+        link.setAttribute('aria-disabled', 'true');
+        link.tabIndex = -1;
+      } else if (!link.classList.contains('active')) {
+        link.setAttribute('aria-disabled', 'false');
+        link.tabIndex = 0;
+      }
+    });
+  };
+
+  const hideHoSoBhytTab = () => {
+    if (normalizePath(window.location.pathname) !== '/sinh-vien/ho-so') return;
+    const tabs = Array.from(document.querySelectorAll('main [role="tab"]'));
+    if (tabs.length === 0) return;
+
+    let bhytActive = false;
+    tabs.forEach((tab) => {
+      const norm = normalizeText(tab.textContent.trim());
+      if (norm === 'bhyt' || norm.includes('bhyt') || norm.includes('bao hiem y te')) {
+        if (tab.getAttribute('data-state') === 'active' || tab.getAttribute('aria-selected') === 'true') {
+          bhytActive = true;
+        }
+        tab.hidden = true;
+        tab.dataset.cdHiddenTab = '1';
+        tab.setAttribute('aria-hidden', 'true');
+        tab.tabIndex = -1;
+        tab.style.setProperty('display', 'none', 'important');
+
+        const panelId = tab.getAttribute('aria-controls');
+        if (panelId) {
+          const panel = document.getElementById(panelId);
+          if (panel) {
+            panel.hidden = true;
+            panel.style.setProperty('display', 'none', 'important');
+          }
+        }
+      }
+    });
+
+    if (bhytActive) {
+      const fallbackTab = tabs.find((t) => !t.hidden && t.dataset.cdHiddenTab !== '1');
+      if (fallbackTab) {
+        fallbackTab.click();
+      }
+    }
+  };
+
   const activatePortalTab = (tabLabel) => {
     if (!tabLabel) return;
     const targetNorm = normalizeText(tabLabel);
 
     const tryClickTab = () => {
-      const tabs = Array.from(document.querySelectorAll('main [role="tab"]'));
+      const tabs = Array.from(document.querySelectorAll('main [role="tab"]'))
+        .filter((t) => !t.hidden && t.dataset.cdHiddenTab !== '1');
       const match = tabs.find((t) => normalizeText(t.textContent).includes(targetNorm));
       if (!match) return false;
 
@@ -309,6 +417,10 @@
 
   const navigateAndSelectTab = (href, tabMatch) => {
     const targetPath = normalizePath(href);
+    if (isFirstYearStudent() && FIRST_YEAR_DISABLED_HREFS.has(targetPath)) {
+      return;
+    }
+
     const currentPath = normalizePath(window.location.pathname);
 
     if (currentPath === targetPath) {
@@ -333,8 +445,16 @@
   };
 
   const buildSearchIndex = () => {
+    const firstYear = isFirstYearStudent();
+    const filteredDeepItems = DEEP_SEARCH_ITEMS.filter((item) => {
+      if (firstYear && FIRST_YEAR_DISABLED_HREFS.has(normalizePath(item.href))) {
+        return false;
+      }
+      return true;
+    });
+
     const customPageHrefs = new Set(
-      DEEP_SEARCH_ITEMS.filter((item) => !item.tabMatch).map((item) => normalizePath(item.href))
+      filteredDeepItems.filter((item) => !item.tabMatch).map((item) => normalizePath(item.href))
     );
     const excludedTitleSet = new Set(
       EXCLUDED_SEARCH_TITLES.map((t) => normalizeText(String(t).trim())).filter(Boolean)
@@ -342,6 +462,9 @@
 
     const navItems = Array.from(document.querySelectorAll('#cd-sidebar .cd-nav a'))
       .filter((a) => {
+        if (a.classList.contains('cd-nav-disabled') || a.getAttribute('aria-disabled') === 'true') {
+          return false;
+        }
         const href = normalizePath(a.getAttribute('href'));
         const titleNorm = normalizeText(a.textContent.trim());
         return !customPageHrefs.has(href) && !excludedTitleSet.has(titleNorm);
@@ -354,7 +477,7 @@
         keywords: ''
       }));
 
-    return [...DEEP_SEARCH_ITEMS, ...navItems];
+    return [...filteredDeepItems, ...navItems];
   };
 
   const bindTitlebarSearch = () => {
@@ -597,17 +720,42 @@
   applySavedCustomTheme();
 
   // 8. Profile state & /trang-chu card controls
+  const getGreetingByHour = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Chào buổi sáng,';
+    if (hour < 18) return 'Chào buổi chiều,';
+    return 'Chào buổi tối,';
+  };
+
+  const renderProfileMetaPills = (metaEl, metaText) => {
+    if (!metaEl) return;
+    metaEl.innerHTML = '';
+    const tokens = String(metaText || '')
+      .split('|')
+      .map((part) => part.trim())
+      .filter(Boolean);
+    tokens.forEach((token) => {
+      const pill = document.createElement('span');
+      pill.className = 'cd-user-meta-pill';
+      pill.textContent = token;
+      metaEl.appendChild(pill);
+    });
+  };
+
   const applyProfile = (profile) => {
     if (!profile) return;
     cachedProfile = profile;
     profileFetchSettled = true;
     if (!isExcludedPage(window.location.pathname)) {
+      const greetingEl = document.getElementById('cd-user-greeting');
       const nameEl = document.getElementById('cd-user-name');
       const avatarEl = document.getElementById('cd-user-avatar');
       const metaEl = document.getElementById('cd-user-meta');
+      if (greetingEl) greetingEl.textContent = getGreetingByHour();
       if (nameEl && profile.name) nameEl.textContent = profile.name;
       if (avatarEl && profile.avatar) avatarEl.src = profile.avatar;
-      if (metaEl && profile.meta) metaEl.textContent = profile.meta;
+      if (metaEl && profile.meta) renderProfileMetaPills(metaEl, profile.meta);
+      updateFirstYearNavState();
     }
     window.__scheduleBootCurtainCheck();
   };
@@ -658,11 +806,16 @@
     }
 
     applySavedCustomTheme();
+    const greetingEl = document.getElementById('cd-user-greeting');
+    if (greetingEl) greetingEl.textContent = getGreetingByHour();
     if (cachedProfile) {
       applyProfile(cachedProfile);
     } else if (profileFetchSettled) {
       const nameEl = document.getElementById('cd-user-name');
       if (nameEl) nameEl.textContent = 'Sinh viên UIT';
+    }
+    if (window.__renderCachedUserStats) {
+      window.__renderCachedUserStats();
     }
   };
 
@@ -699,13 +852,17 @@
         const href = normalizePath(link.getAttribute('href'));
 
         link.addEventListener('mouseenter', () => {
-          if (link.classList.contains('active')) return;
+          if (link.classList.contains('active') || link.classList.contains('cd-nav-disabled')) return;
           const nextLink = document.querySelector(`nav[aria-label="Điều hướng chính"] a[href="${href}"]`);
           nextLink?.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window }));
         });
 
         link.addEventListener('click', (e) => {
-          if (href === normalizePath(window.location.pathname) || link.classList.contains('active')) {
+          if (
+            href === normalizePath(window.location.pathname) ||
+            link.classList.contains('active') ||
+            link.classList.contains('cd-nav-disabled')
+          ) {
             e.preventDefault();
             e.stopPropagation();
             return;
@@ -727,6 +884,7 @@
 
       applySavedCustomTheme();
       if (cachedProfile) applyProfile(cachedProfile);
+      updateFirstYearNavState();
     }
 
     updateSidebarVersionDisplay();
@@ -801,6 +959,7 @@
       document.body.classList.toggle('is-trang-chu', isTrangChu);
       syncShellToggles();
       updateSidebarVersionDisplay();
+      updateFirstYearNavState();
 
       Array.from(document.body.classList).forEach(cls => {
         if (cls.startsWith('route-')) document.body.classList.remove(cls);
@@ -814,6 +973,10 @@
         requestAnimationFrame(() => window.__hideHoSoRouteLoader(false));
       } else if (!pendingRouteHref && document.body.classList.contains('cd-route-loading')) {
         window.__hideHoSoRouteLoader(false);
+      }
+
+      if (normalizedPath === '/sinh-vien/ho-so') {
+        hideHoSoBhytTab();
       }
 
       if (isTrangChu && window.__renderTrangChuView) {
@@ -830,7 +993,8 @@
   const enforceBodyClasses = new MutationObserver((mutations) => {
     const currentPath = window.location.pathname;
     const excluded = isExcludedPage(currentPath);
-    const isTrangChu = isPortalHost && normalizePath(currentPath) === '/trang-chu';
+    const normalizedPath = normalizePath(currentPath);
+    const isTrangChu = isPortalHost && normalizedPath === '/trang-chu';
 
     if (document.documentElement) {
       document.documentElement.classList.toggle('uit-custom-shell', !excluded);
@@ -857,6 +1021,7 @@
       if (isTrangChu && !document.getElementById('cd-trang-chu-view') && window.__renderTrangChuView) {
         window.__renderTrangChuView();
       }
+      updateFirstYearNavState();
       syncShellToggles();
       if (!cachedPortalVersion) {
         updateSidebarVersionDisplay();
@@ -869,6 +1034,9 @@
         (m) => m.type === 'childList' && m.target instanceof Element && m.target.closest('main')
       );
       if (mainChanged) {
+        if (normalizedPath === '/sinh-vien/ho-so') {
+          hideHoSoBhytTab();
+        }
         window.__scheduleBootCurtainCheck();
       }
     }
