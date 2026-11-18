@@ -3,6 +3,99 @@
   font-family: 'Segoe UI', system-ui, sans-serif;
 }
 
+/* Top User Profile & Theme Controls Card */
+#cd-user-card {
+  background-color: var(--col-pri-box);
+  border: 1px solid var(--col-out-box);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+#cd-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+#cd-user-card img {
+  user-select: none;
+  -webkit-user-drag: none;
+  -moz-user-select: none;
+}
+
+#cd-user-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--col-out-box);
+  background-color: var(--col-sec-box);
+}
+
+#cd-user-name {
+  margin: 0 0 4px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--col-hi-text);
+}
+
+#cd-user-meta {
+  margin: 0;
+  color: var(--col-sec-text);
+  font-size: 0.85rem;
+}
+
+/* Theme Importer & Three-Dot Menu Controls */
+#cd-theme-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cd-card-btn {
+  background-color: var(--col-sec-box);
+  color: var(--col-pri-text);
+  border: 1px solid var(--col-out-box);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.cd-card-btn:hover {
+  background-color: var(--col-out-box);
+  border-color: var(--col-accent);
+  color: var(--col-hi-text);
+}
+
+.cd-card-btn-danger:hover {
+  border-color: var(--col-danger);
+  color: var(--col-danger);
+}
+
+.cd-card-icon-btn {
+  padding: 7px 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#cd-more-menu-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
 /* 4-column Overview Stats Grid */
 #cd-stats-grid {
   display: grid;

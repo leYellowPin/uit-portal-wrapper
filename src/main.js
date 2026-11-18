@@ -35,7 +35,6 @@ function readImageBase64(relativePath) {
 }
 
 const BRAND_WHITE_BASE64 = readImageBase64('assets/uit-logo-white.png');
-const BRAND_DETAIL_BASE64 = readImageBase64('assets/uit-logo-detail.png');
 
 const ASSETS = {
   titlebarHtml: readAsset('layouts/titlebar.html'),
@@ -148,7 +147,6 @@ function getGlobalTitlebarCss() {
     }
 
     html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-sidebar-btn,
-    html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-header-btn,
     html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-search-wrap,
     body:not(.with-custom-shell) #cd-search-wrap {
       display: none !important;
@@ -449,7 +447,6 @@ function injectCustomUI(webContents) {
       if (!window.__UIT_SHELL_HTML__)        { window.__UIT_SHELL_HTML__ = ${JSON.stringify(shellHtml)}; }
       if (!window.__UIT_TRANG_CHU_HTML__)    { window.__UIT_TRANG_CHU_HTML__ = ${JSON.stringify(trangChuHtml)}; }
       if (!window.__UIT_BRAND__)             { window.__UIT_BRAND__ = ${JSON.stringify(BRAND_WHITE_BASE64)}; }
-      if (!window.__UIT_BRAND_DETAIL__)      { window.__UIT_BRAND_DETAIL__ = ${JSON.stringify(BRAND_DETAIL_BASE64)}; }
       if (!window.__UIT_APP_VERSION__)       { window.__UIT_APP_VERSION__ = ${JSON.stringify(appVersion)}; }
       if (!window.__UIT_SEARCH_ITEMS__)      { window.__UIT_SEARCH_ITEMS__ = ${JSON.stringify(searchItems)}; }
       ${getEarlyBootstrapScript(isPortalHost)}

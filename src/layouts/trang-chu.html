@@ -1,3 +1,35 @@
+<div id="cd-user-card">
+  <div id="cd-user-profile">
+    <img id="cd-user-avatar" src="" alt="Avatar" />
+    <div class="cd-user-info">
+      <h1 id="cd-user-name">Đang tải dữ liệu...</h1>
+      <p id="cd-user-meta">...</p>
+    </div>
+  </div>
+  <div id="cd-theme-controls">
+    <input type="file" id="cd-theme-file-input" accept=".css,text/css" hidden />
+    <button type="button" id="cd-import-theme-btn" class="cd-card-btn" title="Import custom .css file">
+      Import CSS
+    </button>
+    <button type="button" id="cd-reset-theme-btn" class="cd-card-btn cd-card-btn-danger" title="Reset to default theme" style="display: none;">
+      Reset
+    </button>
+    <div id="cd-more-menu-wrap">
+      <button type="button" id="cd-more-menu-btn" class="cd-card-btn cd-card-icon-btn" title="Quản lý tài khoản" aria-haspopup="true" aria-expanded="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+      </button>
+      <div id="cd-more-dropdown" class="cd-dropdown-menu" hidden>
+        <button type="button" id="cd-change-password-btn" class="cd-dropdown-item" onclick="window.location.href='https://portal.uit.edu.vn/api/auth/change-password'">
+          Đổi mật khẩu
+        </button>
+        <button type="button" id="cd-logout-btn" class="cd-dropdown-item cd-dropdown-item-danger" onclick="window.location.href='/api/auth/logout'">
+          Đăng xuất
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <section id="cd-stats-grid"></section>
 <section id="cd-widgets-grid">
   <div class="cd-widget" id="cd-widget-announcements">

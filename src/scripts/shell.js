@@ -16,7 +16,6 @@
   };
 
   let isSidebarHidden = localStorage.getItem('uit_sidebar_hidden') === '1';
-  let isHeaderHidden = localStorage.getItem('uit_header_hidden') === '1';
   let hasCustomTheme = Boolean(localStorage.getItem('uit_custom_theme_css'));
   let cachedPortalVersion = sessionStorage.getItem('uit_portal_version') || '';
 
@@ -60,8 +59,7 @@
     if (!profileFetchSettled && !cachedProfile) return false;
 
     const sidebar = document.getElementById('cd-sidebar');
-    const header = document.getElementById('cd-header');
-    if (!document.body || !sidebar || !header) return false;
+    if (!document.body || !sidebar) return false;
     if (!document.body.classList.contains('with-custom-shell')) return false;
 
     // Wait until Next.js hydrates the native nav and shell.css hides the native sidebar
@@ -191,9 +189,7 @@
   const syncShellToggles = () => {
     if (!document.body) return;
     document.body.classList.toggle('cd-sidebar-hidden', isSidebarHidden);
-    document.body.classList.toggle('cd-header-hidden', isHeaderHidden);
     document.getElementById('cd-toggle-sidebar-btn')?.setAttribute('aria-pressed', isSidebarHidden ? 'true' : 'false');
-    document.getElementById('cd-toggle-header-btn')?.setAttribute('aria-pressed', isHeaderHidden ? 'true' : 'false');
   };
 
   // 3. Route transition loader for uncached /sinh-vien/ho-so SPA navigation
@@ -486,12 +482,6 @@
         localStorage.setItem('uit_sidebar_hidden', isSidebarHidden ? '1' : '0');
         syncShellToggles();
       });
-
-      document.getElementById('cd-toggle-header-btn')?.addEventListener('click', () => {
-        isHeaderHidden = !isHeaderHidden;
-        localStorage.setItem('uit_header_hidden', isHeaderHidden ? '1' : '0');
-        syncShellToggles();
-      });
     }
 
     bindTitlebarSearch();
@@ -554,7 +544,7 @@
 
     for (const container of containers) {
       for (const el of [container, ...container.querySelectorAll('*')]) {
-        if (el.closest('#cd-sidebar, #cd-header, #cd-titlebar')) continue;
+        if (el.closest('#cd-sidebar, #cd-titlebar')) continue;
         const found = extractVersionToken(el.textContent);
         if (found) {
           cachedPortalVersion = found;
@@ -606,7 +596,7 @@
 
   applySavedCustomTheme();
 
-  // 8. Profile state
+  // 8. Profile state & /trang-chu card controls
   const applyProfile = (profile) => {
     if (!profile) return;
     cachedProfile = profile;
@@ -620,6 +610,60 @@
       if (metaEl && profile.meta) metaEl.textContent = profile.meta;
     }
     window.__scheduleBootCurtainCheck();
+  };
+
+  window.__bindTrangChuControls = () => {
+    const importBtn = document.getElementById('cd-import-theme-btn');
+    const resetBtn = document.getElementById('cd-reset-theme-btn');
+    const fileInput = document.getElementById('cd-theme-file-input');
+
+    if (importBtn && fileInput && importBtn.dataset.bound !== '1') {
+      importBtn.dataset.bound = '1';
+      importBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (typeof ev.target?.result === 'string') {
+            localStorage.setItem('uit_custom_theme_css', ev.target.result);
+            localStorage.setItem('uit_custom_theme_name', file.name.replace(/\.css$/i, ''));
+            applySavedCustomTheme();
+          }
+        };
+        reader.readAsText(file);
+        fileInput.value = '';
+      });
+    }
+
+    if (resetBtn && resetBtn.dataset.bound !== '1') {
+      resetBtn.dataset.bound = '1';
+      resetBtn.addEventListener('click', () => {
+        localStorage.removeItem('uit_custom_theme_css');
+        localStorage.removeItem('uit_custom_theme_name');
+        applySavedCustomTheme();
+      });
+    }
+
+    const moreBtn = document.getElementById('cd-more-menu-btn');
+    const moreDropdown = document.getElementById('cd-more-dropdown');
+    if (moreBtn && moreDropdown && moreBtn.dataset.bound !== '1') {
+      moreBtn.dataset.bound = '1';
+      moreBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const willOpen = moreDropdown.hidden;
+        moreDropdown.hidden = !willOpen;
+        moreBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      });
+    }
+
+    applySavedCustomTheme();
+    if (cachedProfile) {
+      applyProfile(cachedProfile);
+    } else if (profileFetchSettled) {
+      const nameEl = document.getElementById('cd-user-name');
+      if (nameEl) nameEl.textContent = 'Sinh viên UIT';
+    }
   };
 
   if (!window.__cdMenuDismissBound) {
@@ -649,13 +693,7 @@
     if (isExcludedPage(window.location.pathname)) return;
     if (!document.querySelector('#cd-sidebar #cd-sidebar-footer') && window.__UIT_SHELL_HTML__) {
       document.getElementById('cd-sidebar')?.remove();
-      document.getElementById('cd-header')?.remove();
       document.body.insertAdjacentHTML('afterbegin', window.__UIT_SHELL_HTML__);
-
-      const brand01Element = document.getElementById('cd-uit-brand');
-      if (brand01Element && window.__UIT_BRAND_DETAIL__) {
-        brand01Element.src = window.__UIT_BRAND_DETAIL__;
-      }
 
       document.querySelectorAll('#cd-sidebar .cd-nav a').forEach(link => {
         const href = normalizePath(link.getAttribute('href'));
@@ -686,45 +724,6 @@
           }
         });
       });
-
-      const importBtn = document.getElementById('cd-import-theme-btn');
-      const resetBtn = document.getElementById('cd-reset-theme-btn');
-      const fileInput = document.getElementById('cd-theme-file-input');
-
-      if (importBtn && fileInput) {
-        importBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            if (typeof ev.target?.result === 'string') {
-              localStorage.setItem('uit_custom_theme_css', ev.target.result);
-              localStorage.setItem('uit_custom_theme_name', file.name.replace(/\.css$/i, ''));
-              applySavedCustomTheme();
-            }
-          };
-          reader.readAsText(file);
-          fileInput.value = '';
-        });
-      }
-
-      resetBtn?.addEventListener('click', () => {
-        localStorage.removeItem('uit_custom_theme_css');
-        localStorage.removeItem('uit_custom_theme_name');
-        applySavedCustomTheme();
-      });
-
-      const moreBtn = document.getElementById('cd-more-menu-btn');
-      const moreDropdown = document.getElementById('cd-more-dropdown');
-      if (moreBtn && moreDropdown) {
-        moreBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const willOpen = moreDropdown.hidden;
-          moreDropdown.hidden = !willOpen;
-          moreBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-        });
-      }
 
       applySavedCustomTheme();
       if (cachedProfile) applyProfile(cachedProfile);
@@ -786,20 +785,17 @@
     applySavedCustomTheme();
 
     const sidebar = document.getElementById('cd-sidebar');
-    const header = document.getElementById('cd-header');
 
     if (excluded) {
       profileFetchSettled = true;
       dismissBootCurtainNow();
       if (sidebar) sidebar.style.display = 'none';
-      if (header) header.style.display = 'none';
-      document.body.classList.remove('with-custom-shell', 'is-trang-chu', 'cd-sidebar-hidden', 'cd-header-hidden');
+      document.body.classList.remove('with-custom-shell', 'is-trang-chu', 'cd-sidebar-hidden');
       Array.from(document.body.classList).forEach(cls => {
         if (cls.startsWith('route-')) document.body.classList.remove(cls);
       });
     } else {
       if (sidebar) sidebar.style.display = 'flex';
-      if (header) header.style.display = 'flex';
 
       document.body.classList.add('with-custom-shell');
       document.body.classList.toggle('is-trang-chu', isTrangChu);

@@ -18,6 +18,10 @@
 
       customView.innerHTML = window.__UIT_TRANG_CHU_HTML__;
 
+      if (window.__bindTrangChuControls) {
+        window.__bindTrangChuControls();
+      }
+
       const statGrid = document.getElementById('cd-stats-grid');
       const cardTemplate = document.getElementById('cd-stat-card-template');
 
