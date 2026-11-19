@@ -6,14 +6,13 @@
     return cleaned === '/' ? '/trang-chu' : cleaned;
   };
 
-  const isExcludedPage = (pathname) => {
-    if (!isPortalHost) return true;
-    return (
-      pathname.startsWith('/login') ||
-      pathname.startsWith('/api/auth') ||
-      pathname.startsWith('/khao-sat')
-    );
+  const isSupportedShellPage = (pathname) => {
+    if (!isPortalHost) return false;
+    const p = pathname || '';
+    return p.startsWith('/trang-chu') || p.startsWith('/sinh-vien');
   };
+
+  const isExcludedPage = (pathname) => !isSupportedShellPage(pathname);
 
   let isSidebarHidden = localStorage.getItem('uit_sidebar_hidden') === '1';
   let hasCustomTheme = Boolean(localStorage.getItem('uit_custom_theme_css'));
@@ -696,11 +695,16 @@
     if (titlebar.dataset.bound !== '1') {
       titlebar.dataset.bound = '1';
 
-      document.getElementById('cd-refresh-btn')?.addEventListener('click', () => {
-        if (window.__clearHoSoRscCache) window.__clearHoSoRscCache();
-        showBootCurtain(true);
-        requestAnimationFrame(() => window.location.reload());
-      });
+      window.__showBootCurtainForRefresh = () => showBootCurtain(true);
+      const refreshBtn = document.getElementById('cd-refresh-btn');
+      if (refreshBtn && refreshBtn.dataset.refreshBound !== '1') {
+        refreshBtn.dataset.refreshBound = '1';
+        refreshBtn.addEventListener('click', () => {
+          if (window.__clearHoSoRscCache) window.__clearHoSoRscCache();
+          showBootCurtain(true);
+          requestAnimationFrame(() => window.location.reload());
+        });
+      }
 
       document.getElementById('cd-toggle-sidebar-btn')?.addEventListener('click', () => {
         isSidebarHidden = !isSidebarHidden;
@@ -1049,6 +1053,7 @@
     if (excluded) {
       profileFetchSettled = true;
       dismissBootCurtainNow();
+      document.getElementById('cd-custom-theme-style')?.remove();
       if (sidebar) sidebar.style.display = 'none';
       document.body.classList.remove('with-custom-shell', 'is-trang-chu', 'cd-sidebar-hidden');
       Array.from(document.body.classList).forEach(cls => {

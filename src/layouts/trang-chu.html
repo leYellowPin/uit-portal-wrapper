@@ -36,14 +36,39 @@
 </div>
 
 <section id="cd-stats-grid"></section>
+
+<section class="cd-widget" id="cd-widget-schedule">
+  <div id="cd-schedule-overview">
+    <div class="cd-schedule-header-group">
+      <h3>THỜI KHÓA BIỂU HÔM NAY</h3>
+      <p id="cd-schedule-date"></p>
+    </div>
+    <div id="cd-schedule-legend" aria-label="Chú thích trạng thái môn học">
+      <span class="cd-tkb-legend-item" data-status="ongoing">
+        <span class="cd-tkb-status-dot" data-status="ongoing"></span>
+        <span>Đang học</span>
+      </span>
+      <span class="cd-tkb-legend-item" data-status="completed">
+        <span class="cd-tkb-status-dot" data-status="completed"></span>
+        <span>Đã học</span>
+      </span>
+      <span class="cd-tkb-legend-item" data-status="upcoming">
+        <span class="cd-tkb-status-dot" data-status="upcoming"></span>
+        <span>Chưa học</span>
+      </span>
+    </div>
+  </div>
+  <div id="cd-schedule-content" class="cd-widget-body"></div>
+</section>
+
 <section id="cd-widgets-grid">
   <div class="cd-widget" id="cd-widget-announcements">
     <h3>Thông báo chung</h3>
     <div id="cd-announcements-content" class="cd-widget-body"></div>
   </div>
-  <div class="cd-widget" id="cd-widget-schedule">
-    <h3>Thời khóa biểu</h3>
-    <div id="cd-schedule-content" class="cd-widget-body"></div>
+  <div class="cd-widget" id="cd-widget-shortcuts">
+    <h3>Lối tắt trang web</h3>
+    <div id="cd-shortcuts-content" class="cd-widget-body"></div>
   </div>
 </section>
 

@@ -145,6 +145,233 @@
     } catch {}
   };
 
+  const WEEKDAYS_VI = [
+    'Chủ Nhật',
+    'Thứ Hai',
+    'Thứ Ba',
+    'Thứ Tư',
+    'Thứ Năm',
+    'Thứ Sáu',
+    'Thứ Bảy'
+  ];
+
+  const formatVietnameseDate = (date = new Date()) => {
+    const weekday = WEEKDAYS_VI[date.getDay()] || '';
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    return `${weekday} \u00B7 ${dd}/${mm}/${yyyy}`;
+  };
+
+  const parseTimeRangeSeconds = (text) => {
+    if (!text) return null;
+    const match = String(text).match(
+      /(\d{1,2})\s*[:hH]\s*(\d{2})\s*(?:-|–|—|to|đến)\s*(\d{1,2})\s*[:hH]\s*(\d{2})/i
+    );
+    if (!match) return null;
+
+    const startH = Number.parseInt(match[1], 10);
+    const startM = Number.parseInt(match[2], 10);
+    const endH = Number.parseInt(match[3], 10);
+    const endM = Number.parseInt(match[4], 10);
+
+    if (
+      Number.isNaN(startH) || Number.isNaN(startM) ||
+      Number.isNaN(endH) || Number.isNaN(endM) ||
+      startH < 0 || startH > 23 || startM < 0 || startM > 59 ||
+      endH < 0 || endH > 23 || endM < 0 || endM > 59
+    ) {
+      return null;
+    }
+
+    const startSeconds = startH * 3600 + startM * 60;
+    const endSeconds = endH * 3600 + endM * 60;
+    if (endSeconds <= startSeconds) return null;
+
+    return { startSeconds, endSeconds };
+  };
+
+  const evaluateScheduleStatus = (range, now = new Date()) => {
+    const nowSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    if (nowSeconds < range.startSeconds) {
+      return { status: 'upcoming', label: 'Chưa học' };
+    }
+    if (nowSeconds < range.endSeconds) {
+      return { status: 'ongoing', label: 'Đang học' };
+    }
+    return { status: 'completed', label: 'Đã học' };
+  };
+
+  const findScheduleDotAnchor = (li) => {
+    const leafCandidates = Array.from(li.querySelectorAll('p, span, div, code, strong')).filter(
+      (el) => el.children.length === 0 && (el.textContent || '').trim().length > 0
+    );
+
+    const fullClassCodeEl = leafCandidates.find((el) =>
+      /^[A-Z]{2,6}\d{2,4}(?:\.[A-Z0-9]+)+$/i.test((el.textContent || '').trim())
+    );
+    if (fullClassCodeEl) return fullClassCodeEl;
+
+    const shortClassCodeEl = leafCandidates.find((el) =>
+      /^[A-Z]{2,6}\d{2,4}$/i.test((el.textContent || '').trim())
+    );
+    if (shortClassCodeEl) return shortClassCodeEl;
+
+    return leafCandidates[0] || null;
+  };
+
+  const applyScheduleStatusToItem = (li, now) => {
+    li.querySelectorAll('.cd-tkb-status-dot').forEach((dot) => dot.remove());
+    li.querySelectorAll('.cd-tkb-code-with-dot').forEach((el) => el.classList.remove('cd-tkb-code-with-dot'));
+
+    const range = parseTimeRangeSeconds(li.textContent || '');
+    if (!range) {
+      li.removeAttribute('data-tkb-status');
+      return;
+    }
+
+    const { status, label } = evaluateScheduleStatus(range, now);
+    li.dataset.tkbStatus = status;
+    li.title = label;
+
+    // Hide any empty tiny native indicator dot so there is never a duplicate dot
+    li.querySelectorAll('span[class*="rounded-full"], div[class*="rounded-full"]').forEach((el) => {
+      if ((el.textContent || '').trim() === '' && el.children.length === 0) {
+        el.style.display = 'none';
+      }
+    });
+
+    const anchor = findScheduleDotAnchor(li);
+    if (anchor) {
+      anchor.classList.add('cd-tkb-code-with-dot');
+      const dot = document.createElement('span');
+      dot.className = 'cd-tkb-status-dot';
+      dot.dataset.status = status;
+      dot.title = label;
+      dot.setAttribute('aria-label', label);
+      anchor.appendChild(dot);
+    }
+  };
+
+  const updateScheduleStatuses = () => {
+    const now = new Date();
+    const dateEl = document.getElementById('cd-schedule-date');
+    if (dateEl) {
+      dateEl.textContent = formatVietnameseDate(now);
+    }
+
+    const scheduleContainer = document.getElementById('cd-schedule-content');
+    if (!scheduleContainer) return;
+
+    scheduleContainer.querySelectorAll('li').forEach((li) => {
+      applyScheduleStatusToItem(li, now);
+    });
+  };
+
+  const startScheduleStatusTicker = () => {
+    if (window.__uitScheduleStatusTimer) {
+      clearInterval(window.__uitScheduleStatusTimer);
+      window.__uitScheduleStatusTimer = null;
+    }
+    updateScheduleStatuses();
+    window.__uitScheduleStatusTimer = setInterval(() => {
+      if (!document.getElementById('cd-schedule-content')) {
+        clearInterval(window.__uitScheduleStatusTimer);
+        window.__uitScheduleStatusTimer = null;
+        return;
+      }
+      updateScheduleStatuses();
+    }, 15000);
+  };
+
+  const FALLBACK_SHORTCUTS = [
+    { id: 'uit-official', name: 'Website chính thức', url: 'https://uit.edu.vn', icon: 'shortcut-uit.png', iconSrc: '' },
+    { id: 'uit-portal', name: 'Cổng thông tin', url: 'https://portal.uit.edu.vn', icon: 'shortcut-portal.png', iconSrc: '' },
+    { id: 'uit-drl', name: 'Điểm rèn luyện', url: 'https://drl.uit.edu.vn', icon: 'shortcut-drl.png', iconSrc: '' },
+    { id: 'uit-dkhp', name: 'Đăng ký học phần', url: 'https://dkhp.uit.edu.vn', icon: 'shortcut-dkhp.png', iconSrc: '' },
+    { id: 'uit-moodle', name: 'Moodle', url: 'https://courses.uit.edu.vn', icon: 'shortcut-moodle.png', iconSrc: '' },
+    { id: 'uit-forum', name: 'Forum', url: 'https://forum.uit.edu.vn', icon: 'shortcut-forum.png', iconSrc: '' }
+  ];
+
+  const createFallbackShortcutIcon = () => {
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.classList.add('cd-shortcut-fallback-svg');
+
+    const circle = document.createElementNS(svgNS, 'circle');
+    circle.setAttribute('cx', '12');
+    circle.setAttribute('cy', '12');
+    circle.setAttribute('r', '10');
+
+    const line = document.createElementNS(svgNS, 'line');
+    line.setAttribute('x1', '2');
+    line.setAttribute('y1', '12');
+    line.setAttribute('x2', '22');
+    line.setAttribute('y2', '12');
+
+    const path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('d', 'M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z');
+
+    svg.appendChild(circle);
+    svg.appendChild(line);
+    svg.appendChild(path);
+    return svg;
+  };
+
+  const renderWebShortcuts = () => {
+    const container = document.getElementById('cd-shortcuts-content');
+    if (!container) return;
+
+    const shortcuts = Array.isArray(window.__UIT_WEB_SHORTCUTS__) && window.__UIT_WEB_SHORTCUTS__.length > 0
+      ? window.__UIT_WEB_SHORTCUTS__
+      : FALLBACK_SHORTCUTS;
+
+    container.innerHTML = '';
+
+    shortcuts.forEach((item) => {
+      if (!item || !item.url) return;
+
+      const link = document.createElement('a');
+      link.className = 'cd-shortcut-item';
+      link.href = item.url;
+      if (item.id) link.dataset.shortcutId = item.id;
+      link.title = `${item.name || item.url} (${item.url})`;
+
+      const iconBox = document.createElement('div');
+      iconBox.className = 'cd-shortcut-icon-box';
+
+      if (item.iconSrc) {
+        const img = document.createElement('img');
+        img.className = 'cd-shortcut-icon';
+        img.src = item.iconSrc;
+        img.alt = '';
+        img.draggable = false;
+        img.addEventListener('error', () => {
+          img.remove();
+          iconBox.appendChild(createFallbackShortcutIcon());
+        }, { once: true });
+        iconBox.appendChild(img);
+      } else {
+        iconBox.appendChild(createFallbackShortcutIcon());
+      }
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'cd-shortcut-name';
+      nameEl.textContent = item.name || item.url;
+
+      link.appendChild(iconBox);
+      link.appendChild(nameEl);
+      container.appendChild(link);
+    });
+  };
+
   window.__renderTrangChuView = () => {
     window.__trangChuPopulated = false;
 
@@ -251,6 +478,8 @@
 
       extractWidgetContent('Thông báo từ nhà trường', 'cd-announcements-content');
       extractWidgetContent('Thời khóa biểu', 'cd-schedule-content');
+      startScheduleStatusTicker();
+      renderWebShortcuts();
 
       window.__trangChuPopulated = true;
       if (window.__scheduleBootCurtainCheck) {

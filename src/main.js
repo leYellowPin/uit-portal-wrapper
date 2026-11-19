@@ -40,10 +40,72 @@ function readJsonAsset(relativePath, fallback = { items: [], excludeTitles: [] }
   }
 }
 
+const MIME_BY_EXT = {
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon'
+};
+
 function readImageBase64(relativePath) {
+  if (!relativePath) return '';
   const fullPath = path.join(__dirname, relativePath);
   if (!fs.existsSync(fullPath)) return '';
-  return `data:image/png;base64,${fs.readFileSync(fullPath).toString('base64')}`;
+  const ext = path.extname(fullPath).toLowerCase();
+  const mime = MIME_BY_EXT[ext] || 'image/png';
+  return `data:${mime};base64,${fs.readFileSync(fullPath).toString('base64')}`;
+}
+
+const DEFAULT_WEB_SHORTCUTS = [
+  { id: 'uit-official', name: 'Website chính thức', url: 'https://uit.edu.vn', icon: 'shortcut-uit.png' },
+  { id: 'uit-portal', name: 'Cổng thông tin', url: 'https://portal.uit.edu.vn', icon: 'shortcut-portal.png' },
+  { id: 'uit-drl', name: 'Điểm rèn luyện', url: 'https://drl.uit.edu.vn', icon: 'shortcut-drl.png' },
+  { id: 'uit-dkhp', name: 'Đăng ký học phần', url: 'https://dkhp.uit.edu.vn', icon: 'shortcut-dkhp.png' },
+  { id: 'uit-moodle', name: 'Moodle', url: 'https://courses.uit.edu.vn', icon: 'shortcut-moodle.png' },
+  { id: 'uit-forum', name: 'Forum', url: 'https://forum.uit.edu.vn', icon: 'shortcut-forum.png' }
+];
+
+function getResolvedWebShortcuts() {
+  const raw = readAsset('config/web-shortcuts.json');
+  let list = DEFAULT_WEB_SHORTCUTS;
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        list = parsed;
+      } else if (parsed && Array.isArray(parsed.shortcuts)) {
+        list = parsed.shortcuts;
+      } else if (parsed && Array.isArray(parsed.items)) {
+        list = parsed.items;
+      }
+    } catch (err) {
+      console.error('[UIT Wrapper] Failed to parse config/web-shortcuts.json:', err);
+    }
+  }
+
+  return list
+    .filter((item) => item && typeof item === 'object' && item.url)
+    .map((item, idx) => {
+      const rawUrl = String(item.url).trim();
+      const url = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+      const rawIcon = String(item.icon || '').trim().replace(/^assets[\\/]/i, '');
+      const iconSrc = rawIcon ? readImageBase64(path.join('assets', rawIcon)) : '';
+      return {
+        id: String(item.id || `shortcut-${idx}`),
+        name: String(item.name || rawUrl).trim(),
+        url,
+        icon: rawIcon,
+        iconSrc
+      };
+    });
+}
+
+function isCustomShellUrl(parsedUrl) {
+  if (!parsedUrl || parsedUrl.hostname !== 'portal.uit.edu.vn') return false;
+  const p = parsedUrl.pathname || '';
+  return p.startsWith('/trang-chu') || p.startsWith('/sinh-vien');
 }
 
 const BRAND_WHITE_BASE64 = readImageBase64('assets/uit-logo-white.png');
@@ -254,172 +316,179 @@ const PORTAL_COMBINED_CSS = [
 
 const EXTERNAL_COMBINED_CSS = getGlobalTitlebarCss();
 
-function getEarlyBootstrapScript(isPortalHost) {
+function getEarlyBootstrapScript(useCustomShell) {
   return `
     (() => {
       if (!window.__UIT_BRAND__)             { window.__UIT_BRAND__ = ${JSON.stringify(BRAND_WHITE_BASE64)}; }
       if (!window.__UIT_TITLEBAR_HTML__)     { window.__UIT_TITLEBAR_HTML__ = ${JSON.stringify(ASSETS.titlebarHtml)}; }
       if (!window.__UIT_BOOT_CURTAIN_HTML__) { window.__UIT_BOOT_CURTAIN_HTML__ = ${JSON.stringify(ASSETS.bootCurtainHtml)}; }
-      const isPortalHost = ${JSON.stringify(isPortalHost)};
 
-      const isExcludedRoute = (pathname) => {
-        if (!isPortalHost) return true;
+      const isCustomShellRoute = (pathname) => {
+        if (window.location.hostname !== 'portal.uit.edu.vn') return false;
         const p = pathname || '';
-        return p.startsWith('/login') || p.startsWith('/api/auth') || p.startsWith('/khao-sat');
+        return p.startsWith('/trang-chu') || p.startsWith('/sinh-vien');
       };
 
-      const excluded = isExcludedRoute(window.location.pathname);
+      const activeCustomShell = ${JSON.stringify(Boolean(useCustomShell))} && isCustomShellRoute(window.location.pathname);
 
       if (document.documentElement) {
-        document.documentElement.classList.toggle('uit-custom-shell', !excluded);
+        document.documentElement.classList.toggle('uit-custom-shell', activeCustomShell);
       }
 
-      try {
-        const savedCss = localStorage.getItem('uit_custom_theme_css');
-        if (savedCss && !excluded && !document.getElementById('cd-custom-theme-style') && document.documentElement) {
-          const styleEl = document.createElement('style');
-          styleEl.id = 'cd-custom-theme-style';
-          styleEl.textContent = savedCss;
-          document.documentElement.appendChild(styleEl);
-        }
-      } catch {}
-
-      // Track same-origin fetch and XHR calls so the boot curtain waits until data loads
-      if (!window.__uitNetworkHooked) {
-        window.__uitNetworkHooked = true;
-        window.__uitActiveNetworkCount = 0;
-        window.__uitHoSoRscCache = null;
-        window.__uitHoSoRscInFlight = null;
-
-        const trackStart = () => {
-          window.__uitActiveNetworkCount += 1;
-          if (window.__scheduleBootCurtainCheck) window.__scheduleBootCurtainCheck();
-          let done = false;
-          const finish = () => {
-            if (done) return;
-            done = true;
-            window.__uitActiveNetworkCount = Math.max(0, window.__uitActiveNetworkCount - 1);
-            if (window.__scheduleBootCurtainCheck) window.__scheduleBootCurtainCheck();
-          };
-          setTimeout(finish, 6000);
-          return finish;
-        };
-
-        const origXhrSend = XMLHttpRequest.prototype.send;
-        XMLHttpRequest.prototype.send = function (...args) {
-          if (!this.__uitTracked) {
-            this.__uitTracked = true;
-            const finish = trackStart();
-            this.addEventListener('loadend', () => {
-              this.__uitTracked = false;
-              finish();
-            }, { once: true });
+      if (activeCustomShell) {
+        try {
+          const savedCss = localStorage.getItem('uit_custom_theme_css');
+          if (savedCss && !document.getElementById('cd-custom-theme-style') && document.documentElement) {
+            const styleEl = document.createElement('style');
+            styleEl.id = 'cd-custom-theme-style';
+            styleEl.textContent = savedCss;
+            document.documentElement.appendChild(styleEl);
           }
-          return origXhrSend.apply(this, args);
-        };
+        } catch {}
 
-        const origFetch = window.fetch.bind(window);
-
-        const buildCachedResponse = (cached) => new Response(cached.body.slice(0), {
-          status: cached.status,
-          statusText: cached.statusText,
-          headers: new Headers(cached.headers)
-        });
-
-        const fetchHoSoRsc = (url, stateTree, nextUrl) => {
-          if (window.__uitHoSoRscCache) return Promise.resolve(window.__uitHoSoRscCache);
-          if (window.__uitHoSoRscInFlight) return window.__uitHoSoRscInFlight;
-
-          const headers = new Headers({
-            'RSC': '1',
-            'Accept': 'text/x-component',
-            'Next-Url': nextUrl || window.location.pathname || '/trang-chu'
-          });
-          if (stateTree) headers.set('Next-Router-State-Tree', stateTree);
-
-          const finish = trackStart();
-          const task = origFetch(url, { method: 'GET', credentials: 'include', headers })
-            .then(async (res) => {
-              if (!res.ok) return null;
-              const body = await res.arrayBuffer();
-              if (body.byteLength < 50 * 1024) return null;
-              const safeHeaders = [];
-              res.headers.forEach((v, k) => {
-                const l = k.toLowerCase();
-                if (l !== 'content-encoding' && l !== 'content-length') safeHeaders.push([k, v]);
-              });
-              window.__uitHoSoRscCache = { body, status: res.status, statusText: res.statusText, headers: safeHeaders };
-              return window.__uitHoSoRscCache;
-            })
-            .catch(() => null)
-            .finally(() => {
-              window.__uitHoSoRscInFlight = null;
-              finish();
-            });
-
-          window.__uitHoSoRscInFlight = task;
-          return task;
-        };
-
-        window.__preloadHoSoRsc = (stateTree, nextUrl) => fetchHoSoRsc('/sinh-vien/ho-so?_rsc=preload', stateTree, nextUrl);
-        window.__clearHoSoRscCache = () => {
+        // Track same-origin fetch and XHR calls so the boot curtain waits until data loads
+        if (!window.__uitNetworkHooked) {
+          window.__uitNetworkHooked = true;
+          window.__uitActiveNetworkCount = 0;
           window.__uitHoSoRscCache = null;
           window.__uitHoSoRscInFlight = null;
-        };
 
-        window.fetch = async (input, init) => {
-          const isReq = typeof Request !== 'undefined' && input instanceof Request;
-          const rawUrl = typeof input === 'string' ? input : (input instanceof URL ? input.href : input?.url);
-          const method = (init?.method || (isReq ? input.method : 'GET') || 'GET').toUpperCase();
+          const trackStart = () => {
+            window.__uitActiveNetworkCount += 1;
+            if (window.__scheduleBootCurtainCheck) window.__scheduleBootCurtainCheck();
+            let done = false;
+            const finish = () => {
+              if (done) return;
+              done = true;
+              window.__uitActiveNetworkCount = Math.max(0, window.__uitActiveNetworkCount - 1);
+              if (window.__scheduleBootCurtainCheck) window.__scheduleBootCurtainCheck();
+            };
+            setTimeout(finish, 6000);
+            return finish;
+          };
 
-          let parsed = null;
-          let sameOrigin = false;
-          if (rawUrl) {
-            try {
-              parsed = new URL(rawUrl, window.location.origin);
-              sameOrigin = parsed.origin === window.location.origin;
-            } catch {}
-          }
-
-          if (isPortalHost && parsed) {
-            if (parsed.pathname.startsWith('/api/auth') || parsed.pathname === '/login' || (method !== 'GET' && parsed.pathname.startsWith('/sinh-vien/ho-so'))) {
-              window.__clearHoSoRscCache();
+          const origXhrSend = XMLHttpRequest.prototype.send;
+          XMLHttpRequest.prototype.send = function (...args) {
+            if (!this.__uitTracked) {
+              this.__uitTracked = true;
+              const finish = trackStart();
+              this.addEventListener('loadend', () => {
+                this.__uitTracked = false;
+                finish();
+              }, { once: true });
             }
+            return origXhrSend.apply(this, args);
+          };
 
-            if (method === 'GET' && sameOrigin && parsed.pathname === '/sinh-vien/ho-so' && parsed.searchParams.has('_rsc')) {
-              const reqHeaders = new Headers(isReq ? input.headers : undefined);
-              if (init?.headers) new Headers(init.headers).forEach((v, k) => reqHeaders.set(k, v));
+          const origFetch = window.fetch.bind(window);
 
-              const isPrefetch = reqHeaders.has('Next-Router-Prefetch') || reqHeaders.has('Next-Router-Segment-Prefetch');
-              if (isPrefetch) {
-                if (!window.__uitHoSoRscCache && !window.__uitHoSoRscInFlight) {
-                  fetchHoSoRsc(parsed.pathname + parsed.search, reqHeaders.get('Next-Router-State-Tree'), reqHeaders.get('Next-Url'));
-                }
-                const finish = trackStart();
-                try { return await origFetch(input, init); } finally { finish(); }
-              }
+          const buildCachedResponse = (cached) => new Response(cached.body.slice(0), {
+            status: cached.status,
+            statusText: cached.statusText,
+            headers: new Headers(cached.headers)
+          });
 
-              if (window.__uitHoSoRscCache) return buildCachedResponse(window.__uitHoSoRscCache);
+          const fetchHoSoRsc = (url, stateTree, nextUrl) => {
+            if (window.__uitHoSoRscCache) return Promise.resolve(window.__uitHoSoRscCache);
+            if (window.__uitHoSoRscInFlight) return window.__uitHoSoRscInFlight;
 
-              if (window.__showHoSoRouteLoader) window.__showHoSoRouteLoader('/sinh-vien/ho-so');
-              try {
-                const cached = await (window.__uitHoSoRscInFlight || fetchHoSoRsc(parsed.pathname + parsed.search, reqHeaders.get('Next-Router-State-Tree'), reqHeaders.get('Next-Url')));
-                if (cached) return buildCachedResponse(cached);
-              } finally {
-                if (window.__scheduleHideHoSoRouteLoader) window.__scheduleHideHoSoRouteLoader();
-              }
-            }
-          }
+            const headers = new Headers({
+              'RSC': '1',
+              'Accept': 'text/x-component',
+              'Next-Url': nextUrl || window.location.pathname || '/trang-chu'
+            });
+            if (stateTree) headers.set('Next-Router-State-Tree', stateTree);
 
-          if (sameOrigin) {
             const finish = trackStart();
-            try { return await origFetch(input, init); } finally { finish(); }
-          }
-          return origFetch(input, init);
-        };
+            const task = origFetch(url, { method: 'GET', credentials: 'include', headers })
+              .then(async (res) => {
+                if (!res.ok) return null;
+                const body = await res.arrayBuffer();
+                if (body.byteLength < 50 * 1024) return null;
+                const safeHeaders = [];
+                res.headers.forEach((v, k) => {
+                  const l = k.toLowerCase();
+                  if (l !== 'content-encoding' && l !== 'content-length') safeHeaders.push([k, v]);
+                });
+                window.__uitHoSoRscCache = { body, status: res.status, statusText: res.statusText, headers: safeHeaders };
+                return window.__uitHoSoRscCache;
+              })
+              .catch(() => null)
+              .finally(() => {
+                window.__uitHoSoRscInFlight = null;
+                finish();
+              });
+
+            window.__uitHoSoRscInFlight = task;
+            return task;
+          };
+
+          window.__preloadHoSoRsc = (stateTree, nextUrl) => fetchHoSoRsc('/sinh-vien/ho-so?_rsc=preload', stateTree, nextUrl);
+          window.__clearHoSoRscCache = () => {
+            window.__uitHoSoRscCache = null;
+            window.__uitHoSoRscInFlight = null;
+          };
+
+          window.fetch = async (input, init) => {
+            const isReq = typeof Request !== 'undefined' && input instanceof Request;
+            const rawUrl = typeof input === 'string' ? input : (input instanceof URL ? input.href : input?.url);
+            const method = (init?.method || (isReq ? input.method : 'GET') || 'GET').toUpperCase();
+
+            let parsed = null;
+            let sameOrigin = false;
+            if (rawUrl) {
+              try {
+                parsed = new URL(rawUrl, window.location.origin);
+                sameOrigin = parsed.origin === window.location.origin;
+              } catch {}
+            }
+
+            if (parsed) {
+              if (parsed.pathname.startsWith('/api/auth') || parsed.pathname === '/login' || (method !== 'GET' && parsed.pathname.startsWith('/sinh-vien/ho-so'))) {
+                window.__clearHoSoRscCache();
+              }
+
+              if (method === 'GET' && sameOrigin && parsed.pathname === '/sinh-vien/ho-so' && parsed.searchParams.has('_rsc')) {
+                const reqHeaders = new Headers(isReq ? input.headers : undefined);
+                if (init?.headers) new Headers(init.headers).forEach((v, k) => reqHeaders.set(k, v));
+
+                const isPrefetch = reqHeaders.has('Next-Router-Prefetch') || reqHeaders.has('Next-Router-Segment-Prefetch');
+                if (isPrefetch) {
+                  if (!window.__uitHoSoRscCache && !window.__uitHoSoRscInFlight) {
+                    fetchHoSoRsc(parsed.pathname + parsed.search, reqHeaders.get('Next-Router-State-Tree'), reqHeaders.get('Next-Url'));
+                  }
+                  const finish = trackStart();
+                  try { return await origFetch(input, init); } finally { finish(); }
+                }
+
+                if (window.__uitHoSoRscCache) return buildCachedResponse(window.__uitHoSoRscCache);
+
+                if (window.__showHoSoRouteLoader) window.__showHoSoRouteLoader('/sinh-vien/ho-so');
+                try {
+                  const cached = await (window.__uitHoSoRscInFlight || fetchHoSoRsc(parsed.pathname + parsed.search, reqHeaders.get('Next-Router-State-Tree'), reqHeaders.get('Next-Url')));
+                  if (cached) return buildCachedResponse(cached);
+                } finally {
+                  if (window.__scheduleHideHoSoRouteLoader) window.__scheduleHideHoSoRouteLoader();
+                }
+              }
+            }
+
+            if (sameOrigin) {
+              const finish = trackStart();
+              try { return await origFetch(input, init); } finally { finish(); }
+            }
+            return origFetch(input, init);
+          };
+        }
+      } else {
+        document.getElementById('cd-custom-theme-style')?.remove();
+        if (window.__lastOverlaySymbolColor !== '#8b949e') {
+          window.__lastOverlaySymbolColor = '#8b949e';
+          console.debug('__UIT_TITLEBAR_OVERLAY__' + JSON.stringify({ symbolColor: '#8b949e' }));
+        }
       }
 
-      // Mount early titlebar as soon as <body> exists
+      // Mount early titlebar on every site as soon as <body> exists
       const mountEarlyTitlebar = () => {
         const target = document.body || document.documentElement;
         if (!target) return false;
@@ -439,14 +508,39 @@ function getEarlyBootstrapScript(isPortalHost) {
             iconEl.style.display = 'none';
           }
         }
+        const refreshBtn = document.getElementById('cd-refresh-btn');
+        if (refreshBtn && refreshBtn.dataset.refreshBound !== '1') {
+          refreshBtn.dataset.refreshBound = '1';
+          refreshBtn.addEventListener('click', () => {
+            if (window.__clearHoSoRscCache) window.__clearHoSoRscCache();
+            if (window.__showBootCurtainForRefresh) window.__showBootCurtainForRefresh();
+            requestAnimationFrame(() => window.location.reload());
+          });
+        }
         return Boolean(document.body);
       };
 
-      if (!mountEarlyTitlebar()) {
+      mountEarlyTitlebar();
+      if (!window.__uitTitlebarGuardInstalled) {
+        window.__uitTitlebarGuardInstalled = true;
         const obs = new MutationObserver(() => {
-          if (mountEarlyTitlebar()) obs.disconnect();
+          if (!document.getElementById('cd-titlebar') || (document.body && document.getElementById('cd-titlebar')?.parentElement !== document.body)) {
+            mountEarlyTitlebar();
+          }
         });
-        obs.observe(document, { childList: true, subtree: true });
+        obs.observe(document.documentElement || document, { childList: true });
+        if (document.body) {
+          obs.observe(document.body, { childList: true });
+        } else {
+          const bodyWaitObs = new MutationObserver(() => {
+            if (document.body) {
+              bodyWaitObs.disconnect();
+              mountEarlyTitlebar();
+              obs.observe(document.body, { childList: true });
+            }
+          });
+          bodyWaitObs.observe(document.documentElement || document, { childList: true });
+        }
       }
     })();
   `;
@@ -466,13 +560,13 @@ ipcMain.on('uit:get-bootstrap-data', (event, targetUrl) => {
     return;
   }
 
-  const isPortalHost = parsedUrl.hostname === 'portal.uit.edu.vn';
+  const useCustomShell = isCustomShellUrl(parsedUrl);
   event.returnValue = {
-    isPortalHost,
-    combinedCss: isPortalHost ? PORTAL_COMBINED_CSS : EXTERNAL_COMBINED_CSS,
-    bootCurtainHtml: isPortalHost ? ASSETS.bootCurtainHtml : '',
+    useCustomShell,
+    combinedCss: useCustomShell ? PORTAL_COMBINED_CSS : EXTERNAL_COMBINED_CSS,
+    bootCurtainHtml: useCustomShell ? ASSETS.bootCurtainHtml : '',
     brandWhite: BRAND_WHITE_BASE64,
-    earlyBootstrapScript: getEarlyBootstrapScript(isPortalHost)
+    earlyBootstrapScript: getEarlyBootstrapScript(useCustomShell)
   };
 });
 
@@ -487,17 +581,43 @@ function injectCustomUI(webContents) {
 
   if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') return;
 
-  const isPortalHost = parsedUrl.hostname === 'portal.uit.edu.vn';
-  const combinedCss = isPortalHost ? PORTAL_COMBINED_CSS : EXTERNAL_COMBINED_CSS;
-  const shellHtml = isPortalHost ? ASSETS.shellHtml : '';
-  const trangChuHtml = isPortalHost ? ASSETS.trangChuHtml : '';
-  const trangChuJs = isPortalHost ? ASSETS.trangChuJs : '';
-  const searchItems = isPortalHost ? ASSETS.searchItems : { items: [], excludeTitles: [] };
+  const useCustomShell = isCustomShellUrl(parsedUrl);
+  const combinedCss = useCustomShell ? PORTAL_COMBINED_CSS : EXTERNAL_COMBINED_CSS;
+
+  if (!useCustomShell) {
+    const titlebarOnlyCode = `
+      (() => {
+        const styleEl = document.getElementById('cd-early-css');
+        if (styleEl) {
+          styleEl.textContent = ${JSON.stringify(combinedCss)};
+        } else if (document.documentElement) {
+          const s = document.createElement('style');
+          s.id = 'cd-early-css';
+          s.textContent = ${JSON.stringify(combinedCss)};
+          document.documentElement.appendChild(s);
+        }
+        if (!window.__UIT_TITLEBAR_HTML__) { window.__UIT_TITLEBAR_HTML__ = ${JSON.stringify(ASSETS.titlebarHtml)}; }
+        if (!window.__UIT_BRAND__)         { window.__UIT_BRAND__ = ${JSON.stringify(BRAND_WHITE_BASE64)}; }
+        if (window.__updateCustomRouteState) {
+          window.__updateCustomRouteState();
+        } else {
+          ${getEarlyBootstrapScript(false)}
+        }
+      })();
+    `;
+    webContents.executeJavaScript(titlebarOnlyCode).catch(console.error);
+    return;
+  }
+
   const appVersion = app.getVersion();
+  const webShortcuts = getResolvedWebShortcuts();
 
   const bootstrapCode = `
     (() => {
-      if (!document.getElementById('cd-early-css') && document.documentElement) {
+      const styleEl = document.getElementById('cd-early-css');
+      if (styleEl) {
+        styleEl.textContent = ${JSON.stringify(combinedCss)};
+      } else if (document.documentElement) {
         const s = document.createElement('style');
         s.id = 'cd-early-css';
         s.textContent = ${JSON.stringify(combinedCss)};
@@ -505,14 +625,20 @@ function injectCustomUI(webContents) {
       }
       if (!window.__UIT_TITLEBAR_HTML__)     { window.__UIT_TITLEBAR_HTML__ = ${JSON.stringify(ASSETS.titlebarHtml)}; }
       if (!window.__UIT_BOOT_CURTAIN_HTML__) { window.__UIT_BOOT_CURTAIN_HTML__ = ${JSON.stringify(ASSETS.bootCurtainHtml)}; }
-      if (!window.__UIT_SHELL_HTML__)        { window.__UIT_SHELL_HTML__ = ${JSON.stringify(shellHtml)}; }
-      if (!window.__UIT_TRANG_CHU_HTML__)    { window.__UIT_TRANG_CHU_HTML__ = ${JSON.stringify(trangChuHtml)}; }
+      if (!window.__UIT_SHELL_HTML__)        { window.__UIT_SHELL_HTML__ = ${JSON.stringify(ASSETS.shellHtml)}; }
+      if (!window.__UIT_TRANG_CHU_HTML__)    { window.__UIT_TRANG_CHU_HTML__ = ${JSON.stringify(ASSETS.trangChuHtml)}; }
       if (!window.__UIT_BRAND__)             { window.__UIT_BRAND__ = ${JSON.stringify(BRAND_WHITE_BASE64)}; }
       if (!window.__UIT_APP_VERSION__)       { window.__UIT_APP_VERSION__ = ${JSON.stringify(appVersion)}; }
-      if (!window.__UIT_SEARCH_ITEMS__)      { window.__UIT_SEARCH_ITEMS__ = ${JSON.stringify(searchItems)}; }
-      ${getEarlyBootstrapScript(isPortalHost)}
-      ${ASSETS.shellJs}
-      ${trangChuJs}
+      if (!window.__UIT_SEARCH_ITEMS__)      { window.__UIT_SEARCH_ITEMS__ = ${JSON.stringify(ASSETS.searchItems)}; }
+      window.__UIT_WEB_SHORTCUTS__ = ${JSON.stringify(webShortcuts)};
+      ${getEarlyBootstrapScript(true)}
+      if (!window.__uitShellInitialized) {
+        window.__uitShellInitialized = true;
+        ${ASSETS.shellJs}
+        ${ASSETS.trangChuJs}
+      } else if (window.__updateCustomRouteState) {
+        window.__updateCustomRouteState();
+      }
     })();
   `;
 
@@ -567,12 +693,10 @@ function createWindow() {
   });
 
   mainWindow.webContents.on('did-navigate-in-page', () => {
-    mainWindow.webContents.executeJavaScript(`
-      if (window.__updateCustomRouteState) window.__updateCustomRouteState();
-    `).catch(console.error);
+    injectCustomUI(mainWindow.webContents);
   });
 
-  mainWindow.loadURL('https://portal.uit.edu.vn/login');
+  mainWindow.loadURL('https://portal.uit.edu.vn/trang-chu');
 }
 
 app.disableHardwareAcceleration();

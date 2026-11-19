@@ -7,20 +7,17 @@ const { ipcRenderer } = require('electron');
   const data = ipcRenderer.sendSync('uit:get-bootstrap-data', window.location.href);
   if (!data) return;
 
-  const rawPath = window.location.pathname || '/';
-  const cleanedPath = rawPath.replace(/\/+$/, '') || '/';
-  const normalizedPath = cleanedPath === '/' ? '/trang-chu' : cleanedPath;
-  const isExcluded =
-    !data.isPortalHost ||
-    (normalizedPath !== '/trang-chu' &&
-      normalizedPath !== '/sinh-vien' &&
-      !normalizedPath.startsWith('/sinh-vien/'));
+  const pathname = window.location.pathname || '';
+  const useCustomShell =
+    Boolean(data.useCustomShell) &&
+    window.location.hostname === 'portal.uit.edu.vn' &&
+    (pathname.startsWith('/trang-chu') || pathname.startsWith('/sinh-vien'));
 
   const injectIntoRoot = (root) => {
     if (!root || root.dataset.uitBootstrapped === '1') return;
     root.dataset.uitBootstrapped = '1';
 
-    if (!isExcluded) {
+    if (useCustomShell) {
       root.classList.add('uit-custom-shell');
     }
 
@@ -31,7 +28,7 @@ const { ipcRenderer } = require('electron');
       root.appendChild(cssEl);
     }
 
-    if (!isExcluded) {
+    if (useCustomShell) {
       try {
         const savedCss = localStorage.getItem('uit_custom_theme_css');
         if (savedCss && !document.getElementById('cd-custom-theme-style')) {
