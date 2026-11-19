@@ -7,12 +7,14 @@ const { ipcRenderer } = require('electron');
   const data = ipcRenderer.sendSync('uit:get-bootstrap-data', window.location.href);
   if (!data) return;
 
-  const pathname = window.location.pathname || '';
+  const rawPath = window.location.pathname || '/';
+  const cleanedPath = rawPath.replace(/\/+$/, '') || '/';
+  const normalizedPath = cleanedPath === '/' ? '/trang-chu' : cleanedPath;
   const isExcluded =
     !data.isPortalHost ||
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/khao-sat');
+    (normalizedPath !== '/trang-chu' &&
+      normalizedPath !== '/sinh-vien' &&
+      !normalizedPath.startsWith('/sinh-vien/'));
 
   const injectIntoRoot = (root) => {
     if (!root || root.dataset.uitBootstrapped === '1') return;

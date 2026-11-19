@@ -7,6 +7,18 @@ function readAsset(relativePath) {
   return fs.existsSync(fullPath) ? fs.readFileSync(fullPath, 'utf8') : '';
 }
 
+function readAssetFromCandidates(relativePaths) {
+  for (const relativePath of relativePaths) {
+    const fullPath = path.join(__dirname, relativePath);
+    if (fs.existsSync(fullPath)) {
+      console.info(`[UIT Wrapper] Loaded asset: ${relativePath}`);
+      return fs.readFileSync(fullPath, 'utf8');
+    }
+  }
+  console.warn(`[UIT Wrapper] Asset not found in: ${relativePaths.join(', ')}`);
+  return '';
+}
+
 function readJsonAsset(relativePath, fallback = { items: [], excludeTitles: [] }) {
   const raw = readAsset(relativePath);
   if (!raw) return fallback;
@@ -41,10 +53,10 @@ const ASSETS = {
   bootCurtainHtml: readAsset('layouts/boot-curtain.html'),
   shellHtml: readAsset('layouts/shell.html'),
   trangChuHtml: readAsset('layouts/trang-chu.html'),
-  shellCss: readAsset('styles/shell.css'),
+  shellCss: readAssetFromCandidates(['styles/shell.css', 'src/styles/shell.css', 'shell.css']),
   trangChuCss: readAsset('styles/trang-chu.css'),
   hoSoCss: readAsset('styles/ho-so.css'),
-  shellJs: readAsset('scripts/shell.js'),
+  shellJs: readAssetFromCandidates(['scripts/shell.js', 'src/scripts/shell.js', 'shell.js']),
   trangChuJs: readAsset('scripts/trang-chu.js'),
   searchItems: readJsonAsset('config/search-items.json', { items: [], excludeTitles: [] })
 };
@@ -177,6 +189,55 @@ function getGlobalTitlebarCss() {
 }
 
 const PORTAL_COMBINED_CSS = [
+  `
+    /* UIT modal viewport fix v2: the titlebar remains above this layer. */
+    body.with-custom-shell [data-uit-modal-overlay="1"],
+    body.with-custom-shell [data-slot="dialog-overlay"],
+    body.with-custom-shell [data-slot="alert-dialog-overlay"],
+    body.with-custom-shell [data-slot="sheet-overlay"],
+    body.with-custom-shell [data-slot="drawer-overlay"],
+    body.with-custom-shell [data-radix-dialog-overlay],
+    body.with-custom-shell [data-radix-alert-dialog-overlay] {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 10000 !important;
+    }
+
+    body.with-custom-shell [role="dialog"],
+    body.with-custom-shell [role="alertdialog"],
+    body.with-custom-shell [aria-modal="true"],
+    body.with-custom-shell dialog[open] {
+      z-index: 10001 !important;
+      max-height: calc(100vh - 72px) !important;
+      overflow-y: auto !important;
+      overscroll-behavior: contain !important;
+    }
+
+    /* Restore true viewport centering for ordinary dialogs on every page. */
+    body.with-custom-shell [data-uit-modal-fix="default"][class*="top-1/2"],
+    body.with-custom-shell [data-uit-modal-fix="default"][class*="top-[50%]"] {
+      top: 50% !important;
+    }
+
+    /* Ticket creation: midpoint of the usable viewport (36px below titlebar). */
+    body.with-custom-shell [data-uit-modal-fix="ticket-create"] {
+      top: calc(50% + 18px) !important;
+      max-height: calc(100vh - 80px) !important;
+      overflow-y: auto !important;
+    }
+
+    /* Processed-ticket detail: pin below titlebar and scroll within viewport. */
+    body.with-custom-shell [data-uit-modal-fix="ticket-detail"] {
+      top: 48px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      max-height: calc(100vh - 64px) !important;
+      overflow-y: auto !important;
+      overscroll-behavior: contain !important;
+    }
+  `,
   `
     #cd-boot-curtain {
       position: fixed !important;

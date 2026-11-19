@@ -382,6 +382,8 @@ body.with-custom-shell > div.flex.min-h-screen {
   bottom: 0 !important;
   height: auto !important;
   min-height: 0 !important;
+  /* Keep the portal content (and its modal portals) above the custom sidebar. */
+  z-index: 31 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   background-color: var(--col-pri-bg) !important;
@@ -418,7 +420,8 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
   display: none !important;
 }
 
-/* Fixed Custom Sidebar */
+/* Fixed Custom Sidebar. Portal content is at z-index 31 so its modal overlays
+   can cover and block this sidebar; the sidebar itself stays at 30. */
 #cd-sidebar {
   position: fixed;
   top: 36px;
@@ -429,7 +432,7 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
   border-right: 1px solid var(--col-out-nav);
   display: flex;
   flex-direction: column;
-  z-index: 50;
+  z-index: 30;
   box-sizing: border-box;
   user-select: none;
   -webkit-user-drag: none;
@@ -529,6 +532,66 @@ body.with-custom-shell.cd-sidebar-hidden #cd-sidebar {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Modal/backdrop baseline. Runtime modal handling marks active portal nodes. */
+body.with-custom-shell [data-slot="dialog-overlay"],
+body.with-custom-shell [data-slot="alert-dialog-overlay"],
+body.with-custom-shell [data-slot="sheet-overlay"],
+body.with-custom-shell [data-slot="drawer-overlay"],
+body.with-custom-shell [data-radix-dialog-overlay],
+body.with-custom-shell [data-radix-alert-dialog-overlay],
+body.with-custom-shell [data-uit-modal-overlay="1"] {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10000 !important;
+  padding: auto;
+  margin: 37px 0 !important;
+}
+
+body.with-custom-shell [role="dialog"],
+body.with-custom-shell [role="alertdialog"],
+body.with-custom-shell [aria-modal="true"],
+body.with-custom-shell dialog[open] {
+  z-index: 10001 !important;
+  max-height: calc(100vh - 72px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Fullscreen dialogs and vertical drawers remain below the titlebar. */
+body.with-custom-shell [role="dialog"].fixed.inset-0,
+body.with-custom-shell [role="alertdialog"].fixed.inset-0,
+body.with-custom-shell [aria-modal="true"].fixed.inset-0,
+body.with-custom-shell [data-slot="sheet-content"],
+body.with-custom-shell [data-slot="drawer-content"].inset-y-0 {
+  top: 36px !important;
+  bottom: 0 !important;
+  height: calc(100vh - 36px) !important;
+  max-height: calc(100vh - 36px) !important;
+  padding-top: 24px !important;
+}
+
+/* Ordinary fixed dialogs are centered against the real window viewport. */
+body.with-custom-shell [role="dialog"].fixed[class*="top-1/2"],
+body.with-custom-shell [role="dialog"].fixed[class*="top-[50%]"],
+body.with-custom-shell [role="alertdialog"].fixed[class*="top-1/2"],
+body.with-custom-shell [role="alertdialog"].fixed[class*="top-[50%]"],
+body.with-custom-shell [aria-modal="true"].fixed[class*="top-1/2"],
+body.with-custom-shell [aria-modal="true"].fixed[class*="top-[50%]"] {
+  top: 50% !important;
+}
+
+/* Popovers, selects, dropdowns, tooltips inside or outside modals */
+body.with-custom-shell [data-radix-popper-content-wrapper],
+body.with-custom-shell [data-slot="select-content"],
+body.with-custom-shell [data-slot="popover-content"],
+body.with-custom-shell [data-slot="dropdown-menu-content"],
+body.with-custom-shell [data-slot="context-menu-content"],
+body.with-custom-shell [data-slot="tooltip-content"] {
+  z-index: 10010 !important;
 }
 
 /* Theme overrides for all native subpages (/sinh-vien/*) */

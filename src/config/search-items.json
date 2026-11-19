@@ -2,14 +2,12 @@
     "items": [
         {
             "title": "Trang chủ",
-            "sub": "Tổng quan",
             "href": "/trang-chu",
             "tabMatch": null,
             "keywords": ""
         },
         {
             "title": "Thông tin cá nhân",
-            "sub": "Tổng quan > Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Cá nhân",
             "keywords": [
@@ -20,7 +18,6 @@
         },
         {
             "title": "Thông tin gia đình",
-            "sub": "Tổng quan > Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Gia đình",
             "keywords": [
@@ -31,7 +28,6 @@
         },
         {
             "title": "Thông tin học vụ",
-            "sub": "Tổng quan > Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Học vụ",
             "keywords": [
@@ -43,7 +39,6 @@
         },
         {
             "title": "Hồ sơ scan",
-            "sub": "Tổng quan > Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Hồ sơ scan",
             "keywords": [
@@ -55,7 +50,6 @@
         },
         {
             "title": "Thông tin sức khỏe",
-            "sub": "Tổng quan > Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Sức khỏe",
             "keywords": [
@@ -66,7 +60,6 @@
         },
         {
             "title": "Tài khoản ngân hàng",
-            "sub": "Tổng quan > Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Cá nhân",
             "keywords": [
@@ -80,7 +73,6 @@
         },
         {
             "title": "Khen thưởng",
-            "sub": "Tổng quan > Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Khen thưởng",
             "keywords": [
@@ -90,7 +82,6 @@
         },
         {
             "title": "Tài khoản trường cấp",
-            "sub": "Tổng quan > Hồ sơ cá nhân",
             "href": "/sinh-vien/ho-so",
             "tabMatch": "Tài khoản",
             "keywords": [
@@ -106,7 +97,6 @@
         },
         {
             "title": "Thời khóa biểu theo ĐKHP",
-            "sub": "Học vụ > Thời khóa biểu",
             "href": "/sinh-vien/tkb",
             "tabMatch": "Theo ĐKHP",
             "keywords": [
@@ -120,7 +110,6 @@
         },
         {
             "title": "Lịch tuần",
-            "sub": "Học vụ > Thời khóa biểu",
             "href": "/sinh-vien/tkb",
             "tabMatch": "Lịch tuần",
             "keywords": [
@@ -133,22 +122,19 @@
         },
         {
             "title": "Lịch sinh hoạt lớp",
-            "sub": "Học vụ > Lịch sinh hoạt",
-            "href": "/sinh-vien/tkb",
+            "href": "/sinh-vien/lich-sinh-hoat",
             "tabMatch": "Sinh hoạt lớp",
             "keywords": "hoc vu"
         },
         {
             "title": "Lịch sinh hoạt đoàn",
-            "sub": "Học vụ > Lịch sinh hoạt",
-            "href": "/sinh-vien/tkb",
+            "href": "/sinh-vien/lich-sinh-hoat",
             "tabMatch": "Sinh hoạt đoàn",
             "keywords": "hoc vu"
         },
         {
             "title": "Lịch gặp CVHT",
-            "sub": "Học vụ > Lịch sinh hoạt",
-            "href": "/sinh-vien/tkb",
+            "href": "/sinh-vien/lich-sinh-hoat",
             "tabMatch": "CVHT",
             "keywords": [
                 "hoc vu",
@@ -158,7 +144,6 @@
         },
         {
             "title": "Điểm môn học",
-            "sub": "Học vụ > Bảng điểm",
             "href": "/sinh-vien/bang-diem",
             "tabMatch": "Chi tiết môn học",
             "keywords": [
@@ -178,7 +163,6 @@
         },
         {
             "title": "Điểm tổng kết",
-            "sub": "Học vụ > Bảng điểm",
             "href": "/sinh-vien/bang-diem",
             "tabMatch": "Tổng kết theo kỳ",
             "keywords": [
@@ -198,7 +182,6 @@
         },
         {
             "title": "Bảng điểm theo CTĐT",
-            "sub": "Học vụ > Bảng điểm",
             "href": "/sinh-vien/bang-diem",
             "tabMatch": "Theo CTĐT",
             "keywords": [
@@ -213,7 +196,6 @@
         },
         {
             "title": "Đăng ký bảng điểm",
-            "sub": "Yêu cầu giấy tờ",
             "href": "/sinh-vien/xin-bang-diem",
             "tabMatch": null,
             "keywords": [
@@ -226,7 +208,6 @@
         },
         {
             "title": "Điểm rèn luyện",
-            "sub": "Học vụ",
             "href": "/sinh-vien/diem-ren-luyen",
             "tabMatch": null,
             "keywords": [
@@ -236,7 +217,6 @@
         },
         {
             "title": "Đăng ký giấy xác nhận sinh viên",
-            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
             "href": "/sinh-vien/giay-xac-nhan",
             "tabMatch": "XNSV",
             "keywords": [
@@ -247,7 +227,6 @@
         },
         {
             "title": "Đăng ký xác nhận chứng chỉ",
-            "sub": "Yêu cầu giấy tờ",
             "href": "/sinh-vien/xac-nhan-chung-chi",
             "tabMatch": null,
             "keywords": [
@@ -259,7 +238,6 @@
         },
         {
             "title": "Đăng ký gửi xe",
-            "sub": "Yêu cầu giấy tờ",
             "href": "/sinh-vien/gui-xe",
             "tabMatch": null,
             "keywords": [
@@ -269,7 +247,6 @@
         },
         {
             "title": "Đăng ký ngoại trú / tạm trú",
-            "sub": "Yêu cầu giấy tờ",
             "href": "/sinh-vien/ngoai-tru",
             "tabMatch": null,
             "keywords": [
@@ -279,7 +256,6 @@
         },
         {
             "title": "Đăng ký giấy xác nhận vay vốn ngân hàng",
-            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
             "href": "/sinh-vien/giay-xac-nhan",
             "tabMatch": "VVNH",
             "keywords": [
@@ -290,7 +266,6 @@
         },
         {
             "title": "Đăng ký giấy giới thiệu",
-            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
             "href": "/sinh-vien/giay-xac-nhan",
             "tabMatch": "GGT",
             "keywords": [
@@ -301,7 +276,6 @@
         },
         {
             "title": "Đăng ký giấy xác nhận thành tích",
-            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
             "href": "/sinh-vien/giay-xac-nhan",
             "tabMatch": "XNTT",
             "keywords": [
@@ -312,7 +286,6 @@
         },
         {
             "title": "Đăng ký giấy xác nhận Điểm rèn luyện",
-            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
             "href": "/sinh-vien/giay-xac-nhan",
             "tabMatch": "Giấy xác nhận Điểm rèn luyện",
             "keywords": [
@@ -323,7 +296,6 @@
         },
         {
             "title": "Đăng ký giấy xác nhận Ưu đãi giáo dục",
-            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
             "href": "/sinh-vien/giay-xac-nhan",
             "tabMatch": "Giấy xác nhận Ưu đãi giáo dục",
             "keywords": [
@@ -334,7 +306,6 @@
         },
         {
             "title": "Đăng ký đề tài NCKH",
-            "sub": "Yêu cầu giấy tờ",
             "href": "/sinh-vien/de-tai-sinh-vien",
             "tabMatch": null,
             "keywords": [
@@ -345,24 +316,9 @@
             ]
         },
         {
-            "title": "Thông tin bảo hiểm",
-            "sub": "Yêu cầu giấy tờ",
-            "href": "/sinh-vien/bao-hiem",
-            "tabMatch": "Thông tin bảo hiểm",
-            "keywords": [
-                "yeu cau giay to",
-                "bao hiem",
-                "y te",
-                "tai nan",
-                "bhyt",
-                "bhtn"
-            ]
-        },
-        {
             "title": "Đăng ký bảo hiểm",
-            "sub": "Yêu cầu giấy tờ",
             "href": "/sinh-vien/bao-hiem",
-            "tabMatch": "Đăng ký mua bảo hiểm",
+            "tabMatch": null,
             "keywords": [
                 "yeu cau giay to",
                 "bao hiem",
@@ -375,15 +331,13 @@
         },
         {
             "title": "Đảng viên",
-            "sub": "Khác",
             "href": "/sinh-vien/dang-vien",
             "tabMatch": null,
             "keywords": "khac"
         },
         {
             "title": "Khảo sát",
-            "sub": "Khác",
-            "href": "/sinh-vien/khao-sat",
+            "href": "/khao-sat",
             "tabMatch": null,
             "keywords": [
                 "khac",
@@ -395,7 +349,6 @@
         },
         {
             "title": "Yêu cầu hỗ trợ",
-            "sub": "Khác",
             "href": "/sinh-vien/ho-tro",
             "tabMatch": null,
             "keywords": [

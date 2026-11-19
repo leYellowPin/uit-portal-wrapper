@@ -444,14 +444,96 @@
     }
   };
 
+  const escapeHtml = (str) =>
+    String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const formatNavGroupTitle = (rawText) => {
+    const cleaned = String(rawText || '').replace(/\s+/g, ' ').trim();
+    if (!cleaned) return '';
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+  };
+
+  const collectSidebarHierarchy = () => {
+    const byHref = new Map();
+    const entries = [];
+    const nav = document.querySelector('#cd-sidebar .cd-nav');
+    if (!nav) return { byHref, entries };
+
+    let currentGroup = '';
+    Array.from(nav.children).forEach((el) => {
+      if (el.classList.contains('nav-group')) {
+        currentGroup = formatNavGroupTitle(el.textContent);
+        return;
+      }
+      if (el.tagName === 'A') {
+        const rawHref = el.getAttribute('href') || '';
+        const href = normalizePath(rawHref);
+        const pageTitle = el.textContent.trim();
+        const disabled =
+          el.classList.contains('cd-nav-disabled') ||
+          el.getAttribute('aria-disabled') === 'true';
+        const info = {
+          href,
+          rawHref,
+          groupTitle: currentGroup,
+          pageTitle,
+          disabled
+        };
+        byHref.set(href, info);
+        entries.push(info);
+      }
+    });
+
+    return { byHref, entries };
+  };
+
+  const resolveDestinationHierarchy = (item, navByHref) => {
+    const targetHref = normalizePath(item.href);
+    const navInfo = navByHref.get(targetHref);
+
+    if (navInfo) {
+      const isPageRoot =
+        !item.tabMatch &&
+        normalizeText(item.title) === normalizeText(navInfo.pageTitle);
+
+      if (isPageRoot) {
+        return navInfo.groupTitle || 'Trang chính';
+      }
+
+      const chain = [navInfo.groupTitle, navInfo.pageTitle].filter(Boolean);
+      if (chain.length > 0) {
+        return chain.join(' > ');
+      }
+    }
+
+    return item.sub || 'Trang chính';
+  };
+
   const buildSearchIndex = () => {
     const firstYear = isFirstYearStudent();
-    const filteredDeepItems = DEEP_SEARCH_ITEMS.filter((item) => {
-      if (firstYear && FIRST_YEAR_DISABLED_HREFS.has(normalizePath(item.href))) {
-        return false;
-      }
-      return true;
-    });
+    const { byHref: navByHref, entries: sidebarEntries } = collectSidebarHierarchy();
+
+    const filteredDeepItems = DEEP_SEARCH_ITEMS
+      .filter((item) => {
+        const targetHref = normalizePath(item.href);
+        if (firstYear && FIRST_YEAR_DISABLED_HREFS.has(targetHref)) {
+          return false;
+        }
+        const navInfo = navByHref.get(targetHref);
+        if (navInfo?.disabled) {
+          return false;
+        }
+        return true;
+      })
+      .map((item) => ({
+        ...item,
+        sub: resolveDestinationHierarchy(item, navByHref)
+      }));
 
     const customPageHrefs = new Set(
       filteredDeepItems.filter((item) => !item.tabMatch).map((item) => normalizePath(item.href))
@@ -460,19 +542,17 @@
       EXCLUDED_SEARCH_TITLES.map((t) => normalizeText(String(t).trim())).filter(Boolean)
     );
 
-    const navItems = Array.from(document.querySelectorAll('#cd-sidebar .cd-nav a'))
-      .filter((a) => {
-        if (a.classList.contains('cd-nav-disabled') || a.getAttribute('aria-disabled') === 'true') {
-          return false;
-        }
-        const href = normalizePath(a.getAttribute('href'));
-        const titleNorm = normalizeText(a.textContent.trim());
-        return !customPageHrefs.has(href) && !excludedTitleSet.has(titleNorm);
+    const navItems = sidebarEntries
+      .filter((entry) => {
+        if (entry.disabled) return false;
+        if (firstYear && FIRST_YEAR_DISABLED_HREFS.has(entry.href)) return false;
+        const titleNorm = normalizeText(entry.pageTitle);
+        return !customPageHrefs.has(entry.href) && !excludedTitleSet.has(titleNorm);
       })
-      .map((a) => ({
-        title: a.textContent.trim(),
-        sub: 'Trang chính',
-        href: a.getAttribute('href'),
+      .map((entry) => ({
+        title: entry.pageTitle,
+        sub: entry.groupTitle || 'Trang chính',
+        href: entry.rawHref || entry.href,
         tabMatch: null,
         keywords: ''
       }));
@@ -490,19 +570,41 @@
     let currentMatches = [];
 
     const renderResults = (query) => {
-      const q = normalizeText(query.trim());
+      const q = normalizeText(query.trim()).replace(/\s+/g, ' ');
       if (!q) {
         searchResults.hidden = true;
         return;
       }
 
-      currentMatches = buildSearchIndex().filter((item) => {
-        const keywordsText = Array.isArray(item.keywords)
-          ? item.keywords.join(' ')
-          : (item.keywords || '');
-        const haystack = normalizeText(`${item.title} ${item.sub} ${keywordsText}`);
-        return haystack.includes(q);
-      }).slice(0, 8);
+      const queryTokens = q.split(' ').filter(Boolean);
+
+      currentMatches = buildSearchIndex()
+        .map((item, idx) => {
+          const keywordsText = Array.isArray(item.keywords)
+            ? item.keywords.join(' ')
+            : (item.keywords || '');
+          const normTitle = normalizeText(item.title);
+          const normSub = normalizeText(item.sub);
+          const normKeywords = normalizeText(keywordsText);
+          const haystack = `${normTitle} ${normSub} ${normKeywords}`;
+
+          const matched =
+            haystack.includes(q) ||
+            queryTokens.every((token) => haystack.includes(token));
+          if (!matched) return null;
+
+          let score = 4;
+          if (normTitle === q) score = 0;
+          else if (normTitle.startsWith(q)) score = 1;
+          else if (normTitle.includes(q)) score = 2;
+          else if (normSub.includes(q)) score = 3;
+
+          return { item, score, idx };
+        })
+        .filter(Boolean)
+        .sort((a, b) => (a.score - b.score) || (a.idx - b.idx))
+        .slice(0, 8)
+        .map((entry) => entry.item);
 
       activeIndex = 0;
       searchResults.innerHTML = '';
@@ -518,8 +620,8 @@
         btn.type = 'button';
         btn.className = `cd-search-item${idx === 0 ? ' is-selected' : ''}`;
         btn.innerHTML = `
-          <span class="cd-search-item-title">${item.title}</span>
-          <span class="cd-search-item-sub">trong: ${item.sub}</span>
+          <span class="cd-search-item-title">${escapeHtml(item.title)}</span>
+          <span class="cd-search-item-sub">trong: ${escapeHtml(item.sub)}</span>
         `;
         btn.addEventListener('mousedown', (e) => {
           e.preventDefault();
@@ -1045,4 +1147,134 @@
   if (document.body) {
     enforceBodyClasses.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
   }
+
+  // 12. Modal viewport manager: inspect the live DOM after React opens dialogs.
+  const installModalViewportManager = () => {
+    if (!document.body || window.__uitModalViewportManagerInstalled) return;
+    window.__uitModalViewportManagerInstalled = true;
+    window.__UIT_MODAL_FIX_VERSION__ = 3;
+
+    const dialogSelector = '[role="dialog"], [role="alertdialog"], [aria-modal="true"], dialog[open]';
+    // These are the exact modal/sheet nodes for which the user's DevTools
+    // element.style overrides worked. Apply the same declarations inline with
+    // !important so portal/framework inline styles cannot reintroduce margins
+    // or a restrictive max-height.
+    const directViewportFixSelector = [
+      'body.with-custom-shell [role="dialog"].fixed.inset-0',
+      'body.with-custom-shell [role="alertdialog"].fixed.inset-0',
+      'body.with-custom-shell [aria-modal="true"].fixed.inset-0',
+      'body.with-custom-shell [data-slot="sheet-content"]',
+      'body.with-custom-shell [data-slot="drawer-content"].inset-y-0'
+    ].join(',');
+
+    const applyDirectViewportFix = (el) => {
+      if (!(el instanceof HTMLElement) || !el.matches(directViewportFixSelector)) return;
+      el.style.setProperty('margin', '0', 'important');
+      el.style.setProperty('max-height', 'none', 'important');
+    };
+
+    const overlaySelector = [
+      '[data-slot="dialog-overlay"]',
+      '[data-slot="alert-dialog-overlay"]',
+      '[data-slot="sheet-overlay"]',
+      '[data-slot="drawer-overlay"]',
+      '[data-radix-dialog-overlay]',
+      '[data-radix-alert-dialog-overlay]',
+      '.fixed.inset-0'
+    ].join(',');
+
+    const normalizeText = (value) => String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const isVisible = (el) => {
+      if (!(el instanceof HTMLElement)) return false;
+      if (el.hidden || el.getAttribute('aria-hidden') === 'true') return false;
+      const style = getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    };
+
+    const isSupportRoute = () => normalizePath(window.location.pathname) === '/sinh-vien/ho-tro';
+
+    const markOverlay = (el) => {
+      if (!(el instanceof HTMLElement) || el.id === 'cd-boot-curtain' || el.matches(dialogSelector)) return;
+      if (!isVisible(el)) return;
+      const rect = el.getBoundingClientRect();
+      const coversViewport = rect.width >= window.innerWidth * 0.8 && rect.height >= window.innerHeight * 0.8;
+      const hasOverlayMarker = el.matches('[data-slot$="-overlay"], [data-radix-dialog-overlay], [data-radix-alert-dialog-overlay]');
+      const className = typeof el.className === 'string' ? el.className : (el.className?.baseVal || '');
+      const hasBackdropClass = /(^|\s)(bg-black|bg-background|bg-foreground|bg-slate-|bg-gray-|bg-zinc-)/.test(className);
+      if (!hasOverlayMarker && !(coversViewport && hasBackdropClass)) return;
+      el.setAttribute('data-uit-modal-overlay', '1');
+      el.style.setProperty('position', 'fixed', 'important');
+      el.style.setProperty('inset', '0', 'important');
+      el.style.setProperty('width', '100vw', 'important');
+      el.style.setProperty('height', '100vh', 'important');
+      el.style.setProperty('z-index', '10000', 'important');
+    };
+
+    const markDialog = (el) => {
+      if (!(el instanceof HTMLElement) || !isVisible(el)) return;
+      const text = normalizeText(el.innerText || el.textContent);
+      let kind = 'default';
+      if (isSupportRoute()) {
+        kind = (text.includes('tao ticket moi') || text.includes('tao yeu cau moi'))
+          ? 'ticket-create'
+          : 'ticket-detail';
+      }
+      el.setAttribute('data-uit-modal-fix', kind);
+      el.style.setProperty('z-index', '10001', 'important');
+      // Keep the prior height cap only for dialog implementations outside the
+      // exact selector set. For the elements identified by the user, apply the
+      // proven inline max-height:none and margin:0 overrides instead.
+      if (el.matches(directViewportFixSelector)) {
+        applyDirectViewportFix(el);
+      } else {
+        el.style.setProperty('max-height', kind === 'ticket-detail'
+          ? 'calc(100vh - 64px)'
+          : (kind === 'ticket-create' ? 'calc(100vh - 80px)' : 'calc(100vh - 72px)'), 'important');
+      }
+      el.style.setProperty('overflow-y', 'auto', 'important');
+      el.style.setProperty('overscroll-behavior', 'contain', 'important');
+
+      if (kind === 'ticket-create') {
+        el.style.setProperty('top', 'calc(50% + 18px)', 'important');
+      } else if (kind === 'ticket-detail') {
+        el.style.setProperty('position', 'fixed', 'important');
+        el.style.setProperty('left', '50%', 'important');
+        el.style.setProperty('top', '48px', 'important');
+        el.style.setProperty('transform', 'translateX(-50%)', 'important');
+      } else {
+        const className = typeof el.className === 'string' ? el.className : '';
+        if (className.includes('top-1/2') || className.includes('top-[50%]')) {
+          el.style.setProperty('top', '50%', 'important');
+        }
+      }
+    };
+
+    const refresh = () => {
+      if (!document.body.classList.contains('with-custom-shell')) return;
+      document.querySelectorAll(overlaySelector).forEach(markOverlay);
+      document.querySelectorAll(directViewportFixSelector).forEach(applyDirectViewportFix);
+      document.querySelectorAll(dialogSelector).forEach(markDialog);
+    };
+
+    refresh();
+    const observer = new MutationObserver(() => refresh());
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'data-state', 'aria-hidden', 'hidden']
+    });
+    window.__uitModalViewportObserver = observer;
+    console.info('[UIT Wrapper] Modal viewport manager v3 active');
+  };
+
+  installModalViewportManager();
 })();
