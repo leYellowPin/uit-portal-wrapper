@@ -1,6 +1,9 @@
 #cd-trang-chu-view {
   padding: 24px 32px;
   font-family: 'Segoe UI', system-ui, sans-serif;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* Top User Profile & Overview Card */
@@ -53,6 +56,7 @@
   flex-shrink: 0;
   border: 2px solid var(--col-out-box);
   background-color: var(--col-sec-box);
+  object-position: 0 0;
 }
 
 #cd-user-greeting {
@@ -191,7 +195,7 @@
   transition: width 0.25s ease;
 }
 
-/* Theme Importer & Three-Dot Menu Controls */
+/* Account Three-Dot Menu Controls */
 #cd-theme-controls {
   margin-left: auto;
   display: flex;
@@ -215,11 +219,6 @@
   background-color: var(--col-out-box);
   border-color: var(--col-accent, var(--col--accent));
   color: var(--col-hi-text);
-}
-
-.cd-card-btn-danger:hover {
-  border-color: var(--col-danger);
-  color: var(--col-danger);
 }
 
 .cd-card-icon-btn {
@@ -353,7 +352,7 @@
   border-right: 1px solid var(--col-out-box);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 18px;
   min-width: 0;
 }
@@ -417,18 +416,9 @@
   vertical-align: middle;
 }
 
-.cd-tkb-status-dot[data-status="ongoing"] {
-  background-color: #3fb950;
-  box-shadow: 0 0 0 3px rgba(63, 185, 80, 0.18);
-}
-
-.cd-tkb-status-dot[data-status="completed"] {
-  background-color: #f85149;
-}
-
-.cd-tkb-status-dot[data-status="upcoming"] {
-  background-color: var(--col-sec-text, #8b949e);
-}
+.cd-tkb-status-dot[data-status="ongoing"]   { background-color: #3fb950; }
+.cd-tkb-status-dot[data-status="completed"] { background-color: #f85149; }
+.cd-tkb-status-dot[data-status="upcoming"]  { background-color: var(--col-sec-text, #8b949e); }
 
 .cd-tkb-code-with-dot {
   display: inline-flex !important;
@@ -498,6 +488,13 @@
 
 #cd-schedule-content li .text-muted-foreground {
   color: var(--col-sec-text) !important;
+}
+
+#cd-schedule-content li,
+#cd-schedule-content li :not(a),
+#cd-schedule-content li .line-through {
+  text-decoration: none !important;
+  text-decoration-line: none !important;
 }
 
 #cd-schedule-content li span[class*="rounded"]:not(.cd-tkb-status-dot),

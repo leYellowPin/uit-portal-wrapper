@@ -45,7 +45,8 @@ const { ipcRenderer } = require('electron');
         if (curtain) {
           curtain.style.cssText =
             'position:fixed;inset:0;z-index:2147483646;background-color:var(--col-pri-bg, #0d1117);' +
-            'opacity:1;display:flex;align-items:center;justify-content:center;pointer-events:none;';
+            'opacity:1;display:flex;align-items:center;justify-content:center;' +
+            'transition:opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1);pointer-events:none;';
         }
         const logo = document.getElementById('cd-boot-curtain-logo');
         if (logo) {
@@ -74,4 +75,9 @@ const { ipcRenderer } = require('electron');
     });
     rootObserver.observe(document, { childList: true });
   }
+
+  console.log("%cDừng lại!", "color: red; font-size:4em;");
+  console.log("%cban biet cai deo j ma dung console", "color: white; font-size:2em;");
+  console.log("%cneu ban biet thi di hoc dai hoc lam me j", "color: white; font-size:2em;");
+  console.log("%cviet cai job application di", "color: white; font-size:2em;");
 })();

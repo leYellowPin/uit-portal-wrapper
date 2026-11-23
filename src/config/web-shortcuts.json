@@ -2,7 +2,7 @@
   "shortcuts": [
     {
       "id": "uit-official",
-      "name": "Website chính thức",
+      "name": "Website UIT",
       "url": "https://uit.edu.vn",
       "icon": "shortcut-uit.png"
     },
@@ -20,13 +20,13 @@
     },
     {
       "id": "uit-dkhp",
-      "name": "Đăng ký học phần",
+      "name": "ĐKHP",
       "url": "https://dkhp.uit.edu.vn",
       "icon": "shortcut-dkhp.png"
     },
     {
       "id": "uit-moodle",
-      "name": "Moodle",
+      "name": "LMS",
       "url": "https://courses.uit.edu.vn",
       "icon": "shortcut-moodle.png"
     },

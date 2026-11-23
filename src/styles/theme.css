@@ -1,0 +1,106 @@
+:root,
+[data-theme="dark"] {
+  /* Base colors */
+  --col-pri-bg: #0d1117;
+  --col-pri-box: #161b22;
+  --col-sec-box: #21262d;
+  --col-out-box: #30363d;
+
+  /* Navigation & Header */
+  --col-pri-nav: var(--col-pri-box);
+  --col-sec-nav: var(--col-sec-box);
+  --col-out-nav: var(--col-out-box);
+
+  /* Shortcut Widgets */
+  --col-pri-widget: var(--col-sec-box);
+  --col-sec-widget: var(--col-out-box);
+
+  /* Typography */
+  --col-pri-text: #c9d1d9;
+  --col-sec-text: #8b949e;
+  --col-head-text: #f0f6fc;
+  --col-hi-text: #ffffff;
+
+  /* Accents */
+  --col-accent: #58a6ff;
+  --col--accent: var(--col-accent);
+  --col-accent-soft: rgba(88, 166, 255, 0.15);
+  --col-danger: #f85149;
+
+  /* Notification / Announcement Card */
+  --col-pri-notification: rgba(245, 158, 11, 0.12);
+  --col-out-notification: rgba(245, 158, 11, 0.4);
+  --col-accent-notification: #fbbf24;
+  --col-text-notification: var(--col-pri-text);
+
+  /* Drop Shadows */
+  --shadow-dropdown: 0 10px 28px rgba(0, 0, 0, 0.45);
+  --shadow-theme-dropdown: 0 10px 28px rgba(0, 0, 0, 0.35);
+  --shadow-widget: 0 2px 8px rgba(0, 0, 0, 0.18);
+  --shadow-card: none;
+  --shadow-nav: none;
+
+  /* Scrollbar */
+  --col-accent-scroll: var(--col-out-nav);
+}
+
+[data-theme="light"] {
+  /* Base colors */
+  --col-pri-bg: #e4ebf1;
+  --col-pri-box: #ffffff;
+  --col-sec-box: #e3e9f4;
+  --col-out-box: #cbd5e2;
+
+  /* Navigation & Header */
+  --col-pri-nav: var(--col-pri-box);
+  --col-sec-nav: var(--col-sec-box);
+  --col-out-nav: var(--col-out-box);
+
+  /* Shortcut Widgets */
+  --col-pri-widget: var(--col-sec-box);
+  --col-sec-widget: var(--col-out-box);
+
+  /* Typography */
+  --col-pri-text: #0f1729;
+  --col-sec-text: #65758b;
+  --col-head-text: #0f1729;
+  --col-hi-text: #2E6BFF;
+
+  /* Accents */
+  --col-accent: #2f6bff;
+  --col--accent: var(--col-accent);
+  --col-accent-soft: #f0f0f0; /* used for highlights */
+  --col-danger: #ff4848;
+
+  /* Notification / Announcement Card */
+  --col-pri-notification: rgba(217, 194, 43, 0.245);
+  --col-out-notification: rgba(228, 149, 40, 0.627);
+  --col-accent-notification: #bb8013;
+  --col-text-notification: var(--col-pri-text);
+
+  /* Drop Shadows */
+  --shadow-dropdown: 0 10px 28px rgba(15, 23, 41, 0.14);
+  --shadow-theme-dropdown: 0 10px 28px rgba(15, 23, 41, 0.12);
+  --shadow-widget: 0 2px 8px rgba(15, 23, 41, 0.08);
+  --shadow-card: none;
+  --shadow-nav: none;
+
+  /* Scrollbar */
+  --col-accent-scroll: var(--col-out-box);
+}
+
+/*
+for loading custom images without changing html structures
+
+-moz-box-sizing: border-box;
+box-sizing: border-box;
+background: url(insert_url) no-repeat;
+width: 220px;
+height: 220px;
+padding-left: 220px; /* same as width
+*/
+
+/* Titlebar icon */
+[data-theme="light"] #cd-titlebar-icon {
+  filter: invert(100%);
+}

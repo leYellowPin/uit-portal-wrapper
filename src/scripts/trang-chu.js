@@ -368,6 +368,26 @@
 
       link.appendChild(iconBox);
       link.appendChild(nameEl);
+
+      link.addEventListener('click', (e) => {
+        if (window.__openInWebview) {
+          try {
+            const parsed = new URL(item.url);
+            const isNative =
+              parsed.hostname === 'sso.uit.edu.vn' ||
+              (parsed.hostname === 'portal.uit.edu.vn' &&
+                (parsed.pathname.startsWith('/trang-chu') ||
+                  parsed.pathname.startsWith('/sinh-vien') ||
+                  parsed.pathname.startsWith('/login') ||
+                  parsed.pathname.startsWith('/api/auth')));
+            if (!isNative) {
+              e.preventDefault();
+              window.__openInWebview(item.url, item.name || item.url);
+            }
+          } catch {}
+        }
+      });
+
       container.appendChild(link);
     });
   };

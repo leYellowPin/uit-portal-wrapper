@@ -1,37 +1,3 @@
-:root {
-  /* Base colors */
-  --col-pri-bg: #0d1117;
-  --col-pri-box: #161b22;
-  --col-sec-box: #21262d;
-  --col-out-box: #30363d;
-
-  /* Navigation */
-  --col-pri-nav: var(--col-pri-box);
-  --col-sec-nav: var(--col-sec-box);
-  --col-out-nav: var(--col-out-box);
-
-  /* Typography */
-  --col-pri-text: #c9d1d9;
-  --col-sec-text: #8b949e;
-  --col-head-text: #f0f6fc;
-  --col-hi-text: #ffffff;
-
-  /* Accents */
-  --col-accent: #58a6ff;
-  --col--accent: var(--col-accent);
-  --col-accent-soft: rgba(88, 166, 255, 0.15);
-  --col-danger: #f85149;
-
-  /* Notification / Announcement Card */
-  --col-pri-notification: rgba(245, 158, 11, 0.12);
-  --col-out-notification: rgba(245, 158, 11, 0.4);
-  --col-accent-notification: #fbbf24;
-  --col-text-notification: var(--col-pri-text);
-
-  /* Scrollbar */
-  --col-accent-scroll: var(--col-out-nav);
-}
-
 /* Match page and container scrollbars to the sidebar scrollbar */
 html.uit-custom-shell *,
 body.with-custom-shell * {
@@ -80,6 +46,7 @@ body.with-custom-shell *::-webkit-scrollbar-thumb,
   height: 36px !important;
   background-color: var(--col-pri-nav) !important;
   border-bottom: 1px solid var(--col-out-nav) !important;
+  box-shadow: var(--shadow-nav, none) !important;
   color: var(--col-head-text) !important;
   display: grid !important;
   grid-template-columns: 1fr auto 1fr !important;
@@ -117,6 +84,26 @@ body.with-custom-shell *::-webkit-scrollbar-thumb,
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+}
+
+/* Webview Navigation Controls */
+#cd-webview-nav-controls {
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 36px !important;
+  margin-left: -6px !important;
+  -webkit-app-region: no-drag !important;
+}
+
+#cd-webview-nav-controls[hidden],
+html.uit-webview-active #cd-toggle-sidebar-btn,
+html.uit-webview-active #cd-refresh-btn,
+html.uit-webview-active #cd-search-wrap {
+  display: none !important;
+}
+
+#cd-webview-nav-controls .cd-titlebar-btn {
+  width: 34px !important;
 }
 
 /* Titlebar Search Bar */
@@ -212,7 +199,7 @@ body.with-custom-shell *::-webkit-scrollbar-thumb,
   border: 1px solid var(--col-out-box);
   border-radius: 10px;
   padding: 6px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-dropdown, 0 10px 28px rgba(0, 0, 0, 0.45));
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -249,6 +236,102 @@ body.with-custom-shell *::-webkit-scrollbar-thumb,
 .cd-dropdown-item-danger:hover {
   background-color: color-mix(in srgb, var(--col-danger) 15%, var(--col-sec-nav));
   color: var(--col-danger);
+}
+
+/* Titlebar Dropdown Menus (styled to match titlebar buttons) */
+#cd-theme-menu-wrap,
+#cd-account-menu-wrap {
+  position: relative !important;
+  height: 100% !important;
+  display: inline-flex !important;
+  align-items: stretch !important;
+  -webkit-app-region: no-drag !important;
+}
+
+.cd-titlebar-dropdown,
+#cd-theme-dropdown,
+#cd-account-dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  min-width: 185px !important;
+  max-width: 240px !important;
+  background-color: var(--col-pri-nav) !important;
+  border: 1px solid var(--col-out-nav) !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: var(--shadow-nav, 0 8px 24px rgba(0, 0, 0, 0.35)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  z-index: 2147483647 !important;
+  -webkit-app-region: no-drag !important;
+}
+
+.cd-titlebar-dropdown[hidden],
+#cd-theme-dropdown[hidden],
+#cd-account-dropdown[hidden] {
+  display: none !important;
+}
+
+.cd-titlebar-menu-item,
+.cd-theme-menu-item {
+  width: 100% !important;
+  height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 14px !important;
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  line-height: 34px !important;
+  color: var(--col-sec-text) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+  -webkit-app-region: no-drag !important;
+}
+
+.cd-titlebar-menu-item[hidden],
+.cd-theme-menu-item[hidden] {
+  display: none !important;
+}
+
+.cd-titlebar-menu-item:hover,
+.cd-theme-menu-item:hover {
+  background-color: color-mix(in srgb, var(--col-head-text) 10%, transparent) !important;
+  color: var(--col-head-text) !important;
+}
+
+.cd-titlebar-menu-item:active,
+.cd-theme-menu-item:active {
+  background-color: color-mix(in srgb, var(--col-head-text) 16%, transparent) !important;
+  color: var(--col-hi-text) !important;
+}
+
+.cd-titlebar-menu-item-danger {
+  color: var(--col-danger) !important;
+}
+
+.cd-titlebar-menu-item-danger:hover {
+  background-color: color-mix(in srgb, var(--col-danger) 12%, transparent) !important;
+  color: var(--col-danger) !important;
+}
+
+.cd-titlebar-menu-item-danger:active {
+  background-color: color-mix(in srgb, var(--col-danger) 18%, transparent) !important;
+  color: var(--col-danger) !important;
 }
 
 .cd-search-item {
@@ -319,7 +402,8 @@ body.with-custom-shell *::-webkit-scrollbar-thumb,
   transition: color 0.15s ease, stroke 0.15s ease !important;
 }
 
-.cd-titlebar-btn:hover {
+.cd-titlebar-btn:hover,
+.cd-titlebar-btn[aria-expanded="true"] {
   background-color: color-mix(in srgb, var(--col-head-text) 10%, transparent) !important;
   border: none !important;
   color: var(--col-head-text) !important;
@@ -334,9 +418,11 @@ body.cd-sidebar-hidden #cd-toggle-sidebar-btn {
   color: var(--col-accent) !important;
 }
 
+html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-theme-menu-wrap,
+html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-account-menu-wrap,
 html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-sidebar-btn,
 html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-search-wrap,
-body:not(.with-custom-shell) #cd-search-wrap {
+html:has(> body:not(.with-custom-shell)) #cd-search-wrap {
   display: none !important;
 }
 
@@ -349,34 +435,54 @@ body {
   overflow: hidden !important;
 }
 
-html:not(.uit-custom-shell) body:not(.with-custom-shell) {
+html:not(.uit-custom-shell):not(#_#_) > body:not(.with-custom-shell):not(#_#_) {
   position: fixed !important;
   top: 36px !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  height: auto !important;
-  max-height: none !important;
+  width: 100vw !important;
+  height: calc(100vh - 36px) !important;
+  max-height: calc(100vh - 36px) !important;
+  margin: 0 !important;
   padding-top: 0 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   box-sizing: border-box !important;
+  transform: translate3d(0, 0, 0) !important;
 }
 
 html.uit-custom-shell,
 html.uit-custom-shell body,
 html:has(body.with-custom-shell),
 body.with-custom-shell {
+  --cd-status-banner-height: 0px;
   background-color: var(--col-pri-bg) !important;
   color: var(--col-pri-text) !important;
   padding: 0 !important;
 }
 
-/* Scrollable page container positioned below titlebar */
+html.uit-custom-shell body:has(> div[role="status"]:not([hidden])),
+body.with-custom-shell:has(> div[role="status"]:not([hidden])) {
+  --cd-status-banner-height: 37px;
+}
+
+/* Portal server status/update header positioned directly below the custom titlebar */
+html.uit-custom-shell body > div[role="status"],
+body.with-custom-shell > div[role="status"] {
+  position: fixed !important;
+  top: 36px !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  margin: 0 !important;
+}
+
+/* Scrollable page container positioned below titlebar (and status header if present) */
 html.uit-custom-shell body > div.flex.min-h-screen,
 body.with-custom-shell > div.flex.min-h-screen {
   position: fixed !important;
-  top: 36px !important;
+  top: calc(36px + var(--cd-status-banner-height, 0px)) !important;
   left: 260px !important;
   right: 0 !important;
   bottom: 0 !important;
@@ -387,7 +493,7 @@ body.with-custom-shell > div.flex.min-h-screen {
   overflow-y: auto !important;
   overflow-x: hidden !important;
   background-color: var(--col-pri-bg) !important;
-  transition: left 0.2s ease;
+  transition: left 0.2s ease, top 0.15s ease;
 }
 
 html.uit-custom-shell body.cd-sidebar-hidden > div.flex.min-h-screen,
@@ -424,12 +530,13 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
    can cover and block this sidebar; the sidebar itself stays at 30. */
 #cd-sidebar {
   position: fixed;
-  top: 36px;
+  top: calc(36px + var(--cd-status-banner-height, 0px));
   left: 0;
   bottom: 0;
   width: 260px;
   background-color: var(--col-pri-nav);
   border-right: 1px solid var(--col-out-nav);
+  box-shadow: var(--shadow-nav, none);
   display: flex;
   flex-direction: column;
   z-index: 30;
@@ -438,7 +545,7 @@ body:not(.is-trang-chu) #cd-trang-chu-view {
   -webkit-user-drag: none;
   -moz-user-select: none;
   font-family: 'Segoe UI', system-ui, sans-serif;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, top 0.15s ease;
 }
 
 body.with-custom-shell.cd-sidebar-hidden #cd-sidebar {
@@ -595,219 +702,219 @@ body.with-custom-shell [data-slot="tooltip-content"] {
 }
 
 /* Theme overrides for all native subpages (/sinh-vien/*) */
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) main,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) main,
 body.with-custom-shell:not(.is-trang-chu) main#main-content {
   padding: 24px 32px !important;
   background-color: var(--col-pri-bg) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-background"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-slate-950"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-gray-950"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-zinc-950"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-background"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-950"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-950"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-950"] {
   background-color: var(--col-pri-bg) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-card"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-popover"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-white"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-slate-900"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-gray-900"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-zinc-900"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-card"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-popover"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-white"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-900"] {
   background-color: var(--col-pri-box) !important;
   border-color: var(--col-out-box) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-muted"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-secondary"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-slate-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-slate-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-slate-200"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-slate-800"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-gray-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-gray-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-gray-200"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-gray-800"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-zinc-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-zinc-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-zinc-200"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-zinc-800"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-neutral-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-neutral-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-stone-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-stone-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .hover\:bg-accent:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-muted"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-secondary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-200"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-800"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-200"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-800"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-200"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-800"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-neutral-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-neutral-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-stone-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-stone-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .hover\:bg-accent:hover {
   background-color: var(--col-sec-box) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-emerald-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-emerald-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-emerald-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-green-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-green-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-green-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-teal-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-teal-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-teal-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-cyan-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-cyan-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-cyan-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-sky-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-sky-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-blue-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-blue-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-indigo-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-indigo-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-purple-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-purple-500/"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-emerald-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-emerald-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-emerald-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-green-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-green-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-green-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-teal-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-teal-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-teal-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-cyan-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-cyan-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-cyan-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-sky-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-sky-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-blue-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-blue-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-indigo-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-indigo-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-purple-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-purple-500/"] {
   background-color: var(--col-sec-box) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-red-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-red-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-red-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-rose-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-rose-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-rose-500/"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-red-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-red-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-red-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-rose-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-rose-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-rose-500/"] {
   background-color: color-mix(in srgb, var(--col-danger) 14%, var(--col-sec-box)) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-primary/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-accent/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-blue-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-sky-500/"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-primary/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-accent/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-blue-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-sky-500/"] {
   background-color: var(--col-accent-soft) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-amber-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-yellow-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-yellow-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-yellow-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-orange-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-orange-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-orange-500/"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-amber-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-yellow-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-yellow-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-yellow-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-orange-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-orange-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-orange-500/"] {
   background-color: var(--col-pri-notification) !important;
   border-color: var(--col-out-notification) !important;
   color: var(--col-text-notification) !important;
 }
 
 /* Radix UI / shadcn Tabs */
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [role="tablist"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [role="tablist"] {
   background-color: var(--col-sec-box) !important;
   border: 1px solid var(--col-out-box) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [role="tab"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [role="tab"] {
   color: var(--col-sec-text) !important;
   border: 1px solid transparent !important;
   box-sizing: border-box !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [role="tab"]:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [role="tab"]:hover {
   color: var(--col-hi-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [role="tab"][data-state="active"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [role="tab"][aria-selected="true"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [role="tab"][data-state="active"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [role="tab"][aria-selected="true"] {
   background-color: var(--col-pri-box) !important;
   color: var(--col-accent) !important;
   border-color: var(--col-out-box) !important;
 }
 
 /* Typography */
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .text-foreground,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-slate-900"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-gray-900"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) h1,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) h2,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) h3,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) h4,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) th {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .text-foreground,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-slate-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-gray-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) h1,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) h2,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) h3,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) h4,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) th {
   color: var(--col-head-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .text-card-foreground,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .text-popover-foreground,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) td {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .text-card-foreground,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .text-popover-foreground,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) td {
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .text-muted-foreground {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .text-muted-foreground {
   color: var(--col-sec-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-primary"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-blue-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-sky-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-emerald-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-green-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-teal-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .hover\:text-primary:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-primary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-blue-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-sky-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-emerald-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-green-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-teal-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .hover\:text-primary:hover {
   color: var(--col-accent) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-red-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-rose-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-destructive"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-red-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-rose-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-destructive"] {
   color: var(--col-danger) !important;
 }
 
 /* Solid accent and danger badges/buttons */
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .bg-primary,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) button.bg-primary,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) a.bg-primary {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .bg-primary,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) button.bg-primary,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) a.bg-primary {
   background-color: var(--col-accent) !important;
   color: var(--col-pri-bg) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .bg-primary *,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-primary-foreground"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .bg-primary *,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-primary-foreground"] {
   color: var(--col-pri-bg) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .bg-destructive,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-red-600"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .bg-destructive,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-red-600"] {
   background-color: var(--col-danger) !important;
   color: var(--col-hi-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .bg-destructive *,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-destructive-foreground"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .bg-destructive *,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-destructive-foreground"] {
   color: var(--col-hi-text) !important;
 }
 
 /* Borders, Accent Stripes, Tables, and Form Controls */
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="border-"]:not([role="tab"]),
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .divide-border > :not([hidden]) ~ :not([hidden]),
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) table,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) th,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) td {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="border-"]:not([role="tab"]),
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .divide-border > :not([hidden]) ~ :not([hidden]),
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) table,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) th,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) td {
   border-color: var(--col-out-box) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="border-primary"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="border-l-primary"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="border-blue-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="border-sky-"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="border-primary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="border-l-primary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="border-blue-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="border-sky-"] {
   border-color: var(--col-accent) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) thead,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) thead tr,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) tbody tr:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) thead,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) thead tr,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) tbody tr:hover {
   background-color: var(--col-sec-box) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) input,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) select,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) textarea,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) button[role="combobox"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) input,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) select,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) textarea,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) button[role="combobox"] {
   background-color: var(--col-sec-box) !important;
   color: var(--col-pri-text) !important;
   border-color: var(--col-out-box) !important;
@@ -863,7 +970,7 @@ body.cd-route-loading #cd-trang-chu-view {
 #cd-route-loader {
   position: sticky;
   top: 0;
-  height: calc(100vh - 36px);
+  height: calc(100vh - 36px - var(--cd-status-banner-height, 0px));
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -903,4 +1010,35 @@ body.cd-route-loading #cd-trang-chu-view {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Custom Card & Shortcut Widget Overrides */
+#cd-trang-chu-view #cd-user-card,
+#cd-trang-chu-view .cd-stat-card,
+#cd-trang-chu-view .cd-widget {
+  box-shadow: var(--shadow-card, none);
+}
+
+#cd-trang-chu-view .cd-shortcut-item {
+  transform: none;
+  color: var(--col-pri-text);
+  transition: none;
+}
+
+#cd-trang-chu-view .cd-shortcut-item:hover {
+  transform: none;
+  color: var(--col-pri-text);
+}
+
+#cd-trang-chu-view .cd-shortcut-icon-box {
+  background-color: var(--col-pri-widget, var(--col-sec-box));
+  border: 1px solid var(--col-out-box);
+  box-shadow: var(--shadow-widget, 0 2px 8px rgba(0, 0, 0, 0.18));
+  transition: background-color 0.15s ease;
+}
+
+#cd-trang-chu-view .cd-shortcut-item:hover .cd-shortcut-icon-box {
+  border-color: var(--col-out-box);
+  background-color: var(--col-sec-widget, var(--col-out-box));
+  box-shadow: var(--shadow-widget, 0 2px 8px rgba(0, 0, 0, 0.18));
 }

@@ -15,7 +15,7 @@
   const isExcludedPage = (pathname) => !isSupportedShellPage(pathname);
 
   let isSidebarHidden = localStorage.getItem('uit_sidebar_hidden') === '1';
-  let hasCustomTheme = Boolean(localStorage.getItem('uit_custom_theme_css'));
+  let hasCustomTheme = Boolean(localStorage.getItem('uit_custom_theme_css')) && localStorage.getItem('uit_custom_theme_active') !== '0';
   let cachedPortalVersion = sessionStorage.getItem('uit_portal_version') || '';
 
   let cachedProfile = null;
@@ -90,10 +90,13 @@
     const curtain = document.getElementById('cd-boot-curtain');
     if (!curtain || curtain.dataset.dismissed === '1') return;
 
-    clearTimeout(curtainState.settleTimer);
-    curtainState.settleTimer = null;
+    if (!isPageReadyForReveal()) {
+      clearTimeout(curtainState.settleTimer);
+      curtainState.settleTimer = null;
+      return;
+    }
 
-    if (!isPageReadyForReveal()) return;
+    if (curtainState.settleTimer) return;
 
     curtainState.settleTimer = setTimeout(() => {
       curtainState.settleTimer = null;
@@ -150,7 +153,7 @@
   showBootCurtain(false);
   window.addEventListener('load', () => window.__scheduleBootCurtainCheck(), { once: true });
 
-  // 2. Titlebar overlay & layout toggles
+  // 2. Titlebar overlay, color scheme, and layout toggles
   const rgbToHex = (colorStr) => {
     if (!colorStr) return '';
     const trimmed = colorStr.trim();
@@ -185,10 +188,98 @@
     }
   };
 
+  const THEME_MODES = ['light', 'dark', 'system'];
+  const THEME_MODE_LABELS = {
+    light: 'Bảng màu: Sáng',
+    dark: 'Bảng màu: Tối',
+    system: 'Bảng màu: Thiết bị'
+  };
+
+  const getSavedThemeMode = () => {
+    const stored = localStorage.getItem('uit_theme_mode');
+    return THEME_MODES.includes(stored) ? stored : 'system';
+  };
+
+  const resolveEffectiveTheme = (mode) => {
+    if (mode === 'light' || mode === 'dark') return mode;
+    const prefersDark = Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    return prefersDark ? 'dark' : 'light';
+  };
+
+  const applyColorScheme = (mode = getSavedThemeMode()) => {
+    const excluded = isExcludedPage(window.location.pathname);
+    if (excluded) {
+      document.documentElement?.removeAttribute('data-theme');
+    } else {
+      const effective = resolveEffectiveTheme(mode);
+      document.documentElement?.setAttribute('data-theme', effective);
+    }
+
+    const schemeBtn = document.getElementById('cd-theme-scheme-btn');
+    if (schemeBtn) {
+      schemeBtn.textContent = THEME_MODE_LABELS[mode] || THEME_MODE_LABELS.system;
+    }
+
+    syncTitlebarOverlayColor();
+  };
+
+  if (!window.__uitSystemThemeListenerBound && window.matchMedia) {
+    window.__uitSystemThemeListenerBound = true;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const onSystemThemeChange = () => {
+      if (getSavedThemeMode() === 'system') {
+        applyColorScheme('system');
+      }
+    };
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', onSystemThemeChange);
+    } else if (typeof mediaQuery.addListener === 'function') {
+      mediaQuery.addListener(onSystemThemeChange);
+    }
+  }
+
+  const syncStatusBannerOffset = () => {
+    if (!document.body) return;
+    if (isExcludedPage(window.location.pathname) || !document.body.classList.contains('with-custom-shell')) {
+      document.body.style.removeProperty('--cd-status-banner-height');
+      return;
+    }
+
+    const banner = Array.from(document.body.children).find(
+      (el) => el instanceof HTMLElement && el.getAttribute('role') === 'status'
+    );
+
+    if (!banner || banner.hidden || banner.getAttribute('aria-hidden') === 'true') {
+      document.body.style.setProperty('--cd-status-banner-height', '0px');
+      return;
+    }
+
+    const style = getComputedStyle(banner);
+    if (style.display === 'none' || style.visibility === 'hidden') {
+      document.body.style.setProperty('--cd-status-banner-height', '0px');
+      return;
+    }
+
+    if (!banner.__uitResizeObserved && typeof ResizeObserver === 'function') {
+      banner.__uitResizeObserved = true;
+      const ro = new ResizeObserver(() => syncStatusBannerOffset());
+      ro.observe(banner);
+    }
+
+    const height = Math.ceil(banner.getBoundingClientRect().height);
+    document.body.style.setProperty('--cd-status-banner-height', `${height > 0 ? height : 0}px`);
+  };
+
+  if (!window.__uitStatusBannerResizeBound) {
+    window.__uitStatusBannerResizeBound = true;
+    window.addEventListener('resize', syncStatusBannerOffset);
+  }
+
   const syncShellToggles = () => {
     if (!document.body) return;
     document.body.classList.toggle('cd-sidebar-hidden', isSidebarHidden);
     document.getElementById('cd-toggle-sidebar-btn')?.setAttribute('aria-pressed', isSidebarHidden ? 'true' : 'false');
+    syncStatusBannerOffset();
   };
 
   // 3. Route transition loader for uncached /sinh-vien/ho-so SPA navigation
@@ -238,14 +329,22 @@
     routeLoaderSafetyTimer = setTimeout(() => window.__hideHoSoRouteLoader(true), 15000);
   };
 
+  let routeLoaderHideAttempt = 0;
+
   window.__hideHoSoRouteLoader = (restoreCurrentActive = false) => {
     clearTimeout(routeLoaderSafetyTimer);
     clearTimeout(routeLoaderHideTimer);
+    routeLoaderHideAttempt += 1;
     const wasPending = Boolean(pendingRouteHref);
     pendingRouteHref = '';
     document.body.classList.remove('cd-route-loading');
 
-    if (restoreCurrentActive && wasPending) {
+    if (
+      normalizePath(window.location.pathname) === '/sinh-vien/ho-so' &&
+      typeof window.__updateCustomRouteState === 'function'
+    ) {
+      window.__updateCustomRouteState();
+    } else if (restoreCurrentActive && wasPending) {
       syncSidebarActiveLinks(normalizePath(window.location.pathname));
     }
 
@@ -259,9 +358,29 @@
 
   window.__scheduleHideHoSoRouteLoader = () => {
     clearTimeout(routeLoaderHideTimer);
-    routeLoaderHideTimer = setTimeout(() => {
-      requestAnimationFrame(() => window.__hideHoSoRouteLoader(true));
-    }, 120);
+    const token = ++routeLoaderHideAttempt;
+    const startedAt = Date.now();
+
+    const checkAndHide = () => {
+      if (token !== routeLoaderHideAttempt) return;
+      const isTargetRoute = normalizePath(window.location.pathname) === '/sinh-vien/ho-so';
+      const mainContent = document.querySelector('main#main-content') || document.querySelector('main');
+      const hasContent = Boolean(mainContent && mainContent.textContent.trim().length > 0);
+      const timedOut = Date.now() - startedAt > 2000;
+
+      if ((isTargetRoute && hasContent) || timedOut) {
+        requestAnimationFrame(() => {
+          if (token === routeLoaderHideAttempt) {
+            window.__hideHoSoRouteLoader(true);
+          }
+        });
+        return;
+      }
+
+      routeLoaderHideTimer = setTimeout(checkAndHide, 50);
+    };
+
+    routeLoaderHideTimer = setTimeout(checkAndHide, 80);
   };
 
   // 4. Titlebar Search, Tab Activation, and Student Year Checks
@@ -347,6 +466,106 @@
         link.tabIndex = 0;
       }
     });
+  };
+
+  const TKB_HEADER_BTN_CLASS =
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-sm h-9 rounded-md px-3 cursor-pointer';
+
+  const customizeHoSoHeader = () => {
+    if (normalizePath(window.location.pathname) !== '/sinh-vien/ho-so') return;
+    const main = document.querySelector('main#main-content') || document.querySelector('main');
+    if (!main) return;
+
+    const pageRoot = main.querySelector(':scope > div') || main;
+    const directChildren = Array.from(pageRoot.children).filter(
+      (el) => el instanceof HTMLElement
+    );
+
+    const headerEl =
+      directChildren.find(
+        (el) =>
+          !el.querySelector('[role="tablist"], form') &&
+          Boolean(el.querySelector('img[src*="anh-the"], h2, button'))
+      ) ||
+      directChildren.find((el) => !el.querySelector('[role="tablist"], form'));
+
+    if (!headerEl) return;
+
+    if (headerEl.className !== 'mb-3 space-y-1') {
+      headerEl.className = 'mb-3 space-y-1';
+    }
+
+    const exportBtn =
+      Array.from(headerEl.querySelectorAll('button, a')).find((btn) =>
+        normalizeText(btn.textContent).includes('ly lich sv')
+      ) || headerEl.querySelector('button');
+
+    let breadcrumbNav = headerEl.querySelector('#cd-hoso-breadcrumb');
+    if (!breadcrumbNav) {
+      breadcrumbNav = document.createElement('nav');
+      breadcrumbNav.id = 'cd-hoso-breadcrumb';
+      breadcrumbNav.setAttribute('aria-label', 'Breadcrumb');
+      breadcrumbNav.className = 'flex items-center text-xs text-muted-foreground';
+      breadcrumbNav.innerHTML = `
+        <span class="flex items-center">
+          <a class="hover:text-foreground transition-colors" href="/sinh-vien">Cổng Sinh viên</a>
+        </span>
+        <span class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right mx-1 h-3 w-3" aria-hidden="true">
+            <path d="m9 18 6-6-6-6"></path>
+          </svg>
+          <span aria-current="page" class="text-foreground">Hồ sơ cá nhân</span>
+        </span>
+      `;
+    }
+
+    let headerRow = headerEl.querySelector('#cd-hoso-header-row');
+    if (!headerRow) {
+      headerRow = document.createElement('div');
+      headerRow.id = 'cd-hoso-header-row';
+      headerRow.className = 'flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4';
+      headerRow.innerHTML = `
+        <div id="cd-hoso-header-left" class="min-w-0 flex-1 space-y-1">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">Hồ sơ cá nhân</h1>
+          <p class="text-sm leading-relaxed text-muted-foreground">Thông tin lý lịch cá nhân, gia đình, học vụ và hồ sơ sinh viên.</p>
+        </div>
+        <div id="cd-hoso-actions" class="flex flex-wrap items-center gap-2 sm:shrink-0"></div>
+      `;
+    }
+
+    if (headerEl.firstElementChild !== breadcrumbNav) {
+      headerEl.prepend(breadcrumbNav);
+    }
+    if (breadcrumbNav.nextElementSibling !== headerRow) {
+      breadcrumbNav.after(headerRow);
+    }
+
+    const actionsWrap = headerRow.querySelector('#cd-hoso-actions');
+    if (exportBtn && actionsWrap) {
+      exportBtn.setAttribute('data-cd-hoso-export-btn', '1');
+      if (exportBtn.className !== TKB_HEADER_BTN_CLASS) {
+        exportBtn.className = TKB_HEADER_BTN_CLASS;
+      }
+      const btnSvg = exportBtn.querySelector('svg');
+      if (btnSvg && btnSvg.getAttribute('class') !== 'lucide lucide-file-down mr-2 h-4 w-4') {
+        btnSvg.setAttribute('class', 'lucide lucide-file-down mr-2 h-4 w-4');
+      }
+      exportBtn.hidden = false;
+      exportBtn.removeAttribute('aria-hidden');
+      if (exportBtn.parentElement !== actionsWrap) {
+        actionsWrap.appendChild(exportBtn);
+      }
+    }
+
+    Array.from(headerEl.children).forEach((child) => {
+      if (!(child instanceof HTMLElement)) return;
+      if (child === breadcrumbNav || child === headerRow) return;
+      child.setAttribute('data-cd-hoso-hidden', '1');
+      child.hidden = true;
+      child.setAttribute('aria-hidden', 'true');
+    });
+
+    headerEl.setAttribute('data-cd-hoso-header', '1');
   };
 
   const hideHoSoBhytTab = () => {
@@ -445,10 +664,10 @@
 
   const escapeHtml = (str) =>
     String(str ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
+      .replace(/&/g, '&amp')
+      .replace(/</g, '&lt')
+      .replace(/>/g, '&gt')
+      .replace(/"/g, '&quot')
       .replace(/'/g, '&#39;');
 
   const formatNavGroupTitle = (rawText) => {
@@ -670,6 +889,7 @@
       document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
           if (!document.documentElement.classList.contains('uit-custom-shell')) return;
+          if (document.documentElement.classList.contains('uit-webview-active')) return;
           e.preventDefault();
           document.getElementById('cd-search-input')?.focus();
         }
@@ -677,17 +897,228 @@
     }
   };
 
-  // 5. Mount custom titlebar
+  // 5. Custom CSS theme management & titlebar dropdown menus
+  const ensureCssExtension = (name) => {
+    const trimmed = String(name || '').trim();
+    if (!trimmed) return '';
+    return /\.css$/i.test(trimmed) ? trimmed : `${trimmed}.css`;
+  };
+
+  const closeThemeDropdown = () => {
+    const themeDropdown = document.getElementById('cd-theme-dropdown');
+    const importBtn = document.getElementById('cd-import-theme-btn');
+    if (themeDropdown) themeDropdown.hidden = true;
+    if (importBtn) importBtn.setAttribute('aria-expanded', 'false');
+  };
+
+  const closeAccountDropdown = () => {
+    const accountDropdown = document.getElementById('cd-account-dropdown');
+    const accountBtn = document.getElementById('cd-account-menu-btn');
+    if (accountDropdown) accountDropdown.hidden = true;
+    if (accountBtn) accountBtn.setAttribute('aria-expanded', 'false');
+  };
+
+  const applySavedCustomTheme = () => {
+    const disableTheme = isExcludedPage(window.location.pathname);
+    const savedCss = localStorage.getItem('uit_custom_theme_css');
+    const savedName = ensureCssExtension(localStorage.getItem('uit_custom_theme_name') || '');
+    const isCustomActive = localStorage.getItem('uit_custom_theme_active') !== '0';
+    hasCustomTheme = Boolean(savedCss) && isCustomActive;
+    let styleEl = document.getElementById('cd-custom-theme-style');
+
+    if (hasCustomTheme && !disableTheme) {
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'cd-custom-theme-style';
+      }
+      styleEl.textContent = savedCss;
+      if (document.documentElement) {
+        document.documentElement.appendChild(styleEl);
+      }
+    } else if (styleEl) {
+      styleEl.remove();
+    }
+
+    const importBtn = document.getElementById('cd-import-theme-btn');
+    const customCssBtn = document.getElementById('cd-theme-custom-btn');
+    if (importBtn) {
+      importBtn.title = savedCss && savedName ? `Import CSS (${savedName})` : 'Import CSS';
+    }
+    if (customCssBtn) {
+      if (savedCss) {
+        const displayName = savedName || 'custom.css';
+        customCssBtn.textContent = displayName;
+        customCssBtn.title = `Khôi phục giao diện mặc định (${displayName})`;
+      } else {
+        customCssBtn.textContent = 'Tùy chỉnh CSS';
+        customCssBtn.title = 'Tùy chỉnh CSS';
+      }
+    }
+
+    applyColorScheme(getSavedThemeMode());
+  };
+
+  window.__applySavedCustomTheme = applySavedCustomTheme;
+
+  const revertCustomThemeToDefault = () => {
+    localStorage.removeItem('uit_custom_theme_css');
+    localStorage.removeItem('uit_custom_theme_name');
+    localStorage.removeItem('uit_custom_theme_path');
+    localStorage.removeItem('uit_custom_theme_active');
+    applySavedCustomTheme();
+  };
+
+  // 6. Mount custom titlebar
+  const bindTitlebarThemeMenu = () => {
+    const importBtn = document.getElementById('cd-import-theme-btn');
+    const themeDropdown = document.getElementById('cd-theme-dropdown');
+    const schemeBtn = document.getElementById('cd-theme-scheme-btn');
+    const customCssBtn = document.getElementById('cd-theme-custom-btn');
+    const fileInput = document.getElementById('cd-theme-file-input');
+
+    if (importBtn && themeDropdown && importBtn.dataset.bound !== '1') {
+      importBtn.dataset.bound = '1';
+      importBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const willOpen = themeDropdown.hidden;
+        themeDropdown.hidden = !willOpen;
+        importBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        if (willOpen) closeAccountDropdown();
+      });
+    }
+
+    if (schemeBtn && schemeBtn.dataset.bound !== '1') {
+      schemeBtn.dataset.bound = '1';
+      schemeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const currentMode = getSavedThemeMode();
+        const nextMode = THEME_MODES[(THEME_MODES.indexOf(currentMode) + 1) % THEME_MODES.length];
+        localStorage.setItem('uit_theme_mode', nextMode);
+
+        // If an active custom CSS does not define [data-theme] selectors, pause it so the selected palette takes effect.
+        const savedCss = localStorage.getItem('uit_custom_theme_css') || '';
+        if (savedCss && localStorage.getItem('uit_custom_theme_active') !== '0' && !/\[data-theme\s*=/.test(savedCss)) {
+          localStorage.setItem('uit_custom_theme_active', '0');
+          applySavedCustomTheme();
+          return;
+        }
+
+        applyColorScheme(nextMode);
+      });
+    }
+
+    if (customCssBtn && fileInput && customCssBtn.dataset.bound !== '1') {
+      customCssBtn.dataset.bound = '1';
+      customCssBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeThemeDropdown();
+        if (localStorage.getItem('uit_custom_theme_css')) {
+          revertCustomThemeToDefault();
+          return;
+        }
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (typeof ev.target?.result === 'string') {
+            localStorage.setItem('uit_custom_theme_css', ev.target.result);
+            localStorage.setItem('uit_custom_theme_name', ensureCssExtension(file.name));
+            localStorage.setItem('uit_custom_theme_active', '1');
+            localStorage.removeItem('uit_custom_theme_path');
+            applySavedCustomTheme();
+          }
+        };
+        reader.readAsText(file);
+        fileInput.value = '';
+      });
+    }
+  };
+
+  const bindTitlebarAccountMenu = () => {
+    const accountBtn = document.getElementById('cd-account-menu-btn');
+    const accountDropdown = document.getElementById('cd-account-dropdown');
+    const changePwdBtn = document.getElementById('cd-change-password-btn');
+    const logoutBtn = document.getElementById('cd-logout-btn');
+
+    if (accountBtn && accountDropdown && accountBtn.dataset.bound !== '1') {
+      accountBtn.dataset.bound = '1';
+      accountBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const willOpen = accountDropdown.hidden;
+        accountDropdown.hidden = !willOpen;
+        accountBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        if (willOpen) closeThemeDropdown();
+      });
+    }
+
+    if (changePwdBtn && changePwdBtn.dataset.bound !== '1') {
+      changePwdBtn.dataset.bound = '1';
+      changePwdBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAccountDropdown();
+        window.location.href = 'https://portal.uit.edu.vn/api/auth/change-password';
+      });
+    }
+
+    if (logoutBtn && logoutBtn.dataset.bound !== '1') {
+      logoutBtn.dataset.bound = '1';
+      logoutBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAccountDropdown();
+        window.location.href = '/api/auth/logout';
+      });
+    }
+  };
+
+  const bindWebviewNavControls = () => {
+    const backBtn = document.getElementById('cd-webview-back-btn');
+    const reloadBtn = document.getElementById('cd-webview-reload-btn');
+    const homeBtn = document.getElementById('cd-webview-home-btn');
+
+    if (backBtn && backBtn.dataset.bound !== '1') {
+      backBtn.dataset.bound = '1';
+      backBtn.addEventListener('click', () => {
+        const wv = document.getElementById('cd-external-webview');
+        if (wv && typeof wv.canGoBack === 'function' && wv.canGoBack()) {
+          wv.goBack();
+        } else {
+          window.__closeExternalWebview();
+        }
+      });
+    }
+
+    if (reloadBtn && reloadBtn.dataset.bound !== '1') {
+      reloadBtn.dataset.bound = '1';
+      reloadBtn.addEventListener('click', () => {
+        const wv = document.getElementById('cd-external-webview');
+        if (wv && typeof wv.reload === 'function') {
+          wv.reload();
+        }
+      });
+    }
+
+    if (homeBtn && homeBtn.dataset.bound !== '1') {
+      homeBtn.dataset.bound = '1';
+      homeBtn.addEventListener('click', () => {
+        window.__closeExternalWebview();
+      });
+    }
+  };
+
   const mountTitlebar = () => {
-    const target = document.body || document.documentElement;
+    const target = document.documentElement;
     if (!target) return;
 
     let titlebar = document.getElementById('cd-titlebar');
     if (!titlebar && window.__UIT_TITLEBAR_HTML__) {
-      target.insertAdjacentHTML('afterbegin', window.__UIT_TITLEBAR_HTML__);
+      target.insertAdjacentHTML('beforeend', window.__UIT_TITLEBAR_HTML__);
       titlebar = document.getElementById('cd-titlebar');
-    } else if (titlebar && document.body && titlebar.parentElement !== document.body) {
-      document.body.insertAdjacentElement('afterbegin', titlebar);
+    } else if (titlebar && titlebar.parentElement !== target) {
+      target.appendChild(titlebar);
     }
 
     if (!titlebar) return;
@@ -713,6 +1144,9 @@
       });
     }
 
+    bindWebviewNavControls();
+    bindTitlebarThemeMenu();
+    bindTitlebarAccountMenu();
     bindTitlebarSearch();
 
     const iconEl = document.getElementById('cd-titlebar-icon');
@@ -725,12 +1159,170 @@
       }
     }
 
-    syncTitlebarOverlayColor();
+    applySavedCustomTheme();
   };
 
   mountTitlebar();
 
-  // 6. Portal version detection
+  // External <webview> manager for non-shell & external routes
+  const isNativePortalUrl = (rawUrl) => {
+    const raw = String(rawUrl || '').trim();
+    if (!raw || raw === 'about:blank') return true;
+
+    let parsed;
+    try {
+      parsed = new URL(raw, window.location.origin);
+    } catch {
+      return true;
+    }
+
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return true;
+    }
+
+    const host = parsed.hostname.toLowerCase();
+    if (host === 'sso.uit.edu.vn') return true;
+
+    const p = (parsed.pathname || '/').toLowerCase();
+    if (/\.pdf($|[?#])/i.test(p) || parsed.searchParams.has('print')) {
+      return true;
+    }
+
+    if (host === 'portal.uit.edu.vn') {
+      return (
+        p.startsWith('/trang-chu') ||
+        p.startsWith('/sinh-vien') ||
+        p.startsWith('/login') ||
+        p.startsWith('/api/') ||
+        p.includes('/print') ||
+        p.includes('/in-bang-diem')
+      );
+    }
+
+    return false;
+  };
+
+  let defaultPortalTitle = '';
+
+  window.__closeExternalWebview = () => {
+    const container = document.getElementById('cd-webview-container');
+    if (container) {
+      container.remove();
+    }
+    document.documentElement?.classList.remove('uit-webview-active');
+
+    const navWrap = document.getElementById('cd-webview-nav-controls');
+    if (navWrap) navWrap.hidden = true;
+
+    const titleEl = document.getElementById('cd-titlebar-title');
+    if (titleEl && defaultPortalTitle) {
+      titleEl.textContent = defaultPortalTitle;
+    }
+    syncTitlebarOverlayColor();
+  };
+
+  window.__openInWebview = (targetUrl, initialTitle = '') => {
+    if (!targetUrl || isNativePortalUrl(targetUrl)) return;
+
+    mountTitlebar();
+    const navWrap = document.getElementById('cd-webview-nav-controls');
+    if (navWrap) navWrap.hidden = false;
+
+    const titleEl = document.getElementById('cd-titlebar-title');
+    if (titleEl) {
+      if (!defaultPortalTitle) defaultPortalTitle = titleEl.textContent || 'UIT Student Portal';
+      if (initialTitle) titleEl.textContent = initialTitle;
+    }
+
+    let container = document.getElementById('cd-webview-container');
+    let wv = document.getElementById('cd-external-webview');
+
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'cd-webview-container';
+      document.documentElement.appendChild(container);
+    }
+
+    if (!wv) {
+      wv = document.createElement('webview');
+      wv.id = 'cd-external-webview';
+      wv.setAttribute('allowpopups', '');
+      wv.addEventListener('page-title-updated', (e) => {
+        const tEl = document.getElementById('cd-titlebar-title');
+        if (tEl && e.title) tEl.textContent = e.title;
+      });
+
+      const handleWebviewCustomShellRedirect = (navUrl) => {
+        if (!navUrl) return;
+        let parsed;
+        try {
+          parsed = new URL(navUrl, window.location.origin);
+        } catch {
+          return;
+        }
+        if (parsed.hostname.toLowerCase() === 'portal.uit.edu.vn') {
+          const p = parsed.pathname || '/';
+          if (p.startsWith('/trang-chu') || p.startsWith('/sinh-vien')) {
+            window.__closeExternalWebview();
+            const targetPath = normalizePath(p);
+            if (normalizePath(window.location.pathname) !== targetPath) {
+              navigateAndSelectTab(targetPath, null);
+            }
+          }
+        }
+      };
+
+      wv.addEventListener('will-navigate', (e) => {
+        handleWebviewCustomShellRedirect(e.url);
+      });
+      wv.addEventListener('did-navigate', (e) => {
+        handleWebviewCustomShellRedirect(e.url);
+      });
+      wv.addEventListener('did-navigate-in-page', (e) => {
+        if (e.isMainFrame !== false) {
+          handleWebviewCustomShellRedirect(e.url);
+        }
+      });
+
+      container.appendChild(wv);
+    }
+
+    container.hidden = false;
+    document.documentElement?.classList.add('uit-webview-active');
+    wv.src = targetUrl;
+  };
+
+  if (!window.__uitExternalLinkInterceptorBound) {
+    window.__uitExternalLinkInterceptorBound = true;
+
+    document.addEventListener('click', (e) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const anchor = e.target instanceof Element ? e.target.closest('a[href]') : null;
+      if (!anchor) return;
+
+      const rawHref = anchor.getAttribute('href') || '';
+      if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('javascript:')) return;
+
+      let resolvedUrl;
+      try {
+        resolvedUrl = new URL(anchor.href, window.location.href).href;
+      } catch {
+        return;
+      }
+
+      if (!isNativePortalUrl(resolvedUrl)) {
+        e.preventDefault();
+        e.stopPropagation();
+        const label =
+          anchor.querySelector('.cd-shortcut-name')?.textContent?.trim() ||
+          anchor.textContent?.trim() ||
+          resolvedUrl;
+        window.__openInWebview(resolvedUrl, label);
+      }
+    }, true);
+  }
+
+  // 7. Portal version detection
   const extractVersionToken = (rawText) => {
     if (!rawText) return '';
     const text = rawText.replace(/\s+/g, ' ').trim();
@@ -794,37 +1386,6 @@
     versionEl.textContent = portalVer ? `UIT Portal ${portalVer} | Wrapper ${appVer}` : `Wrapper ${appVer}`;
   };
 
-  // 7. Custom CSS theme management
-  const applySavedCustomTheme = () => {
-    const disableTheme = isExcludedPage(window.location.pathname);
-    const savedCss = localStorage.getItem('uit_custom_theme_css');
-    const savedName = localStorage.getItem('uit_custom_theme_name');
-    hasCustomTheme = Boolean(savedCss);
-    let styleEl = document.getElementById('cd-custom-theme-style');
-
-    if (savedCss && !disableTheme) {
-      if (!styleEl) {
-        styleEl = document.createElement('style');
-        styleEl.id = 'cd-custom-theme-style';
-      }
-      styleEl.textContent = savedCss;
-      if (document.documentElement) {
-        document.documentElement.appendChild(styleEl);
-      }
-    } else if (styleEl) {
-      styleEl.remove();
-    }
-
-    const importBtn = document.getElementById('cd-import-theme-btn');
-    const resetBtn = document.getElementById('cd-reset-theme-btn');
-    if (importBtn) importBtn.textContent = savedCss && savedName ? `Theme: ${savedName}` : 'Import CSS';
-    if (resetBtn) resetBtn.style.display = savedCss ? 'inline-block' : 'none';
-
-    syncTitlebarOverlayColor();
-  };
-
-  applySavedCustomTheme();
-
   // 8. Profile state & /trang-chu card controls
   const getGreetingByHour = () => {
     const hour = new Date().getHours();
@@ -867,50 +1428,6 @@
   };
 
   window.__bindTrangChuControls = () => {
-    const importBtn = document.getElementById('cd-import-theme-btn');
-    const resetBtn = document.getElementById('cd-reset-theme-btn');
-    const fileInput = document.getElementById('cd-theme-file-input');
-
-    if (importBtn && fileInput && importBtn.dataset.bound !== '1') {
-      importBtn.dataset.bound = '1';
-      importBtn.addEventListener('click', () => fileInput.click());
-      fileInput.addEventListener('change', (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          if (typeof ev.target?.result === 'string') {
-            localStorage.setItem('uit_custom_theme_css', ev.target.result);
-            localStorage.setItem('uit_custom_theme_name', file.name.replace(/\.css$/i, ''));
-            applySavedCustomTheme();
-          }
-        };
-        reader.readAsText(file);
-        fileInput.value = '';
-      });
-    }
-
-    if (resetBtn && resetBtn.dataset.bound !== '1') {
-      resetBtn.dataset.bound = '1';
-      resetBtn.addEventListener('click', () => {
-        localStorage.removeItem('uit_custom_theme_css');
-        localStorage.removeItem('uit_custom_theme_name');
-        applySavedCustomTheme();
-      });
-    }
-
-    const moreBtn = document.getElementById('cd-more-menu-btn');
-    const moreDropdown = document.getElementById('cd-more-dropdown');
-    if (moreBtn && moreDropdown && moreBtn.dataset.bound !== '1') {
-      moreBtn.dataset.bound = '1';
-      moreBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const willOpen = moreDropdown.hidden;
-        moreDropdown.hidden = !willOpen;
-        moreBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-      });
-    }
-
     applySavedCustomTheme();
     const greetingEl = document.getElementById('cd-user-greeting');
     if (greetingEl) greetingEl.textContent = getGreetingByHour();
@@ -928,20 +1445,20 @@
   if (!window.__cdMenuDismissBound) {
     window.__cdMenuDismissBound = true;
     document.addEventListener('click', (e) => {
-      const wrap = document.getElementById('cd-more-menu-wrap');
-      const dropdown = document.getElementById('cd-more-dropdown');
-      const btn = document.getElementById('cd-more-menu-btn');
-      if (wrap && dropdown && !wrap.contains(e.target)) {
-        dropdown.hidden = true;
-        if (btn) btn.setAttribute('aria-expanded', 'false');
+      const accountWrap = document.getElementById('cd-account-menu-wrap');
+      if (accountWrap && !accountWrap.contains(e.target)) {
+        closeAccountDropdown();
+      }
+
+      const themeWrap = document.getElementById('cd-theme-menu-wrap');
+      if (themeWrap && !themeWrap.contains(e.target)) {
+        closeThemeDropdown();
       }
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        const dropdown = document.getElementById('cd-more-dropdown');
-        const btn = document.getElementById('cd-more-menu-btn');
-        if (dropdown) dropdown.hidden = true;
-        if (btn) btn.setAttribute('aria-expanded', 'false');
+        closeAccountDropdown();
+        closeThemeDropdown();
       }
     });
   }
@@ -1053,9 +1570,11 @@
     if (excluded) {
       profileFetchSettled = true;
       dismissBootCurtainNow();
+      document.documentElement?.removeAttribute('data-theme');
       document.getElementById('cd-custom-theme-style')?.remove();
       if (sidebar) sidebar.style.display = 'none';
       document.body.classList.remove('with-custom-shell', 'is-trang-chu', 'cd-sidebar-hidden');
+      document.body.style.removeProperty('--cd-status-banner-height');
       Array.from(document.body.classList).forEach(cls => {
         if (cls.startsWith('route-')) document.body.classList.remove(cls);
       });
@@ -1077,12 +1596,13 @@
       syncSidebarActiveLinks(pendingRouteHref || normalizedPath);
 
       if (pendingRouteHref && normalizedPath === pendingRouteHref) {
-        requestAnimationFrame(() => window.__hideHoSoRouteLoader(false));
+        window.__scheduleHideHoSoRouteLoader();
       } else if (!pendingRouteHref && document.body.classList.contains('cd-route-loading')) {
         window.__hideHoSoRouteLoader(false);
       }
 
       if (normalizedPath === '/sinh-vien/ho-so') {
+        customizeHoSoHeader();
         hideHoSoBhytTab();
       }
 
@@ -1095,6 +1615,28 @@
   };
 
   window.__updateCustomRouteState();
+
+  if (!window.__uitHistoryHooked) {
+    window.__uitHistoryHooked = true;
+    const wrapHistoryMethod = (methodName) => {
+      const orig = history[methodName];
+      if (typeof orig !== 'function') return;
+      history[methodName] = function (...args) {
+        const result = orig.apply(this, args);
+        if (typeof window.__updateCustomRouteState === 'function') {
+          window.__updateCustomRouteState();
+        }
+        return result;
+      };
+    };
+    wrapHistoryMethod('pushState');
+    wrapHistoryMethod('replaceState');
+    window.addEventListener('popstate', () => {
+      if (typeof window.__updateCustomRouteState === 'function') {
+        window.__updateCustomRouteState();
+      }
+    });
+  }
 
   // 11. Hydration defender
   const enforceBodyClasses = new MutationObserver((mutations) => {
@@ -1122,6 +1664,14 @@
       if (isTrangChu && !document.body.classList.contains('is-trang-chu')) {
         document.body.classList.add('is-trang-chu');
       }
+      const expectedSlug = currentPath.replace(/^\/|\/$/g, '').replace(/\//g, '-') || 'trang-chu';
+      const expectedRouteClass = `route-${expectedSlug}`;
+      if (!document.body.classList.contains(expectedRouteClass)) {
+        Array.from(document.body.classList).forEach(cls => {
+          if (cls.startsWith('route-')) document.body.classList.remove(cls);
+        });
+        document.body.classList.add(expectedRouteClass);
+      }
       if (pendingRouteHref && !document.body.classList.contains('cd-route-loading')) {
         document.body.classList.add('cd-route-loading');
       }
@@ -1136,13 +1686,26 @@
       if (hasCustomTheme && !document.getElementById('cd-custom-theme-style')) {
         applySavedCustomTheme();
       }
+      if (!document.documentElement.getAttribute('data-theme')) {
+        applyColorScheme(getSavedThemeMode());
+      }
 
       const mainChanged = mutations.some(
-        (m) => m.type === 'childList' && m.target instanceof Element && m.target.closest('main')
+        (m) =>
+          m.type === 'childList' &&
+          m.target instanceof Element &&
+          (Boolean(m.target.closest('main')) ||
+            Array.from(m.addedNodes).some(
+              (node) => node instanceof Element && (node.matches('main') || Boolean(node.querySelector('main')))
+            ))
       );
       if (mainChanged) {
         if (normalizedPath === '/sinh-vien/ho-so') {
+          customizeHoSoHeader();
           hideHoSoBhytTab();
+          if (pendingRouteHref === '/sinh-vien/ho-so') {
+            window.__scheduleHideHoSoRouteLoader();
+          }
         }
         window.__scheduleBootCurtainCheck();
       }
@@ -1160,10 +1723,6 @@
     window.__UIT_MODAL_FIX_VERSION__ = 3;
 
     const dialogSelector = '[role="dialog"], [role="alertdialog"], [aria-modal="true"], dialog[open]';
-    // These are the exact modal/sheet nodes for which the user's DevTools
-    // element.style overrides worked. Apply the same declarations inline with
-    // !important so portal/framework inline styles cannot reintroduce margins
-    // or a restrictive max-height.
     const directViewportFixSelector = [
       'body.with-custom-shell [role="dialog"].fixed.inset-0',
       'body.with-custom-shell [role="alertdialog"].fixed.inset-0',
@@ -1188,7 +1747,7 @@
       '.fixed.inset-0'
     ].join(',');
 
-    const normalizeText = (value) => String(value || '')
+    const normalizeModalText = (value) => String(value || '')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
@@ -1225,7 +1784,7 @@
 
     const markDialog = (el) => {
       if (!(el instanceof HTMLElement) || !isVisible(el)) return;
-      const text = normalizeText(el.innerText || el.textContent);
+      const text = normalizeModalText(el.innerText || el.textContent);
       let kind = 'default';
       if (isSupportRoute()) {
         kind = (text.includes('tao ticket moi') || text.includes('tao yeu cau moi'))
@@ -1234,9 +1793,6 @@
       }
       el.setAttribute('data-uit-modal-fix', kind);
       el.style.setProperty('z-index', '10001', 'important');
-      // Keep the prior height cap only for dialog implementations outside the
-      // exact selector set. For the elements identified by the user, apply the
-      // proven inline max-height:none and margin:0 overrides instead.
       if (el.matches(directViewportFixSelector)) {
         applyDirectViewportFix(el);
       } else {

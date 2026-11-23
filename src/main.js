@@ -102,10 +102,96 @@ function getResolvedWebShortcuts() {
     });
 }
 
-function isCustomShellUrl(parsedUrl) {
-  if (!parsedUrl || parsedUrl.hostname !== 'portal.uit.edu.vn') return false;
+function parseUrlSafe(rawUrl) {
+  if (!rawUrl) return null;
+  try {
+    return rawUrl instanceof URL ? rawUrl : new URL(String(rawUrl));
+  } catch {
+    return null;
+  }
+}
+
+function isCustomShellUrl(rawUrl) {
+  const parsedUrl = parseUrlSafe(rawUrl);
+  if (!parsedUrl || parsedUrl.hostname.toLowerCase() !== 'portal.uit.edu.vn') return false;
   const p = parsedUrl.pathname || '';
   return p.startsWith('/trang-chu') || p.startsWith('/sinh-vien');
+}
+
+function isNativeAuthUrl(rawUrl) {
+  const parsedUrl = parseUrlSafe(rawUrl);
+  if (!parsedUrl) return false;
+
+  const host = parsedUrl.hostname.toLowerCase();
+  if (host === 'sso.uit.edu.vn') {
+    return true;
+  }
+
+  if (host === 'portal.uit.edu.vn') {
+    const p = parsedUrl.pathname || '/';
+    return p.startsWith('/login') || p.startsWith('/api/auth');
+  }
+
+  return false;
+}
+
+function isNativePopupPrintUrl(rawUrl) {
+  const raw = String(rawUrl || '').trim();
+  if (!raw || raw === 'about:blank') return true;
+
+  const parsedUrl = parseUrlSafe(raw);
+  if (!parsedUrl) return false;
+
+  if (
+    parsedUrl.protocol === 'about:' ||
+    parsedUrl.protocol === 'blob:' ||
+    parsedUrl.protocol === 'data:'
+  ) {
+    return true;
+  }
+
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    return false;
+  }
+
+  const host = parsedUrl.hostname.toLowerCase();
+  const p = (parsedUrl.pathname || '/').toLowerCase();
+
+  if (/\.pdf($|[?#])/i.test(p) || parsedUrl.searchParams.has('print')) {
+    return true;
+  }
+
+  if (host === 'portal.uit.edu.vn') {
+    if (isNativeAuthUrl(parsedUrl)) return false;
+    if (
+      p.includes('/print') ||
+      p.includes('/in-bang-diem') ||
+      p.startsWith('/api/')
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function getNativePopupWindowOptions(parentWindow) {
+  return {
+    parent: parentWindow || undefined,
+    width: 1024,
+    height: 768,
+    minWidth: 640,
+    minHeight: 480,
+    autoHideMenuBar: true,
+    backgroundColor: '#ffffff',
+    titleBarStyle: 'default',
+    frame: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  };
 }
 
 const BRAND_WHITE_BASE64 = readImageBase64('assets/uit-logo-white.png');
@@ -115,9 +201,11 @@ const ASSETS = {
   bootCurtainHtml: readAsset('layouts/boot-curtain.html'),
   shellHtml: readAsset('layouts/shell.html'),
   trangChuHtml: readAsset('layouts/trang-chu.html'),
+  themeCss: readAssetFromCandidates(['styles/theme.css', 'src/styles/theme.css', 'theme.css']),
   shellCss: readAssetFromCandidates(['styles/shell.css', 'src/styles/shell.css', 'shell.css']),
   trangChuCss: readAsset('styles/trang-chu.css'),
   hoSoCss: readAsset('styles/ho-so.css'),
+  tkbCss: readAsset('styles/tkb.css'),
   shellJs: readAssetFromCandidates(['scripts/shell.js', 'src/scripts/shell.js', 'shell.js']),
   trangChuJs: readAsset('scripts/trang-chu.js'),
   searchItems: readJsonAsset('config/search-items.json', { items: [], excludeTitles: [] })
@@ -220,9 +308,11 @@ function getGlobalTitlebarCss() {
       color: var(--col-hi-text, #ffffff) !important;
     }
 
+    html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-theme-menu-wrap,
+    html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-account-menu-wrap,
     html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-sidebar-btn,
     html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-search-wrap,
-    body:not(.with-custom-shell) #cd-search-wrap {
+    html:has(> body:not(.with-custom-shell)) #cd-search-wrap {
       display: none !important;
     }
 
@@ -234,18 +324,65 @@ function getGlobalTitlebarCss() {
       overflow: hidden !important;
     }
 
-    html:not(.uit-custom-shell) body:not(.with-custom-shell) {
+    html:not(.uit-custom-shell):not(#_#_#) > body:not(.with-custom-shell):not(#_#_#) {
       position: fixed !important;
       top: 36px !important;
       left: 0 !important;
       right: 0 !important;
       bottom: 0 !important;
-      height: auto !important;
-      max-height: none !important;
+      width: 100vw !important;
+      height: calc(100vh - 36px) !important;
+      max-height: calc(100vh - 36px) !important;
+      margin: 0 !important;
       padding-top: 0 !important;
       overflow-y: auto !important;
       overflow-x: hidden !important;
       box-sizing: border-box !important;
+      transform: translate3d(0, 0, 0) !important;
+    }
+
+    #cd-webview-container {
+      position: fixed !important;
+      top: 36px !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: calc(100vh - 36px) !important;
+      z-index: 2147483640 !important;
+      background-color: var(--col-pri-bg, #0d1117) !important;
+      display: flex !important;
+    }
+
+    #cd-webview-container[hidden] {
+      display: none !important;
+    }
+
+    #cd-external-webview {
+      flex: 1 1 auto !important;
+      width: 100% !important;
+      height: 100% !important;
+      border: none !important;
+      display: flex !important;
+    }
+
+    #cd-webview-nav-controls {
+      display: inline-flex !important;
+      align-items: center !important;
+      height: 36px !important;
+      margin-left: -6px !important;
+      -webkit-app-region: no-drag !important;
+    }
+
+    #cd-webview-nav-controls[hidden],
+    html.uit-webview-active #cd-toggle-sidebar-btn,
+    html.uit-webview-active #cd-refresh-btn,
+    html.uit-webview-active #cd-search-wrap {
+      display: none !important;
+    }
+
+    #cd-webview-nav-controls .cd-titlebar-btn {
+      width: 34px !important;
     }
   `;
 }
@@ -309,9 +446,11 @@ const PORTAL_COMBINED_CSS = [
     }
   `,
   getGlobalTitlebarCss(),
+  ASSETS.themeCss,
   ASSETS.shellCss,
   ASSETS.trangChuCss,
-  ASSETS.hoSoCss
+  ASSETS.hoSoCss,
+  ASSETS.tkbCss
 ].join('\n');
 
 const EXTERNAL_COMBINED_CSS = getGlobalTitlebarCss();
@@ -337,8 +476,15 @@ function getEarlyBootstrapScript(useCustomShell) {
 
       if (activeCustomShell) {
         try {
+          const mode = localStorage.getItem('uit_theme_mode') || 'system';
+          const effective = (mode === 'light' || mode === 'dark')
+            ? mode
+            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement?.setAttribute('data-theme', effective);
+
           const savedCss = localStorage.getItem('uit_custom_theme_css');
-          if (savedCss && !document.getElementById('cd-custom-theme-style') && document.documentElement) {
+          const isCustomActive = localStorage.getItem('uit_custom_theme_active') !== '0';
+          if (savedCss && isCustomActive && !document.getElementById('cd-custom-theme-style') && document.documentElement) {
             const styleEl = document.createElement('style');
             styleEl.id = 'cd-custom-theme-style';
             styleEl.textContent = savedCss;
@@ -481,6 +627,7 @@ function getEarlyBootstrapScript(useCustomShell) {
           };
         }
       } else {
+        document.documentElement?.removeAttribute('data-theme');
         document.getElementById('cd-custom-theme-style')?.remove();
         if (window.__lastOverlaySymbolColor !== '#8b949e') {
           window.__lastOverlaySymbolColor = '#8b949e';
@@ -488,16 +635,16 @@ function getEarlyBootstrapScript(useCustomShell) {
         }
       }
 
-      // Mount early titlebar on every site as soon as <body> exists
+      // Mount early titlebar on <html> so body transforms on external sites never shift it
       const mountEarlyTitlebar = () => {
-        const target = document.body || document.documentElement;
+        const target = document.documentElement;
         if (!target) return false;
         let titlebar = document.getElementById('cd-titlebar');
         if (!titlebar && window.__UIT_TITLEBAR_HTML__) {
-          target.insertAdjacentHTML('afterbegin', window.__UIT_TITLEBAR_HTML__);
+          target.insertAdjacentHTML('beforeend', window.__UIT_TITLEBAR_HTML__);
           titlebar = document.getElementById('cd-titlebar');
-        } else if (titlebar && document.body && titlebar.parentElement !== document.body) {
-          document.body.insertAdjacentElement('afterbegin', titlebar);
+        } else if (titlebar && titlebar.parentElement !== target) {
+          target.appendChild(titlebar);
         }
         const iconEl = document.getElementById('cd-titlebar-icon');
         if (iconEl) {
@@ -517,45 +664,38 @@ function getEarlyBootstrapScript(useCustomShell) {
             requestAnimationFrame(() => window.location.reload());
           });
         }
-        return Boolean(document.body);
+        return Boolean(titlebar);
       };
 
       mountEarlyTitlebar();
       if (!window.__uitTitlebarGuardInstalled) {
         window.__uitTitlebarGuardInstalled = true;
         const obs = new MutationObserver(() => {
-          if (!document.getElementById('cd-titlebar') || (document.body && document.getElementById('cd-titlebar')?.parentElement !== document.body)) {
+          const root = document.documentElement;
+          const tb = document.getElementById('cd-titlebar');
+          if (!tb || (root && tb.parentElement !== root)) {
             mountEarlyTitlebar();
           }
         });
         obs.observe(document.documentElement || document, { childList: true });
-        if (document.body) {
-          obs.observe(document.body, { childList: true });
-        } else {
-          const bodyWaitObs = new MutationObserver(() => {
-            if (document.body) {
-              bodyWaitObs.disconnect();
-              mountEarlyTitlebar();
-              obs.observe(document.body, { childList: true });
-            }
-          });
-          bodyWaitObs.observe(document.documentElement || document, { childList: true });
-        }
       }
     })();
   `;
 }
 
+let primaryMainWindow = null;
+
 ipcMain.on('uit:get-bootstrap-data', (event, targetUrl) => {
-  let parsedUrl;
-  try {
-    parsedUrl = new URL(targetUrl);
-  } catch {
+  if (
+    event.sender.getType() !== 'window' ||
+    (primaryMainWindow && !primaryMainWindow.isDestroyed() && event.sender !== primaryMainWindow.webContents)
+  ) {
     event.returnValue = null;
     return;
   }
 
-  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+  const parsedUrl = parseUrlSafe(targetUrl);
+  if (!parsedUrl || (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:')) {
     event.returnValue = null;
     return;
   }
@@ -572,14 +712,8 @@ ipcMain.on('uit:get-bootstrap-data', (event, targetUrl) => {
 
 function injectCustomUI(webContents) {
   const currentUrl = webContents.getURL();
-  let parsedUrl;
-  try {
-    parsedUrl = new URL(currentUrl);
-  } catch {
-    return;
-  }
-
-  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') return;
+  const parsedUrl = parseUrlSafe(currentUrl);
+  if (!parsedUrl || (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:')) return;
 
   const useCustomShell = isCustomShellUrl(parsedUrl);
   const combinedCss = useCustomShell ? PORTAL_COMBINED_CSS : EXTERNAL_COMBINED_CSS;
@@ -588,8 +722,9 @@ function injectCustomUI(webContents) {
     const titlebarOnlyCode = `
       (() => {
         const styleEl = document.getElementById('cd-early-css');
-        if (styleEl) {
+        if (styleEl && document.documentElement) {
           styleEl.textContent = ${JSON.stringify(combinedCss)};
+          document.documentElement.appendChild(styleEl);
         } else if (document.documentElement) {
           const s = document.createElement('style');
           s.id = 'cd-early-css';
@@ -663,30 +798,120 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      webviewTag: true
     },
     frame: true
   });
+  primaryMainWindow = mainWindow;
+
+  mainWindow.webContents.on('did-create-window', (childWindow) => {
+    childWindow.setMenuBarVisibility(false);
+  });
 
   mainWindow.webContents.on('console-message', (event, level, message) => {
-    if (process.platform === 'darwin' || typeof mainWindow.setTitleBarOverlay !== 'function') return;
-    if (typeof message !== 'string' || !message.startsWith('__UIT_TITLEBAR_OVERLAY__')) return;
-    try {
-      const payload = JSON.parse(message.slice('__UIT_TITLEBAR_OVERLAY__'.length));
-      if (payload && payload.symbolColor) {
-        mainWindow.setTitleBarOverlay({
-          color: 'rgba(0,0,0,0)',
-          symbolColor: payload.symbolColor,
-          height: 36
-        });
-      }
-    } catch {}
+    if (typeof message !== 'string') return;
+
+    if (message.startsWith('__UIT_TITLEBAR_OVERLAY__')) {
+      if (process.platform === 'darwin' || typeof mainWindow.setTitleBarOverlay !== 'function') return;
+      try {
+        const payload = JSON.parse(message.slice('__UIT_TITLEBAR_OVERLAY__'.length));
+        if (payload && payload.symbolColor) {
+          mainWindow.setTitleBarOverlay({
+            color: 'rgba(0,0,0,0)',
+            symbolColor: payload.symbolColor,
+            height: 36
+          });
+        }
+      } catch {}
+    }
   });
+
+  const openUrlInMainWebview = (targetUrl) => {
+    const escaped = JSON.stringify(String(targetUrl));
+    const currentUrl = mainWindow.webContents.getURL();
+    if (isCustomShellUrl(currentUrl)) {
+      mainWindow.webContents.executeJavaScript(
+        `window.__openInWebview && window.__openInWebview(${escaped});`
+      ).catch(() => {});
+    } else {
+      mainWindow.webContents.once('did-finish-load', () => {
+        mainWindow.webContents.executeJavaScript(
+          `window.__openInWebview && window.__openInWebview(${escaped});`
+        ).catch(() => {});
+      });
+      mainWindow.loadURL('https://portal.uit.edu.vn/trang-chu');
+    }
+  };
 
   session.defaultSession.webRequest.onBeforeRequest(
     { urls: ['*://uma.uit.edu.vn/*', '*://*.uma.uit.edu.vn/*'] },
     (details, callback) => callback({ cancel: true })
   );
+
+  session.defaultSession.webRequest.onHeadersReceived(
+    { urls: ['*://portal.uit.edu.vn/*'] },
+    (details, callback) => {
+      const headers = { ...details.responseHeaders };
+      for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === 'content-security-policy') {
+          headers[key] = headers[key].map((policy) =>
+            policy
+              .replace(/frame-src[^;]*;?/gi, '')
+              .replace(/child-src[^;]*;?/gi, '')
+          );
+        }
+      }
+      callback({ responseHeaders: headers });
+    }
+  );
+
+  const openUrlInNativePopup = (targetUrl) => {
+    const popup = new BrowserWindow(getNativePopupWindowOptions(mainWindow));
+    popup.setMenuBarVisibility(false);
+    popup.loadURL(String(targetUrl)).catch(() => {});
+  };
+
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (isNativeAuthUrl(url)) return;
+
+    if (isNativePopupPrintUrl(url)) {
+      event.preventDefault();
+      openUrlInNativePopup(url);
+      return;
+    }
+
+    const currentUrl = mainWindow.webContents.getURL();
+    if (!isCustomShellUrl(currentUrl) && isCustomShellUrl(url)) {
+      return;
+    }
+
+    event.preventDefault();
+    openUrlInMainWebview(url);
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (isNativeAuthUrl(url)) {
+      mainWindow.loadURL(url);
+      return { action: 'deny' };
+    }
+
+    const parsed = parseUrlSafe(url);
+    const isSamePortalNonShellPopup =
+      parsed &&
+      parsed.hostname.toLowerCase() === 'portal.uit.edu.vn' &&
+      !isCustomShellUrl(parsed);
+
+    if (isNativePopupPrintUrl(url) || isSamePortalNonShellPopup) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: getNativePopupWindowOptions(mainWindow)
+      };
+    }
+
+    openUrlInMainWebview(url);
+    return { action: 'deny' };
+  });
 
   mainWindow.webContents.on('dom-ready', () => {
     injectCustomUI(mainWindow.webContents);
@@ -708,6 +933,86 @@ app.commandLine.appendSwitch('js-flags', '--max-old-space-size=192');
 app.commandLine.appendSwitch('enable-low-end-device-mode');
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
 app.commandLine.appendSwitch('disable-direct-composition');
+
+app.on('web-contents-created', (_, contents) => {
+  if (contents.getType() !== 'webview') return;
+
+  const redirectWebviewToMainShell = (targetUrl) => {
+    if (!isCustomShellUrl(targetUrl)) return false;
+    const host = contents.hostWebContents;
+    if (!host || host.isDestroyed()) return false;
+
+    const parsed = parseUrlSafe(targetUrl);
+    if (!parsed) return false;
+
+    const escapedUrl = JSON.stringify(parsed.href);
+    const escapedPath = JSON.stringify(parsed.pathname + parsed.search + parsed.hash);
+
+    if (isCustomShellUrl(host.getURL())) {
+      host.executeJavaScript(`
+        (() => {
+          if (window.__closeExternalWebview) window.__closeExternalWebview();
+          const targetPath = ${escapedPath};
+          const currentFull = window.location.pathname + window.location.search + window.location.hash;
+          if (currentFull !== targetPath) {
+            const normTarget = targetPath.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
+            const normalizedTarget = normTarget === '/' ? '/trang-chu' : normTarget;
+            const sidebarLink = Array.from(document.querySelectorAll('#cd-sidebar .cd-nav a'))
+              .find((a) => {
+                const raw = (a.getAttribute('href') || '/').replace(/\/+$/, '') || '/';
+                return (raw === '/' ? '/trang-chu' : raw) === normalizedTarget;
+              });
+            if (sidebarLink && !sidebarLink.classList.contains('active')) {
+              sidebarLink.click();
+            } else {
+              const nativeLink = document.querySelector(\`nav[aria-label="Điều hướng chính"] a[href="\${normalizedTarget}"]\`);
+              if (nativeLink) nativeLink.click();
+              else window.location.href = ${escapedUrl};
+            }
+          }
+        })();
+      `).catch(() => {});
+    } else {
+      host.loadURL(parsed.href).catch(() => {});
+    }
+
+    return true;
+  };
+
+  contents.on('will-navigate', (event, url) => {
+    if (redirectWebviewToMainShell(url)) {
+      event.preventDefault();
+    }
+  });
+
+  contents.on('will-redirect', (event, url) => {
+    if (redirectWebviewToMainShell(url)) {
+      event.preventDefault();
+    }
+  });
+
+  contents.on('did-navigate-in-page', (_, url, isMainFrame) => {
+    if (isMainFrame) {
+      redirectWebviewToMainShell(url);
+    }
+  });
+
+  contents.setWindowOpenHandler(({ url }) => {
+    if (redirectWebviewToMainShell(url)) {
+      return { action: 'deny' };
+    }
+    if (isNativePopupPrintUrl(url)) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: getNativePopupWindowOptions(primaryMainWindow)
+      };
+    }
+    if (parseUrlSafe(url)) {
+      contents.loadURL(url).catch(() => {});
+    }
+    return { action: 'deny' };
+  });
+});
 
 app.whenReady().then(createWindow);
 
