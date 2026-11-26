@@ -15,10 +15,24 @@
 
 <section id="cd-stats-grid"></section>
 
-<section class="cd-widget" id="cd-widget-schedule">
+<section
+  class="cd-widget"
+  id="cd-widget-schedule"
+  role="button"
+  tabindex="0"
+  data-href="/sinh-vien/tkb"
+  data-tab-match="Lịch tuần"
+  aria-label="Thời khóa biểu hôm nay"
+>
   <div id="cd-schedule-overview">
     <div class="cd-schedule-header-group">
-      <h3>THỜI KHÓA BIỂU HÔM NAY</h3>
+      <h3 class="cd-schedule-title">
+        <span class="cd-link-title-text">THỜI KHÓA BIỂU HÔM NAY</span>
+        <svg class="cd-link-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14"/>
+          <path d="m12 5 7 7-7 7"/>
+        </svg>
+      </h3>
       <p id="cd-schedule-date"></p>
     </div>
     <div id="cd-schedule-legend" aria-label="Chú thích trạng thái môn học">
@@ -50,10 +64,78 @@
   </div>
 </section>
 
+<template id="cd-user-stat-card-template">
+  <a class="cd-user-stat-card">
+    <h4 class="cd-user-stat-label">
+      <span class="cd-user-stat-label-text"></span>
+      <svg class="cd-link-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 12h14"/>
+        <path d="m12 5 7 7-7 7"/>
+      </svg>
+    </h4>
+    <div class="cd-user-stat-value"></div>
+    <p class="cd-user-stat-desc"></p>
+    <div class="cd-user-stat-progress">
+      <div class="cd-user-stat-progress-bar"></div>
+    </div>
+  </a>
+</template>
+
 <template id="cd-stat-card-template">
   <div class="cd-stat-card">
     <h4></h4>
     <h2></h2>
     <p></p>
   </div>
+</template>
+
+<template id="cd-tkb-empty-template">
+  <p class="cd-tkb-empty"></p>
+</template>
+
+<template id="cd-tkb-item-template">
+  <li class="cd-tkb-item">
+    <div class="cd-tkb-item-time">
+      <div class="cd-tkb-time-range">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span class="cd-tkb-time-text"></span>
+      </div>
+      <div class="cd-tkb-period-text"></div>
+    </div>
+    <div class="cd-tkb-item-main">
+      <div class="cd-tkb-item-title-row">
+        <span class="cd-tkb-subject-name"></span>
+        <span class="cd-tkb-class-code"></span>
+      </div>
+      <div class="cd-tkb-item-meta-row">
+        <span class="cd-tkb-method-badge"></span>
+        <span class="cd-tkb-meta-item cd-tkb-meta-room">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span class="cd-tkb-meta-text"></span>
+        </span>
+        <span class="cd-tkb-meta-item cd-tkb-meta-lecturer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span class="cd-tkb-meta-text"></span>
+        </span>
+      </div>
+    </div>
+  </li>
+</template>
+
+<template id="cd-shortcut-item-template">
+  <a class="cd-shortcut-item">
+    <div class="cd-shortcut-icon-box">
+      <img class="cd-shortcut-icon" alt="" draggable="false" />
+    </div>
+    <span class="cd-shortcut-name"></span>
+  </a>
 </template>

@@ -2,9 +2,23 @@ const { app, BrowserWindow, session, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+function resolveAssetFullPath(relativePath) {
+  if (!relativePath) return '';
+  const normalized = String(relativePath).replace(/^[\/]+/, '');
+  const candidates = [
+    path.join(__dirname, normalized),
+    path.join(__dirname, 'src', normalized),
+    path.join(__dirname, '..', normalized)
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return '';
+}
+
 function readAsset(relativePath) {
-  const fullPath = path.join(__dirname, relativePath);
-  return fs.existsSync(fullPath) ? fs.readFileSync(fullPath, 'utf8') : '';
+  const fullPath = resolveAssetFullPath(relativePath);
+  return fullPath ? fs.readFileSync(fullPath, 'utf8') : '';
 }
 
 function readAssetFromCandidates(relativePaths) {
@@ -50,9 +64,8 @@ const MIME_BY_EXT = {
 };
 
 function readImageBase64(relativePath) {
-  if (!relativePath) return '';
-  const fullPath = path.join(__dirname, relativePath);
-  if (!fs.existsSync(fullPath)) return '';
+  const fullPath = resolveAssetFullPath(relativePath);
+  if (!fullPath) return '';
   const ext = path.extname(fullPath).toLowerCase();
   const mime = MIME_BY_EXT[ext] || 'image/png';
   return `data:${mime};base64,${fs.readFileSync(fullPath).toString('base64')}`;
@@ -292,6 +305,10 @@ function getGlobalTitlebarCss() {
       -webkit-app-region: no-drag !important;
     }
 
+    .cd-titlebar-btn[hidden] {
+      display: none !important;
+    }
+
     .cd-titlebar-btn svg {
       display: block !important;
       transition: color 0.15s ease, stroke 0.15s ease !important;
@@ -312,7 +329,9 @@ function getGlobalTitlebarCss() {
     html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-account-menu-wrap,
     html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-sidebar-btn,
     html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-search-wrap,
-    html:has(> body:not(.with-custom-shell)) #cd-search-wrap {
+    html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-search-toggle-btn,
+    html:has(> body:not(.with-custom-shell)) #cd-search-wrap,
+    html:has(> body:not(.with-custom-shell)) #cd-search-toggle-btn {
       display: none !important;
     }
 
@@ -377,7 +396,8 @@ function getGlobalTitlebarCss() {
     #cd-webview-nav-controls[hidden],
     html.uit-webview-active #cd-toggle-sidebar-btn,
     html.uit-webview-active #cd-refresh-btn,
-    html.uit-webview-active #cd-search-wrap {
+    html.uit-webview-active #cd-search-wrap,
+    html.uit-webview-active #cd-search-toggle-btn {
       display: none !important;
     }
 
@@ -594,6 +614,10 @@ function getEarlyBootstrapScript(useCustomShell) {
                 window.__clearHoSoRscCache();
               }
 
+              if (parsed.pathname.startsWith('/api/auth') || parsed.pathname === '/login' || (method !== 'GET' && parsed.pathname.startsWith('/api/sinh-vien/tkb'))) {
+                if (window.__clearTkbDangKyCache) window.__clearTkbDangKyCache();
+              }
+
               if (method === 'GET' && sameOrigin && parsed.pathname === '/sinh-vien/ho-so' && parsed.searchParams.has('_rsc')) {
                 const reqHeaders = new Headers(isReq ? input.headers : undefined);
                 if (init?.headers) new Headers(init.headers).forEach((v, k) => reqHeaders.set(k, v));
@@ -660,6 +684,7 @@ function getEarlyBootstrapScript(useCustomShell) {
           refreshBtn.dataset.refreshBound = '1';
           refreshBtn.addEventListener('click', () => {
             if (window.__clearHoSoRscCache) window.__clearHoSoRscCache();
+            if (window.__clearTkbDangKyCache) window.__clearTkbDangKyCache();
             if (window.__showBootCurtainForRefresh) window.__showBootCurtainForRefresh();
             requestAnimationFrame(() => window.location.reload());
           });

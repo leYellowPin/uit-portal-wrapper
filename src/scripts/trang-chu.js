@@ -8,6 +8,31 @@
       .replace(/\s+/g, ' ')
       .trim();
 
+  const navigateToPortalTarget = (href, tabMatch = null) => {
+    if (!href) return;
+    if (typeof window.__navigateAndSelectTab === 'function') {
+      window.__navigateAndSelectTab(href, tabMatch);
+    } else {
+      window.location.href = href;
+    }
+  };
+
+  const resolveUserStatLink = (normTitle) => {
+    if (normTitle.includes('gpa tich luy')) {
+      return { href: '/sinh-vien/bang-diem', tabMatch: null };
+    }
+    if (normTitle.includes('tc tich luy') || normTitle.includes('tin chi tich luy')) {
+      return { href: '/sinh-vien/bang-diem', tabMatch: 'Theo CTĐT' };
+    }
+    if (normTitle.includes('diem ren luyen')) {
+      return { href: '/sinh-vien/diem-ren-luyen', tabMatch: null };
+    }
+    if (normTitle.includes('dich vu dang xu ly') || normTitle.includes('dich vu')) {
+      return { href: '/sinh-vien/ho-tro', tabMatch: null };
+    }
+    return null;
+  };
+
   const extractProgressPercent = (statBlock, descText) => {
     if (statBlock) {
       const bar = statBlock.querySelector('[role="progressbar"] > div, [style*="width:"]');
@@ -94,45 +119,60 @@
 
   const renderUserStats = (statsList) => {
     const container = document.getElementById('cd-user-stats');
-    if (!container) return;
-    container.innerHTML = '';
+    const template = document.getElementById('cd-user-stat-card-template');
+    if (!container || !template) return;
+    container.replaceChildren();
 
     (statsList || []).forEach((rawItem) => {
       const item = sanitizeStatItem(rawItem);
       if (!item) return;
 
-      const card = document.createElement('div');
-      card.className = 'cd-user-stat-card';
+      const fragment = template.content.cloneNode(true);
+      const card = fragment.querySelector('.cd-user-stat-card');
+      const labelTextEl = fragment.querySelector('.cd-user-stat-label-text');
+      const valueEl = fragment.querySelector('.cd-user-stat-value');
+      const descEl = fragment.querySelector('.cd-user-stat-desc');
+      const progressTrackEl = fragment.querySelector('.cd-user-stat-progress');
+      const progressBarEl = fragment.querySelector('.cd-user-stat-progress-bar');
 
-      const labelEl = document.createElement('h4');
-      labelEl.className = 'cd-user-stat-label';
-      labelEl.textContent = item.title;
+      if (labelTextEl) labelTextEl.textContent = item.title;
+      if (valueEl) valueEl.textContent = item.value;
 
-      const valueEl = document.createElement('div');
-      valueEl.className = 'cd-user-stat-value';
-      valueEl.textContent = item.value;
-
-      card.appendChild(labelEl);
-      card.appendChild(valueEl);
-
-      if (item.desc) {
-        const descEl = document.createElement('p');
-        descEl.className = 'cd-user-stat-desc';
-        descEl.textContent = item.desc;
-        card.appendChild(descEl);
+      if (descEl) {
+        if (item.desc) {
+          descEl.textContent = item.desc;
+        } else {
+          descEl.remove();
+        }
       }
 
-      if (typeof item.progress === 'number' && !Number.isNaN(item.progress)) {
-        const track = document.createElement('div');
-        track.className = 'cd-user-stat-progress';
-        const fill = document.createElement('div');
-        fill.className = 'cd-user-stat-progress-bar';
-        fill.style.width = `${Math.max(0, Math.min(100, item.progress))}%`;
-        track.appendChild(fill);
-        card.appendChild(track);
+      if (progressTrackEl && progressBarEl) {
+        if (typeof item.progress === 'number' && !Number.isNaN(item.progress)) {
+          progressBarEl.style.width = `${Math.max(0, Math.min(100, item.progress))}%`;
+        } else {
+          progressTrackEl.remove();
+        }
       }
 
-      container.appendChild(card);
+      const linkConfig = resolveUserStatLink(normalizeText(item.title));
+      if (card && linkConfig) {
+        card.classList.add('is-link');
+        card.href = linkConfig.href;
+        card.dataset.href = linkConfig.href;
+        if (linkConfig.tabMatch) {
+          card.dataset.tabMatch = linkConfig.tabMatch;
+        }
+        card.addEventListener('click', (e) => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          navigateToPortalTarget(linkConfig.href, linkConfig.tabMatch);
+        });
+      } else if (card) {
+        card.removeAttribute('href');
+        card.querySelector('.cd-link-arrow')?.remove();
+      }
+
+      container.appendChild(fragment);
     });
   };
 
@@ -143,6 +183,30 @@
         renderUserStats(cached);
       }
     } catch {}
+  };
+
+  const bindScheduleWidgetLink = () => {
+    const scheduleWidget = document.getElementById('cd-widget-schedule');
+    if (!scheduleWidget || scheduleWidget.dataset.linkBound === '1') return;
+    scheduleWidget.dataset.linkBound = '1';
+
+    const href = scheduleWidget.dataset.href || '/sinh-vien/tkb';
+    const tabMatch = scheduleWidget.dataset.tabMatch || 'Lịch tuần';
+
+    scheduleWidget.addEventListener('click', (e) => {
+      if (e.defaultPrevented) return;
+      if (e.target instanceof Element && e.target.closest('a, button')) return;
+      const selected = window.getSelection?.().toString().trim();
+      if (selected) return;
+      navigateToPortalTarget(href, tabMatch);
+    });
+
+    scheduleWidget.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        navigateToPortalTarget(href, tabMatch);
+      }
+    });
   };
 
   const WEEKDAYS_VI = [
@@ -234,7 +298,6 @@
     li.dataset.tkbStatus = status;
     li.title = label;
 
-    // Hide any empty tiny native indicator dot so there is never a duplicate dot
     li.querySelectorAll('span[class*="rounded-full"], div[class*="rounded-full"]').forEach((el) => {
       if ((el.textContent || '').trim() === '' && el.children.length === 0) {
         el.style.display = 'none';
@@ -284,6 +347,287 @@
     }, 15000);
   };
 
+  const TKB_PERIOD_TIMES = {
+    1: { start: '07:30', end: '08:15' },
+    2: { start: '08:15', end: '09:00' },
+    3: { start: '09:00', end: '09:45' },
+    4: { start: '09:55', end: '10:40' },
+    5: { start: '10:40', end: '11:25' },
+    6: { start: '13:00', end: '13:45' },
+    7: { start: '13:45', end: '14:30' },
+    8: { start: '14:30', end: '15:15' },
+    9: { start: '15:25', end: '16:10' },
+    10: { start: '16:10', end: '17:00' },
+    11: { start: '16:55', end: '17:40' },
+    12: { start: '17:45', end: '18:30' },
+    13: { start: '18:30', end: '19:15' }
+  };
+
+  const TKB_METHOD_LABELS = {
+    LT: 'LÝ THUYẾT',
+    HT1: 'THỰC HÀNH 1',
+    HT2: 'THỰC HÀNH 2',
+    TH: 'THỰC HÀNH',
+    TT: 'TRỰC TUYẾN',
+    ONLINE: 'TRỰC TUYẾN',
+    DA: 'ĐỒ ÁN',
+    KLTN: 'KHÓA LUẬN TỐT NGHIỆP',
+    TTTN: 'THỰC TẬP TỐT NGHIỆP'
+  };
+
+  const formatMethodCodeLabel = (methodCode) => {
+    const code = String(methodCode || '').replace(/[\s\u00A0]+/g, '').toUpperCase();
+    if (!code) return '';
+    return TKB_METHOD_LABELS[code] || code;
+  };
+
+  const formatLecturerName = (raw) => {
+    const cleaned = String(raw || '').replace(/[\s\u00A0]+/g, ' ').trim();
+    if (!cleaned) return '';
+    return cleaned.replace(/^(?:(?:PGS|GS)\.?\s*)?(?:TS|ThS|CN|KS|GV)\.?\s+/i, '').trim() || cleaned;
+  };
+
+  const parseLocalYmd = (ymd) => {
+    const match = String(ymd || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return null;
+    const year = Number.parseInt(match[1], 10);
+    const month = Number.parseInt(match[2], 10);
+    const day = Number.parseInt(match[3], 10);
+    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) return null;
+    return new Date(year, month - 1, day);
+  };
+
+  const toLocalYmdString = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const getMondayOfWeek = (date) => {
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dayOffset = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - dayOffset);
+    return d;
+  };
+
+  const isRowActiveOnDate = (row, now) => {
+    if (!row || typeof row !== 'object') return false;
+    const status = String(row.status || '').trim().toLowerCase();
+    if (status && status !== 'active') return false;
+
+    const todayStr = toLocalYmdString(now);
+    const startStr = String(row.startDate || '').trim();
+    const endStr = String(row.endDate || '').trim();
+
+    if (startStr && todayStr < startStr) return false;
+    if (endStr && todayStr > endStr) return false;
+
+    const weekly2 = Number(row.weekly2 || 1);
+    if (weekly2 === 2 && startStr) {
+      const startDateObj = parseLocalYmd(startStr);
+      if (startDateObj) {
+        const startMonday = getMondayOfWeek(startDateObj);
+        const todayMonday = getMondayOfWeek(now);
+        const diffDays = Math.round((todayMonday.getTime() - startMonday.getTime()) / 86400000);
+        const diffWeeks = Math.floor(diffDays / 7);
+        if (diffWeeks < 0 || diffWeeks % 2 !== 0) return false;
+      }
+    }
+
+    return true;
+  };
+
+  const buildTodayScheduleItems = (payload, now = new Date()) => {
+    const rows = Array.isArray(payload?.rows) ? payload.rows : [];
+    const jsDay = now.getDay();
+    const todayThuList = jsDay === 0 ? [8, 1] : [jsDay + 1];
+    const items = [];
+
+    rows.forEach((row) => {
+      if (!isRowActiveOnDate(row, now)) return;
+      const slots = Array.isArray(row.slots) ? row.slots : [];
+      if (slots.length === 0) return;
+
+      const subjectName = String(row.subjectName || row.subjectCode || 'Môn học')
+        .replace(/[\s\u00A0]+/g, ' ')
+        .trim();
+      const classCode = String(row.code || row.subjectCode || '')
+        .replace(/[\s\u00A0]+/g, '')
+        .trim();
+      const methodLabel = formatMethodCodeLabel(row.methodCode);
+      const lecturer = formatLecturerName(row.lecturer);
+
+      slots.forEach((slot) => {
+        const thu = Number(slot?.thu);
+        if (!todayThuList.includes(thu)) return;
+
+        const startPeriod = Number(slot?.tietBatDau);
+        const endPeriod = Number(slot?.tietKetThuc || startPeriod);
+        if (!Number.isFinite(startPeriod) || startPeriod <= 0) return;
+
+        const startInfo = TKB_PERIOD_TIMES[startPeriod];
+        const endInfo = TKB_PERIOD_TIMES[endPeriod] || startInfo;
+        const timeRange = startInfo && endInfo ? `${startInfo.start} – ${endInfo.end}` : '';
+        const periodLabel = endPeriod > startPeriod
+          ? `Tiết ${startPeriod}–${endPeriod}`
+          : `Tiết ${startPeriod}`;
+        const room = String(slot?.room || '').replace(/[\s\u00A0]+/g, ' ').trim();
+
+        items.push({
+          startPeriod,
+          endPeriod,
+          timeRange,
+          periodLabel,
+          subjectName,
+          classCode,
+          methodLabel,
+          room,
+          lecturer
+        });
+      });
+    });
+
+    items.sort((a, b) => {
+      if (a.startPeriod !== b.startPeriod) return a.startPeriod - b.startPeriod;
+      if (a.endPeriod !== b.endPeriod) return a.endPeriod - b.endPeriod;
+      return a.classCode.localeCompare(b.classCode);
+    });
+
+    return items;
+  };
+
+  const renderScheduleEmptyMessage = (container, text) => {
+    const emptyTemplate = document.getElementById('cd-tkb-empty-template');
+    container.replaceChildren();
+    if (emptyTemplate) {
+      const fragment = emptyTemplate.content.cloneNode(true);
+      const p = fragment.querySelector('.cd-tkb-empty');
+      if (p) p.textContent = text;
+      container.appendChild(fragment);
+    } else {
+      const p = document.createElement('p');
+      p.className = 'cd-tkb-empty';
+      p.textContent = text;
+      container.appendChild(p);
+    }
+  };
+
+  const renderTodayScheduleFromApi = (payload) => {
+    const container = document.getElementById('cd-schedule-content');
+    const itemTemplate = document.getElementById('cd-tkb-item-template');
+    if (!container) return;
+
+    const now = new Date();
+    const items = buildTodayScheduleItems(payload, now);
+
+    if (items.length === 0 || !itemTemplate) {
+      renderScheduleEmptyMessage(container, 'Hôm nay bạn không có lịch học.');
+      startScheduleStatusTicker();
+      return;
+    }
+
+    container.replaceChildren();
+    const listEl = document.createElement('ul');
+    listEl.className = 'cd-tkb-list';
+
+    items.forEach((item) => {
+      const fragment = itemTemplate.content.cloneNode(true);
+      const timeRangeEl = fragment.querySelector('.cd-tkb-time-range');
+      const timeTextEl = fragment.querySelector('.cd-tkb-time-text');
+      const periodEl = fragment.querySelector('.cd-tkb-period-text');
+      const subjectEl = fragment.querySelector('.cd-tkb-subject-name');
+      const codeEl = fragment.querySelector('.cd-tkb-class-code');
+      const metaRow = fragment.querySelector('.cd-tkb-item-meta-row');
+      const badgeEl = fragment.querySelector('.cd-tkb-method-badge');
+      const roomEl = fragment.querySelector('.cd-tkb-meta-room');
+      const lecturerEl = fragment.querySelector('.cd-tkb-meta-lecturer');
+
+      if (item.timeRange && timeTextEl) {
+        timeTextEl.textContent = item.timeRange;
+      } else {
+        timeRangeEl?.remove();
+      }
+
+      if (periodEl) periodEl.textContent = item.periodLabel;
+      if (subjectEl) subjectEl.textContent = item.subjectName;
+
+      if (item.classCode && codeEl) {
+        codeEl.textContent = item.classCode;
+      } else {
+        codeEl?.remove();
+      }
+
+      if (item.methodLabel && badgeEl) {
+        badgeEl.textContent = item.methodLabel;
+      } else {
+        badgeEl?.remove();
+      }
+
+      if (item.room && roomEl) {
+        const roomText = roomEl.querySelector('.cd-tkb-meta-text');
+        if (roomText) roomText.textContent = item.room;
+      } else {
+        roomEl?.remove();
+      }
+
+      if (item.lecturer && lecturerEl) {
+        const lecturerText = lecturerEl.querySelector('.cd-tkb-meta-text');
+        if (lecturerText) lecturerText.textContent = item.lecturer;
+      } else {
+        lecturerEl?.remove();
+      }
+
+      if (!item.methodLabel && !item.room && !item.lecturer) {
+        metaRow?.remove();
+      }
+
+      listEl.appendChild(fragment);
+    });
+
+    container.appendChild(listEl);
+    startScheduleStatusTicker();
+  };
+
+  window.__clearTkbDangKyCache = () => {
+    window.__uitTkbDangKyCache = null;
+    window.__uitTkbDangKyInFlight = null;
+    try {
+      sessionStorage.removeItem('uit_tkb_dang_ky_cache');
+    } catch {}
+  };
+
+  const fetchTkbDangKy = (forceRefresh = false) => {
+    if (window.__uitTkbDangKyInFlight) return window.__uitTkbDangKyInFlight;
+    if (!forceRefresh && window.__uitTkbDangKyCache) return Promise.resolve(window.__uitTkbDangKyCache);
+
+    const task = fetch('https://portal.uit.edu.vn/api/sinh-vien/tkb/dang-ky', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!data || !Array.isArray(data.rows)) {
+          throw new Error('Invalid TKB dang-ky payload');
+        }
+        window.__uitTkbDangKyCache = data;
+        try {
+          sessionStorage.setItem('uit_tkb_dang_ky_cache', JSON.stringify(data));
+        } catch {}
+        return data;
+      })
+      .finally(() => {
+        window.__uitTkbDangKyInFlight = null;
+      });
+
+    window.__uitTkbDangKyInFlight = task;
+    return task;
+  };
+
   const FALLBACK_SHORTCUTS = [
     { id: 'uit-official', name: 'Website chính thức', url: 'https://uit.edu.vn', icon: 'shortcut-uit.png', iconSrc: '' },
     { id: 'uit-portal', name: 'Cổng thông tin', url: 'https://portal.uit.edu.vn', icon: 'shortcut-portal.png', iconSrc: '' },
@@ -327,47 +671,42 @@
 
   const renderWebShortcuts = () => {
     const container = document.getElementById('cd-shortcuts-content');
-    if (!container) return;
+    const template = document.getElementById('cd-shortcut-item-template');
+    if (!container || !template) return;
 
     const shortcuts = Array.isArray(window.__UIT_WEB_SHORTCUTS__) && window.__UIT_WEB_SHORTCUTS__.length > 0
       ? window.__UIT_WEB_SHORTCUTS__
       : FALLBACK_SHORTCUTS;
 
-    container.innerHTML = '';
+    container.replaceChildren();
 
     shortcuts.forEach((item) => {
       if (!item || !item.url) return;
 
-      const link = document.createElement('a');
-      link.className = 'cd-shortcut-item';
+      const fragment = template.content.cloneNode(true);
+      const link = fragment.querySelector('.cd-shortcut-item');
+      const iconBox = fragment.querySelector('.cd-shortcut-icon-box');
+      const img = fragment.querySelector('.cd-shortcut-icon');
+      const fallbackSvg = fragment.querySelector('.cd-shortcut-fallback-svg');
+      const nameEl = fragment.querySelector('.cd-shortcut-name');
+
+      if (!link) return;
+      fallbackSvg?.remove();
       link.href = item.url;
       if (item.id) link.dataset.shortcutId = item.id;
       link.title = `${item.name || item.url} (${item.url})`;
+      if (nameEl) nameEl.textContent = item.name || item.url;
 
-      const iconBox = document.createElement('div');
-      iconBox.className = 'cd-shortcut-icon-box';
-
-      if (item.iconSrc) {
-        const img = document.createElement('img');
-        img.className = 'cd-shortcut-icon';
+      if (item.iconSrc && img) {
         img.src = item.iconSrc;
-        img.alt = '';
-        img.draggable = false;
         img.addEventListener('error', () => {
           img.remove();
-          iconBox.appendChild(createFallbackShortcutIcon());
+          iconBox?.appendChild(createFallbackShortcutIcon());
         }, { once: true });
-        iconBox.appendChild(img);
       } else {
-        iconBox.appendChild(createFallbackShortcutIcon());
+        img?.remove();
+        iconBox?.appendChild(createFallbackShortcutIcon());
       }
-
-      const nameEl = document.createElement('span');
-      nameEl.className = 'cd-shortcut-name';
-      nameEl.textContent = item.name || item.url;
-
-      link.appendChild(iconBox);
-      link.appendChild(nameEl);
 
       link.addEventListener('click', (e) => {
         if (window.__openInWebview) {
@@ -388,7 +727,7 @@
         }
       });
 
-      container.appendChild(link);
+      container.appendChild(fragment);
     });
   };
 
@@ -414,6 +753,7 @@
       if (window.__bindTrangChuControls) {
         window.__bindTrangChuControls();
       }
+      bindScheduleWidgetLink();
 
       let gpaTichLuy = null;
       let tcTichLuy = null;
@@ -497,14 +837,61 @@
       };
 
       extractWidgetContent('Thông báo từ nhà trường', 'cd-announcements-content');
-      extractWidgetContent('Thời khóa biểu', 'cd-schedule-content');
-      startScheduleStatusTicker();
       renderWebShortcuts();
 
-      window.__trangChuPopulated = true;
-      if (window.__scheduleBootCurtainCheck) {
-        window.__scheduleBootCurtainCheck();
+      const renderToken = (window.__uitTrangChuRenderToken || 0) + 1;
+      window.__uitTrangChuRenderToken = renderToken;
+
+      let cachedTkb = window.__uitTkbDangKyCache || null;
+      if (!cachedTkb) {
+        try {
+          const rawCachedTkb = sessionStorage.getItem('uit_tkb_dang_ky_cache');
+          if (rawCachedTkb) {
+            const parsedCachedTkb = JSON.parse(rawCachedTkb);
+            if (parsedCachedTkb && Array.isArray(parsedCachedTkb.rows)) {
+              cachedTkb = parsedCachedTkb;
+              window.__uitTkbDangKyCache = parsedCachedTkb;
+            }
+          }
+        } catch {}
       }
+
+      const markTrangChuReady = () => {
+        if (window.__uitTrangChuRenderToken !== renderToken) return;
+        window.__trangChuPopulated = true;
+        if (window.__scheduleBootCurtainCheck) {
+          window.__scheduleBootCurtainCheck();
+        }
+      };
+
+      if (cachedTkb) {
+        renderTodayScheduleFromApi(cachedTkb);
+        markTrangChuReady();
+      } else {
+        const scheduleEl = document.getElementById('cd-schedule-content');
+        if (scheduleEl) {
+          renderScheduleEmptyMessage(scheduleEl, 'Đang tải thời khóa biểu...');
+        }
+        startScheduleStatusTicker();
+      }
+
+      fetchTkbDangKy()
+        .then((freshTkb) => {
+          if (window.__uitTrangChuRenderToken !== renderToken) return;
+          renderTodayScheduleFromApi(freshTkb);
+          markTrangChuReady();
+        })
+        .catch(() => {
+          if (window.__uitTrangChuRenderToken !== renderToken) return;
+          if (!cachedTkb) {
+            const scheduleEl = document.getElementById('cd-schedule-content');
+            if (scheduleEl) scheduleEl.replaceChildren();
+            extractWidgetContent('Thời khóa biểu', 'cd-schedule-content');
+            startScheduleStatusTicker();
+          }
+          markTrangChuReady();
+        });
+
       return true;
     };
 

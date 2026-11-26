@@ -20,7 +20,7 @@
       </button>
     </div>
     <img id="cd-titlebar-icon" alt="" />
-    <span id="cd-titlebar-title">UIT Student Portal</span>
+    <span id="cd-titlebar-title">CỔNG THÔNG TIN SINH VIÊN</span>
   </div>
 
   <div id="cd-search-wrap">
@@ -39,6 +39,21 @@
   </div>
 
   <div id="cd-titlebar-controls">
+    <button
+      type="button"
+      id="cd-search-toggle-btn"
+      class="cd-titlebar-btn"
+      title="Tìm kiếm (Ctrl+K)"
+      aria-label="Tìm kiếm"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+      hidden
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </button>
     <div id="cd-theme-menu-wrap">
       <input type="file" id="cd-theme-file-input" accept=".css,text/css" hidden />
       <button
@@ -104,4 +119,17 @@
       </div>
     </div>
   </div>
+
+  <template id="cd-search-item-template">
+    <button type="button" class="cd-search-item">
+      <span class="cd-search-item-title"></span>
+      <span class="cd-search-item-sub"></span>
+    </button>
+  </template>
+
+  <template id="cd-search-empty-template">
+    <div class="cd-search-item">
+      <span class="cd-search-item-sub">Không tìm thấy kết quả</span>
+    </div>
+  </template>
 </div>
