@@ -1,8 +1,16 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, contextBridge } = require('electron');
 
 (() => {
   const protocol = window.location.protocol;
   if (protocol !== 'http:' && protocol !== 'https:') return;
+
+  contextBridge.exposeInMainWorld('uitTheme', {
+    getState: () => ipcRenderer.invoke('uit-theme:get-state'),
+    selectFolder: () => ipcRenderer.invoke('uit-theme:select-folder'),
+    setEnabled: (enabled) => ipcRenderer.invoke('uit-theme:set-enabled', Boolean(enabled)),
+    reload: () => ipcRenderer.invoke('uit-theme:reload'),
+    clear: () => ipcRenderer.invoke('uit-theme:clear')
+  });
 
   const data = ipcRenderer.sendSync('uit:get-bootstrap-data', window.location.href);
   if (!data) return;
@@ -30,11 +38,22 @@ const { ipcRenderer } = require('electron');
 
     if (useCustomShell) {
       try {
-        const savedCss = localStorage.getItem('uit_custom_theme_css');
-        if (savedCss && !document.getElementById('cd-custom-theme-style')) {
+        localStorage.removeItem('uit_custom_theme_css');
+        localStorage.removeItem('uit_custom_theme_name');
+        localStorage.removeItem('uit_custom_theme_path');
+        localStorage.removeItem('uit_custom_theme_active');
+
+        const themeState = data.themeState;
+        if (
+          themeState &&
+          themeState.hasTheme &&
+          themeState.enabled &&
+          themeState.compiledCss &&
+          !document.getElementById('cd-custom-theme-style')
+        ) {
           const themeEl = document.createElement('style');
           themeEl.id = 'cd-custom-theme-style';
-          themeEl.textContent = savedCss;
+          themeEl.textContent = themeState.compiledCss;
           root.appendChild(themeEl);
         }
       } catch {}
@@ -77,7 +96,6 @@ const { ipcRenderer } = require('electron');
   }
 
   console.log("%cDừng lại!", "color: red; font-size:4em;");
-  console.log("%cban biet cai deo j ma dung console", "color: white; font-size:2em;");
-  console.log("%cneu ban biet thi di hoc dai hoc lam me j", "color: white; font-size:2em;");
-  console.log("%cviet cai job application di", "color: white; font-size:2em;");
+  console.log("%cViệc sử dụng console chỉ nên được dùng để debug", "color: white; font-size:2em;");
+  console.log("%cKhông nên dán mã lạ vào console nếu bạn không biết bạn đang làm gì", "color: white; font-size:2em;");
 })();

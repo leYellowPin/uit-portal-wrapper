@@ -1,6 +1,18 @@
-const { app, BrowserWindow, session, ipcMain } = require('electron');
+const { app, BrowserWindow, session, ipcMain, dialog, protocol } = require('electron');
 const path = require('path');
 const fs = require('fs');
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'uit-theme',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true
+    }
+  }
+]);
 
 function resolveAssetFullPath(relativePath) {
   if (!relativePath) return '';
@@ -60,7 +72,16 @@ const MIME_BY_EXT = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
-  '.ico': 'image/x-icon'
+  '.gif': 'image/gif',
+  '.bmp': 'image/bmp',
+  '.avif': 'image/avif',
+  '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+  '.eot': 'application/vnd.ms-fontobject',
+  '.css': 'text/css; charset=utf-8'
 };
 
 function readImageBase64(relativePath) {
@@ -69,6 +90,362 @@ function readImageBase64(relativePath) {
   const ext = path.extname(fullPath).toLowerCase();
   const mime = MIME_BY_EXT[ext] || 'image/png';
   return `data:${mime};base64,${fs.readFileSync(fullPath).toString('base64')}`;
+}
+
+function isPathInsideDir(baseDir, targetPath) {
+  const resolvedBase = path.resolve(baseDir);
+  const resolvedTarget = path.resolve(targetPath);
+  return resolvedTarget === resolvedBase || resolvedTarget.startsWith(resolvedBase + path.sep);
+}
+
+function parseSemverParts(versionStr) {
+  const cleaned = String(versionStr || '').trim().replace(/^v/i, '').split('-')[0];
+  if (!cleaned) return null;
+  const parts = cleaned.split('.').map((p) => (/^\d+$/.test(p) ? Number(p) : NaN));
+  if (parts.length === 0 || parts.some((n) => Number.isNaN(n))) return null;
+  return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+}
+
+function compareSemver(a, b) {
+  for (let i = 0; i < 3; i += 1) {
+    if (a[i] > b[i]) return 1;
+    if (a[i] < b[i]) return -1;
+  }
+  return 0;
+}
+
+function matchSingleVersionToken(token, currentParts) {
+  const t = String(token || '').trim().replace(/^v/i, '');
+  if (!t || t === '*' || t.toLowerCase() === 'x') return true;
+
+  const wildcardMatch = t.match(/^(\d+)(?:\.(\d+|x|\*))?(?:\.(\d+|x|\*))?$/i);
+  if (wildcardMatch) {
+    const reqMajor = Number(wildcardMatch[1]);
+    if (currentParts[0] !== reqMajor) return false;
+    const minToken = wildcardMatch[2];
+    if (minToken && minToken !== 'x' && minToken !== '*') {
+      if (currentParts[1] !== Number(minToken)) return false;
+      const patchToken = wildcardMatch[3];
+      if (patchToken && patchToken !== 'x' && patchToken !== '*') {
+        return currentParts[2] === Number(patchToken);
+      }
+    }
+    return true;
+  }
+
+  if (t.startsWith('^')) {
+    const base = parseSemverParts(t.slice(1));
+    if (!base) return true;
+    const upper = base[0] > 0 ? [base[0] + 1, 0, 0] : [0, base[1] + 1, 0];
+    return compareSemver(currentParts, base) >= 0 && compareSemver(currentParts, upper) < 0;
+  }
+
+  if (t.startsWith('~')) {
+    const base = parseSemverParts(t.slice(1));
+    if (!base) return true;
+    const upper = [base[0], base[1] + 1, 0];
+    return compareSemver(currentParts, base) >= 0 && compareSemver(currentParts, upper) < 0;
+  }
+
+  const opMatch = t.match(/^(>=|<=|>|<|=)\s*(.+)$/);
+  if (opMatch) {
+    const op = opMatch[1];
+    const target = parseSemverParts(opMatch[2]);
+    if (!target) return true;
+    const cmp = compareSemver(currentParts, target);
+    if (op === '>=') return cmp >= 0;
+    if (op === '<=') return cmp <= 0;
+    if (op === '>') return cmp > 0;
+    if (op === '<') return cmp < 0;
+    return cmp === 0;
+  }
+
+  return true;
+}
+
+function checkAppVersionCompatibility(requirement, currentVersion) {
+  const req = String(requirement || '').trim();
+  const appVer = String(currentVersion || app.getVersion()).trim();
+  if (!req || req === '*') {
+    return { compatible: true, appVersion: appVer, requiredVersion: req || '*' };
+  }
+
+  const currentParts = parseSemverParts(appVer);
+  if (!currentParts) {
+    return { compatible: true, appVersion: appVer, requiredVersion: req };
+  }
+
+  const tokens = req.split(/\s+/).filter(Boolean);
+  const compatible = tokens.every((tok) => matchSingleVersionToken(tok, currentParts));
+  return { compatible, appVersion: appVer, requiredVersion: req };
+}
+
+function getThemeConfigPath() {
+  return path.join(app.getPath('userData'), 'uit-theme-pack.json');
+}
+
+function readPersistedThemeConfig() {
+  try {
+    const cfgPath = getThemeConfigPath();
+    if (!fs.existsSync(cfgPath)) return { themeDir: '', enabled: true };
+    const parsed = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+    if (!parsed || typeof parsed !== 'object') return { themeDir: '', enabled: true };
+    return {
+      themeDir: typeof parsed.themeDir === 'string' ? parsed.themeDir : '',
+      enabled: parsed.enabled !== false
+    };
+  } catch {
+    return { themeDir: '', enabled: true };
+  }
+}
+
+function writePersistedThemeConfig(config) {
+  try {
+    const cfgPath = getThemeConfigPath();
+    fs.mkdirSync(path.dirname(cfgPath), { recursive: true });
+    fs.writeFileSync(
+      cfgPath,
+      JSON.stringify(
+        {
+          themeDir: String(config?.themeDir || ''),
+          enabled: Boolean(config?.enabled)
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+  } catch (err) {
+    console.error('[UIT Wrapper] Failed to persist theme pack config:', err);
+  }
+}
+
+function buildThemeAssetUrl(themeDir, targetFullPath, cacheBustToken, suffix = '') {
+  const rel = path.relative(themeDir, targetFullPath).split(path.sep).join('/');
+  const encodedPath = rel.split('/').map((seg) => encodeURIComponent(seg)).join('/');
+  const queryPrefix = suffix && suffix.startsWith('?') ? `${suffix}&` : '?';
+  const hashPart = suffix && suffix.includes('#') ? suffix.slice(suffix.indexOf('#')) : '';
+  const cleanQuery = suffix && suffix.startsWith('?')
+    ? suffix.slice(1, suffix.includes('#') ? suffix.indexOf('#') : undefined)
+    : '';
+  const query = cleanQuery ? `?${cleanQuery}&v=${cacheBustToken}` : `?v=${cacheBustToken}`;
+  return `uit-theme://pack/${encodedPath}${query}${hashPart}`;
+}
+
+function compileThemeCssFile(themeDir, cssFullPath, cacheBustToken, visited = new Set()) {
+  const resolvedCss = path.resolve(cssFullPath);
+  if (visited.has(resolvedCss)) return '';
+  visited.add(resolvedCss);
+
+  const cssDir = path.dirname(resolvedCss);
+  let cssText = fs.readFileSync(resolvedCss, 'utf8');
+
+  // Inline local @import statements relative to the importing stylesheet
+  cssText = cssText.replace(
+    /@import\s+(?:url\(\s*)?(['"]?)([^'")\s]+)\1\s*\)?\s*([^;]*);/gi,
+    (fullMatch, _quote, rawTarget, mediaQuery) => {
+      const trimmed = String(rawTarget || '').trim();
+      if (!trimmed || /^(?:https?:|data:|blob:|uit-theme:)/i.test(trimmed)) {
+        return fullMatch;
+      }
+      const cleanRel = trimmed.split(/[?#]/)[0];
+      const importedPath = path.resolve(cssDir, cleanRel);
+      if (!isPathInsideDir(themeDir, importedPath) || !fs.existsSync(importedPath)) {
+        return fullMatch;
+      }
+      const inlined = compileThemeCssFile(themeDir, importedPath, cacheBustToken, visited);
+      const mq = String(mediaQuery || '').trim();
+      return mq ? `@media ${mq} {\n${inlined}\n}` : inlined;
+    }
+  );
+
+  // Rewrite relative url(...) references to uit-theme://pack/...
+  cssText = cssText.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, (fullMatch, _quote, rawUrl) => {
+    const trimmed = String(rawUrl || '').trim();
+    if (
+      !trimmed ||
+      trimmed.startsWith('#') ||
+      /^(?:data:|https?:|blob:|uit-theme:)/i.test(trimmed)
+    ) {
+      return fullMatch;
+    }
+
+    const suffixIdx = trimmed.search(/[?#]/);
+    const pathPart = suffixIdx === -1 ? trimmed : trimmed.slice(0, suffixIdx);
+    const suffix = suffixIdx === -1 ? '' : trimmed.slice(suffixIdx);
+    if (!pathPart) return fullMatch;
+
+    const targetFullPath = path.resolve(cssDir, pathPart);
+    if (!isPathInsideDir(themeDir, targetFullPath)) {
+      return fullMatch;
+    }
+
+    const rewrittenUrl = buildThemeAssetUrl(themeDir, targetFullPath, cacheBustToken, suffix);
+    return `url("${rewrittenUrl}")`;
+  });
+
+  return cssText;
+}
+
+function inspectThemeFolder(themeDir, options = {}) {
+  const resolvedDir = path.resolve(String(themeDir || '').trim());
+  if (!resolvedDir || !fs.existsSync(resolvedDir) || !fs.statSync(resolvedDir).isDirectory()) {
+    throw new Error('Thư mục giao diện không tồn tại hoặc không hợp lệ.');
+  }
+
+  const metadataCandidates = ['theme.json', 'pack.json'];
+  let metadataPath = '';
+  for (const candidate of metadataCandidates) {
+    const full = path.join(resolvedDir, candidate);
+    if (fs.existsSync(full) && fs.statSync(full).isFile()) {
+      metadataPath = full;
+      break;
+    }
+  }
+
+  if (!metadataPath) {
+    throw new Error('Thư mục đã chọn không chứa tệp theme.json.');
+  }
+
+  let rawMeta;
+  try {
+    rawMeta = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+  } catch {
+    throw new Error('Tệp theme.json không đúng định dạng JSON hợp lệ.');
+  }
+
+  if (!rawMeta || typeof rawMeta !== 'object' || Array.isArray(rawMeta)) {
+    throw new Error('Nội dung tệp theme.json không hợp lệ.');
+  }
+
+  const name = String(rawMeta.name || rawMeta.theme_name || '').trim();
+  if (!name) {
+    throw new Error('Tệp theme.json thiếu trường bắt buộc "name".');
+  }
+
+  const entryRel = String(rawMeta.entry || rawMeta.stylesheet || rawMeta.css || 'theme.css').trim();
+  const entryFullPath = path.resolve(resolvedDir, entryRel);
+  if (!isPathInsideDir(resolvedDir, entryFullPath)) {
+    throw new Error('Đường dẫn tệp CSS trong theme.json nằm ngoài thư mục giao diện.');
+  }
+  if (!fs.existsSync(entryFullPath) || !fs.statSync(entryFullPath).isFile()) {
+    throw new Error(`Không tìm thấy tệp CSS "${entryRel}".`);
+  }
+
+  const cacheBustToken = String(Date.now());
+  const compiledCss = compileThemeCssFile(resolvedDir, entryFullPath, cacheBustToken);
+  const enabled = options.enabled !== false;
+
+  const rawSchemes = Array.isArray(rawMeta.color_schemes)
+    ? rawMeta.color_schemes
+    : (Array.isArray(rawMeta.modes) ? rawMeta.modes : null);
+  const colorSchemes = rawSchemes
+    ? rawSchemes
+        .map((s) => String(s || '').trim().toLowerCase())
+        .filter((s) => s === 'dark' || s === 'light')
+    : null;
+
+  const rawDefaultScheme = String(rawMeta.default_scheme || '').trim().toLowerCase();
+  const defaultScheme = ['light', 'dark', 'system'].includes(rawDefaultScheme) ? rawDefaultScheme : null;
+
+  const author = Array.isArray(rawMeta.authors)
+    ? rawMeta.authors.map((a) => String(a || '').trim()).filter(Boolean).join(', ')
+    : String(rawMeta.author || '').trim();
+
+  const compatibleAppVersion = String(
+    rawMeta.compatible_app_version ||
+    rawMeta.compatibleAppVersion ||
+    rawMeta.app_version ||
+    rawMeta.min_app_version ||
+    ''
+  ).trim();
+
+  let iconUrl = '';
+  const iconRel = String(rawMeta.icon || '').trim() || 'pack.png';
+  const iconFullPath = path.resolve(resolvedDir, iconRel);
+  if (
+    isPathInsideDir(resolvedDir, iconFullPath) &&
+    fs.existsSync(iconFullPath) &&
+    fs.statSync(iconFullPath).isFile()
+  ) {
+    iconUrl = buildThemeAssetUrl(resolvedDir, iconFullPath, cacheBustToken);
+  }
+
+  const compatibility = checkAppVersionCompatibility(compatibleAppVersion, app.getVersion());
+
+  return {
+    hasTheme: true,
+    enabled,
+    themeDir: resolvedDir,
+    folderName: path.basename(resolvedDir),
+    metadata: {
+      formatVersion: Number(rawMeta.format_version || 1) || 1,
+      id: String(rawMeta.id || path.basename(resolvedDir)).trim(),
+      name,
+      version: String(rawMeta.version || rawMeta.theme_version || '').trim(),
+      description: String(rawMeta.description || '').trim(),
+      author,
+      compatibleAppVersion,
+      entry: entryRel,
+      colorSchemes,
+      defaultScheme,
+      iconUrl
+    },
+    compatibility,
+    compiledCss: enabled ? compiledCss : '',
+    rawHasColorSchemes: /\[data-theme\s*=/.test(compiledCss)
+  };
+}
+
+let activeThemeState = {
+  hasTheme: false,
+  enabled: false,
+  themeDir: '',
+  folderName: '',
+  metadata: null,
+  compatibility: null,
+  compiledCss: '',
+  rawHasColorSchemes: false
+};
+
+function loadActiveThemeState(forceReload = false) {
+  if (!forceReload && activeThemeState.hasTheme) {
+    return activeThemeState;
+  }
+
+  const persisted = readPersistedThemeConfig();
+  if (!persisted.themeDir) {
+    activeThemeState = {
+      hasTheme: false,
+      enabled: false,
+      themeDir: '',
+      folderName: '',
+      metadata: null,
+      compatibility: null,
+      compiledCss: '',
+      rawHasColorSchemes: false
+    };
+    return activeThemeState;
+  }
+
+  try {
+    activeThemeState = inspectThemeFolder(persisted.themeDir, { enabled: persisted.enabled });
+  } catch (err) {
+    console.warn('[UIT Wrapper] Resetting unavailable theme pack:', err.message);
+    writePersistedThemeConfig({ themeDir: '', enabled: false });
+    activeThemeState = {
+      hasTheme: false,
+      enabled: false,
+      themeDir: '',
+      folderName: '',
+      metadata: null,
+      compatibility: null,
+      compiledCss: '',
+      rawHasColorSchemes: false
+    };
+  }
+
+  return activeThemeState;
 }
 
 const DEFAULT_WEB_SHORTCUTS = [
@@ -475,12 +852,15 @@ const PORTAL_COMBINED_CSS = [
 
 const EXTERNAL_COMBINED_CSS = getGlobalTitlebarCss();
 
-function getEarlyBootstrapScript(useCustomShell) {
+function getEarlyBootstrapScript(useCustomShell, themeState = null) {
   return `
     (() => {
       if (!window.__UIT_BRAND__)             { window.__UIT_BRAND__ = ${JSON.stringify(BRAND_WHITE_BASE64)}; }
       if (!window.__UIT_TITLEBAR_HTML__)     { window.__UIT_TITLEBAR_HTML__ = ${JSON.stringify(ASSETS.titlebarHtml)}; }
       if (!window.__UIT_BOOT_CURTAIN_HTML__) { window.__UIT_BOOT_CURTAIN_HTML__ = ${JSON.stringify(ASSETS.bootCurtainHtml)}; }
+      if (${JSON.stringify(Boolean(themeState))}) {
+        window.__UIT_THEME_STATE__ = ${JSON.stringify(themeState)};
+      }
 
       const isCustomShellRoute = (pathname) => {
         if (window.location.hostname !== 'portal.uit.edu.vn') return false;
@@ -496,19 +876,30 @@ function getEarlyBootstrapScript(useCustomShell) {
 
       if (activeCustomShell) {
         try {
+          // Clean up legacy single-file theme keys if present
+          localStorage.removeItem('uit_custom_theme_css');
+          localStorage.removeItem('uit_custom_theme_name');
+          localStorage.removeItem('uit_custom_theme_path');
+          localStorage.removeItem('uit_custom_theme_active');
+
           const mode = localStorage.getItem('uit_theme_mode') || 'system';
           const effective = (mode === 'light' || mode === 'dark')
             ? mode
             : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
           document.documentElement?.setAttribute('data-theme', effective);
 
-          const savedCss = localStorage.getItem('uit_custom_theme_css');
-          const isCustomActive = localStorage.getItem('uit_custom_theme_active') !== '0';
-          if (savedCss && isCustomActive && !document.getElementById('cd-custom-theme-style') && document.documentElement) {
-            const styleEl = document.createElement('style');
-            styleEl.id = 'cd-custom-theme-style';
-            styleEl.textContent = savedCss;
-            document.documentElement.appendChild(styleEl);
+          const st = window.__UIT_THEME_STATE__;
+          const hasPack = Boolean(st && st.hasTheme && st.enabled && st.compiledCss);
+          let styleEl = document.getElementById('cd-custom-theme-style');
+          if (hasPack && document.documentElement) {
+            if (!styleEl) {
+              styleEl = document.createElement('style');
+              styleEl.id = 'cd-custom-theme-style';
+              document.documentElement.appendChild(styleEl);
+            }
+            styleEl.textContent = st.compiledCss;
+          } else if (styleEl) {
+            styleEl.remove();
           }
         } catch {}
 
@@ -710,11 +1101,15 @@ function getEarlyBootstrapScript(useCustomShell) {
 
 let primaryMainWindow = null;
 
+function isAuthorizedMainSender(event) {
+  return (
+    event.sender.getType() === 'window' &&
+    (!primaryMainWindow || primaryMainWindow.isDestroyed() || event.sender === primaryMainWindow.webContents)
+  );
+}
+
 ipcMain.on('uit:get-bootstrap-data', (event, targetUrl) => {
-  if (
-    event.sender.getType() !== 'window' ||
-    (primaryMainWindow && !primaryMainWindow.isDestroyed() && event.sender !== primaryMainWindow.webContents)
-  ) {
+  if (!isAuthorizedMainSender(event)) {
     event.returnValue = null;
     return;
   }
@@ -726,14 +1121,110 @@ ipcMain.on('uit:get-bootstrap-data', (event, targetUrl) => {
   }
 
   const useCustomShell = isCustomShellUrl(parsedUrl);
+  const themeState = useCustomShell ? loadActiveThemeState(true) : null;
   event.returnValue = {
     useCustomShell,
     combinedCss: useCustomShell ? PORTAL_COMBINED_CSS : EXTERNAL_COMBINED_CSS,
     bootCurtainHtml: useCustomShell ? ASSETS.bootCurtainHtml : '',
     brandWhite: BRAND_WHITE_BASE64,
-    earlyBootstrapScript: getEarlyBootstrapScript(useCustomShell)
+    themeState,
+    earlyBootstrapScript: getEarlyBootstrapScript(useCustomShell, themeState)
   };
 });
+
+ipcMain.handle('uit-theme:get-state', (event) => {
+  if (!isAuthorizedMainSender(event)) return null;
+  return loadActiveThemeState(true);
+});
+
+ipcMain.handle('uit-theme:select-folder', async (event) => {
+  if (!isAuthorizedMainSender(event)) return { canceled: true };
+
+  const parentWin = primaryMainWindow && !primaryMainWindow.isDestroyed() ? primaryMainWindow : undefined;
+  const result = await dialog.showOpenDialog(parentWin, {
+    title: 'Chọn thư mục gói giao diện',
+    properties: ['openDirectory']
+  });
+
+  if (result.canceled || !Array.isArray(result.filePaths) || result.filePaths.length === 0) {
+    return { canceled: true, state: loadActiveThemeState(false) };
+  }
+
+  const selectedDir = result.filePaths[0];
+  let inspected;
+  try {
+    inspected = inspectThemeFolder(selectedDir, { enabled: true });
+  } catch (err) {
+    await dialog.showMessageBox(parentWin, {
+      type: 'error',
+      title: 'Không thể tải gói giao diện',
+      message: err.message || 'Thư mục giao diện không hợp lệ.'
+    });
+    return { canceled: false, error: err.message, state: loadActiveThemeState(false) };
+  }
+
+  if (inspected.compatibility && !inspected.compatibility.compatible) {
+    const confirmRes = await dialog.showMessageBox(parentWin, {
+      type: 'warning',
+      title: 'Phiên bản ứng dụng không tương thích',
+      message: `Gói giao diện "${inspected.metadata.name}" yêu cầu phiên bản ứng dụng ${inspected.compatibility.requiredVersion} (hiện tại: ${inspected.compatibility.appVersion}).`,
+      detail: 'Giao diện có thể hiển thị sai lệch. Bạn vẫn muốn áp dụng gói giao diện này chứ?',
+      buttons: ['Vẫn áp dụng', 'Hủy'],
+      defaultId: 0,
+      cancelId: 1
+    });
+
+    if (confirmRes.response === 1) {
+      return { canceled: true, state: loadActiveThemeState(false) };
+    }
+  }
+
+  writePersistedThemeConfig({ themeDir: inspected.themeDir, enabled: true });
+  activeThemeState = inspected;
+  return {
+    canceled: false,
+    newlyApplied: true,
+    state: activeThemeState
+  };
+});
+
+ipcMain.handle('uit-theme:set-enabled', (event, enabled) => {
+  if (!isAuthorizedMainSender(event)) return null;
+  const persisted = readPersistedThemeConfig();
+  if (!persisted.themeDir) return loadActiveThemeState(true);
+  writePersistedThemeConfig({ themeDir: persisted.themeDir, enabled: Boolean(enabled) });
+  return loadActiveThemeState(true);
+});
+
+ipcMain.handle('uit-theme:reload', (event) => {
+  if (!isAuthorizedMainSender(event)) return null;
+  return loadActiveThemeState(true);
+});
+
+ipcMain.handle('uit-theme:clear', (event) => {
+  if (!isAuthorizedMainSender(event)) return null;
+  writePersistedThemeConfig({ themeDir: '', enabled: false });
+  return loadActiveThemeState(true);
+});
+
+function allowCustomThemeProtocolInCsp(policy) {
+  if (!policy || typeof policy !== 'string') return policy;
+  let updated = policy
+    .replace(/frame-src[^;]*;?/gi, '')
+    .replace(/child-src[^;]*;?/gi, '');
+
+  const directives = ['default-src', 'img-src', 'font-src', 'style-src', 'media-src'];
+  for (const dir of directives) {
+    const regex = new RegExp(`(${dir}\\b[^;]*)`, 'i');
+    if (regex.test(updated)) {
+      updated = updated.replace(regex, (match) => {
+        if (/\buit-theme:/i.test(match)) return match;
+        return `${match} uit-theme:`;
+      });
+    }
+  }
+  return updated;
+}
 
 function injectCustomUI(webContents) {
   const currentUrl = webContents.getURL();
@@ -761,7 +1252,7 @@ function injectCustomUI(webContents) {
         if (window.__updateCustomRouteState) {
           window.__updateCustomRouteState();
         } else {
-          ${getEarlyBootstrapScript(false)}
+          ${getEarlyBootstrapScript(false, null)}
         }
       })();
     `;
@@ -771,6 +1262,7 @@ function injectCustomUI(webContents) {
 
   const appVersion = app.getVersion();
   const webShortcuts = getResolvedWebShortcuts();
+  const themeState = loadActiveThemeState(true);
 
   const bootstrapCode = `
     (() => {
@@ -791,7 +1283,8 @@ function injectCustomUI(webContents) {
       if (!window.__UIT_APP_VERSION__)       { window.__UIT_APP_VERSION__ = ${JSON.stringify(appVersion)}; }
       if (!window.__UIT_SEARCH_ITEMS__)      { window.__UIT_SEARCH_ITEMS__ = ${JSON.stringify(ASSETS.searchItems)}; }
       window.__UIT_WEB_SHORTCUTS__ = ${JSON.stringify(webShortcuts)};
-      ${getEarlyBootstrapScript(true)}
+      window.__UIT_THEME_STATE__ = ${JSON.stringify(themeState)};
+      ${getEarlyBootstrapScript(true, themeState)}
       if (!window.__uitShellInitialized) {
         window.__uitShellInitialized = true;
         ${ASSETS.shellJs}
@@ -803,6 +1296,58 @@ function injectCustomUI(webContents) {
   `;
 
   webContents.executeJavaScript(bootstrapCode).catch(console.error);
+}
+
+function registerThemeAssetProtocol() {
+  protocol.handle('uit-theme', (request) => {
+    const state = loadActiveThemeState(false);
+    if (!state || !state.themeDir) {
+      return new Response('No active theme pack', { status: 404 });
+    }
+
+    const parsed = parseUrlSafe(request.url);
+    if (!parsed) {
+      return new Response('Invalid URL', { status: 400 });
+    }
+
+    const rawPathname = parsed.pathname.replace(/^\/+/, '');
+    let decodedRelPath = '';
+    try {
+      decodedRelPath = rawPathname
+        .split('/')
+        .map((segment) => decodeURIComponent(segment))
+        .join(path.sep);
+    } catch {
+      return new Response('Malformed path', { status: 400 });
+    }
+
+    if (!decodedRelPath) {
+      return new Response('Not found', { status: 404 });
+    }
+
+    const targetFullPath = path.resolve(state.themeDir, decodedRelPath);
+    if (!isPathInsideDir(state.themeDir, targetFullPath)) {
+      return new Response('Forbidden', { status: 403 });
+    }
+
+    try {
+      if (!fs.existsSync(targetFullPath) || !fs.statSync(targetFullPath).isFile()) {
+        return new Response('Not found', { status: 404 });
+      }
+      const ext = path.extname(targetFullPath).toLowerCase();
+      const mime = MIME_BY_EXT[ext] || 'application/octet-stream';
+      const data = fs.readFileSync(targetFullPath);
+      return new Response(data, {
+        status: 200,
+        headers: {
+          'Content-Type': mime,
+          'Cache-Control': 'public, max-age=31536000, immutable'
+        }
+      });
+    } catch {
+      return new Response('Read error', { status: 500 });
+    }
+  });
 }
 
 function createWindow() {
@@ -880,11 +1425,7 @@ function createWindow() {
       const headers = { ...details.responseHeaders };
       for (const key of Object.keys(headers)) {
         if (key.toLowerCase() === 'content-security-policy') {
-          headers[key] = headers[key].map((policy) =>
-            policy
-              .replace(/frame-src[^;]*;?/gi, '')
-              .replace(/child-src[^;]*;?/gi, '')
-          );
+          headers[key] = headers[key].map((policy) => allowCustomThemeProtocolInCsp(policy));
         }
       }
       callback({ responseHeaders: headers });
@@ -1039,7 +1580,10 @@ app.on('web-contents-created', (_, contents) => {
   });
 });
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  registerThemeAssetProtocol();
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

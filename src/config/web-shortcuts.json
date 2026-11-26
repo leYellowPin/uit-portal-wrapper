@@ -1,12 +1,6 @@
 {
   "shortcuts": [
     {
-      "id": "uit-official",
-      "name": "Website UIT",
-      "url": "https://uit.edu.vn",
-      "icon": "shortcut-uit.png"
-    },
-    {
       "id": "uit-portal",
       "name": "Cổng thông tin",
       "url": "https://portal.uit.edu.vn",
@@ -23,6 +17,12 @@
       "name": "ĐKHP",
       "url": "https://dkhp.uit.edu.vn",
       "icon": "shortcut-dkhp.png"
+    },
+        {
+      "id": "uit-wecode",
+      "name": "Wecode",
+      "url": "https://khmt.uit.edu.vn/wecode25/it00x/login",
+      "icon": "shortcut-wecode.png"
     },
     {
       "id": "uit-moodle",

@@ -629,10 +629,10 @@
   };
 
   const FALLBACK_SHORTCUTS = [
-    { id: 'uit-official', name: 'Website chính thức', url: 'https://uit.edu.vn', icon: 'shortcut-uit.png', iconSrc: '' },
     { id: 'uit-portal', name: 'Cổng thông tin', url: 'https://portal.uit.edu.vn', icon: 'shortcut-portal.png', iconSrc: '' },
     { id: 'uit-drl', name: 'Điểm rèn luyện', url: 'https://drl.uit.edu.vn', icon: 'shortcut-drl.png', iconSrc: '' },
     { id: 'uit-dkhp', name: 'Đăng ký học phần', url: 'https://dkhp.uit.edu.vn', icon: 'shortcut-dkhp.png', iconSrc: '' },
+    { id: 'uit-wecode', name: 'Website chính thức', url: 'https://uit.edu.vn', icon: 'shortcut-uit.png', iconSrc: '' },
     { id: 'uit-moodle', name: 'Moodle', url: 'https://courses.uit.edu.vn', icon: 'shortcut-moodle.png', iconSrc: '' },
     { id: 'uit-forum', name: 'Forum', url: 'https://forum.uit.edu.vn', icon: 'shortcut-forum.png', iconSrc: '' }
   ];

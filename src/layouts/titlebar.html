@@ -55,13 +55,12 @@
       </svg>
     </button>
     <div id="cd-theme-menu-wrap">
-      <input type="file" id="cd-theme-file-input" accept=".css,text/css" hidden />
       <button
         type="button"
         id="cd-import-theme-btn"
         class="cd-titlebar-btn"
-        title="Import CSS"
-        aria-label="Import CSS"
+        title="Gói giao diện"
+        aria-label="Gói giao diện"
         aria-haspopup="true"
         aria-expanded="false"
       >
@@ -74,11 +73,31 @@
         </svg>
       </button>
       <div id="cd-theme-dropdown" class="cd-titlebar-dropdown" hidden>
+        <div id="cd-theme-pack-info" class="cd-theme-pack-info" hidden>
+          <img id="cd-theme-pack-icon" class="cd-theme-pack-icon" alt="" hidden />
+          <div class="cd-theme-pack-meta">
+            <div class="cd-theme-pack-title-row">
+              <span id="cd-theme-pack-name" class="cd-theme-pack-name"></span>
+              <span id="cd-theme-pack-version" class="cd-theme-pack-version" hidden></span>
+            </div>
+            <div id="cd-theme-pack-sub" class="cd-theme-pack-sub" hidden></div>
+            <div id="cd-theme-pack-warn" class="cd-theme-pack-warn" hidden></div>
+          </div>
+        </div>
         <button type="button" id="cd-theme-scheme-btn" class="cd-titlebar-menu-item cd-theme-menu-item">
           Bảng màu: Thiết bị
         </button>
-        <button type="button" id="cd-theme-custom-btn" class="cd-titlebar-menu-item cd-theme-menu-item">
-          Tùy chỉnh CSS
+        <button type="button" id="cd-theme-toggle-btn" class="cd-titlebar-menu-item cd-theme-menu-item" hidden>
+          Trạng thái: Bật
+        </button>
+        <button type="button" id="cd-theme-reload-btn" class="cd-titlebar-menu-item cd-theme-menu-item" hidden>
+          Tải lại gói giao diện
+        </button>
+        <button type="button" id="cd-theme-select-btn" class="cd-titlebar-menu-item cd-theme-menu-item">
+          Chọn thư mục giao diện
+        </button>
+        <button type="button" id="cd-theme-remove-btn" class="cd-titlebar-menu-item cd-theme-menu-item cd-titlebar-menu-item-danger" hidden>
+          Gỡ gói giao diện
         </button>
       </div>
     </div>

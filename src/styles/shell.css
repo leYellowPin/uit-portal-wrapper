@@ -291,7 +291,6 @@ html.uit-webview-active #cd-search-toggle-btn {
 }
 
 .cd-titlebar-dropdown,
-#cd-theme-dropdown,
 #cd-account-dropdown {
   position: absolute !important;
   top: 100% !important;
@@ -310,9 +309,115 @@ html.uit-webview-active #cd-search-toggle-btn {
   -webkit-app-region: no-drag !important;
 }
 
+#cd-theme-dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  min-width: 235px !important;
+  max-width: 300px !important;
+  background-color: var(--col-pri-nav) !important;
+  border: 1px solid var(--col-out-nav) !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: var(--shadow-nav, 0 8px 24px rgba(0, 0, 0, 0.35)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  z-index: 2147483647 !important;
+  -webkit-app-region: no-drag !important;
+}
+
 .cd-titlebar-dropdown[hidden],
 #cd-theme-dropdown[hidden],
 #cd-account-dropdown[hidden] {
+  display: none !important;
+}
+
+#cd-theme-pack-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px 14px !important;
+  background-color: var(--col-sec-nav) !important;
+  border-bottom: 1px solid var(--col-out-nav) !important;
+  box-sizing: border-box !important;
+}
+
+#cd-theme-pack-info[hidden] {
+  display: none !important;
+}
+
+#cd-theme-pack-icon {
+  width: 32px !important;
+  height: 32px !important;
+  object-fit: cover !important;
+  flex-shrink: 0 !important;
+}
+
+#cd-theme-pack-icon[hidden] {
+  display: none !important;
+}
+
+.cd-theme-pack-meta {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.cd-theme-pack-title-row {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+
+.cd-theme-pack-name {
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  color: var(--col-head-text) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.cd-theme-pack-version {
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.68rem !important;
+  font-weight: 500 !important;
+  color: var(--col-accent) !important;
+  flex-shrink: 0 !important;
+}
+
+.cd-theme-pack-version[hidden] {
+  display: none !important;
+}
+
+.cd-theme-pack-sub {
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.7rem !important;
+  color: var(--col-sec-text) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.cd-theme-pack-sub[hidden] {
+  display: none !important;
+}
+
+.cd-theme-pack-warn {
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.68rem !important;
+  color: var(--col-danger) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.cd-theme-pack-warn[hidden] {
   display: none !important;
 }
 

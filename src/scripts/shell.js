@@ -15,7 +15,19 @@
   const isExcludedPage = (pathname) => !isSupportedShellPage(pathname);
 
   let isSidebarHidden = localStorage.getItem('uit_sidebar_hidden') === '1';
-  let hasCustomTheme = Boolean(localStorage.getItem('uit_custom_theme_css')) && localStorage.getItem('uit_custom_theme_active') !== '0';
+  let currentThemeState = window.__UIT_THEME_STATE__ || {
+    hasTheme: false,
+    enabled: false,
+    themeDir: '',
+    folderName: '',
+    metadata: null,
+    compatibility: null,
+    compiledCss: '',
+    rawHasColorSchemes: false
+  };
+  let hasCustomTheme = Boolean(
+    currentThemeState.hasTheme && currentThemeState.enabled && currentThemeState.compiledCss
+  );
   let cachedPortalVersion = sessionStorage.getItem('uit_portal_version') || '';
 
   let cachedProfile = null;
@@ -990,13 +1002,7 @@
     }
   };
 
-  // 5. Custom CSS theme management & titlebar dropdown menus
-  const ensureCssExtension = (name) => {
-    const trimmed = String(name || '').trim();
-    if (!trimmed) return '';
-    return /\.css$/i.test(trimmed) ? trimmed : `${trimmed}.css`;
-  };
-
+  // 5. Folder-based theme pack management & titlebar dropdown menus
   const closeThemeDropdown = () => {
     const themeDropdown = document.getElementById('cd-theme-dropdown');
     const importBtn = document.getElementById('cd-import-theme-btn');
@@ -1011,20 +1017,41 @@
     if (accountBtn) accountBtn.setAttribute('aria-expanded', 'false');
   };
 
-  const applySavedCustomTheme = () => {
-    const disableTheme = isExcludedPage(window.location.pathname);
-    const savedCss = localStorage.getItem('uit_custom_theme_css');
-    const savedName = ensureCssExtension(localStorage.getItem('uit_custom_theme_name') || '');
-    const isCustomActive = localStorage.getItem('uit_custom_theme_active') !== '0';
-    hasCustomTheme = Boolean(savedCss) && isCustomActive;
-    let styleEl = document.getElementById('cd-custom-theme-style');
+  const themeSupportsMode = (state, mode) => {
+    if (!state || !state.hasTheme) return true;
+    const effective = resolveEffectiveTheme(mode);
+    const declared = state.metadata?.colorSchemes;
+    if (Array.isArray(declared) && declared.length > 0) {
+      return declared.includes(effective);
+    }
+    return Boolean(state.rawHasColorSchemes);
+  };
 
+  const applyThemeState = (nextState = currentThemeState) => {
+    currentThemeState = nextState || {
+      hasTheme: false,
+      enabled: false,
+      themeDir: '',
+      folderName: '',
+      metadata: null,
+      compatibility: null,
+      compiledCss: '',
+      rawHasColorSchemes: false
+    };
+    window.__UIT_THEME_STATE__ = currentThemeState;
+
+    const disableTheme = isExcludedPage(window.location.pathname);
+    hasCustomTheme = Boolean(
+      currentThemeState.hasTheme && currentThemeState.enabled && currentThemeState.compiledCss
+    );
+
+    let styleEl = document.getElementById('cd-custom-theme-style');
     if (hasCustomTheme && !disableTheme) {
       if (!styleEl) {
         styleEl = document.createElement('style');
         styleEl.id = 'cd-custom-theme-style';
       }
-      styleEl.textContent = savedCss;
+      styleEl.textContent = currentThemeState.compiledCss;
       if (document.documentElement) {
         document.documentElement.appendChild(styleEl);
       }
@@ -1033,41 +1060,123 @@
     }
 
     const importBtn = document.getElementById('cd-import-theme-btn');
-    const customCssBtn = document.getElementById('cd-theme-custom-btn');
+    const packInfoEl = document.getElementById('cd-theme-pack-info');
+    const packIconEl = document.getElementById('cd-theme-pack-icon');
+    const packNameEl = document.getElementById('cd-theme-pack-name');
+    const packVersionEl = document.getElementById('cd-theme-pack-version');
+    const packSubEl = document.getElementById('cd-theme-pack-sub');
+    const packWarnEl = document.getElementById('cd-theme-pack-warn');
+    const toggleBtn = document.getElementById('cd-theme-toggle-btn');
+    const reloadBtn = document.getElementById('cd-theme-reload-btn');
+    const selectBtn = document.getElementById('cd-theme-select-btn');
+    const removeBtn = document.getElementById('cd-theme-remove-btn');
+
+    const meta = currentThemeState.metadata;
     if (importBtn) {
-      importBtn.title = savedCss && savedName ? `Import CSS (${savedName})` : 'Import CSS';
-    }
-    if (customCssBtn) {
-      if (savedCss) {
-        const displayName = savedName || 'custom.css';
-        customCssBtn.textContent = displayName;
-        customCssBtn.title = `Khôi phục giao diện mặc định (${displayName})`;
+      if (currentThemeState.hasTheme && meta?.name) {
+        const suffix = currentThemeState.enabled ? '' : ' (Đã tắt)';
+        importBtn.title = `Gói giao diện: ${meta.name}${suffix}`;
       } else {
-        customCssBtn.textContent = 'Tùy chỉnh CSS';
-        customCssBtn.title = 'Tùy chỉnh CSS';
+        importBtn.title = 'Gói giao diện';
       }
+    }
+
+    if (packInfoEl) {
+      if (currentThemeState.hasTheme && meta) {
+        packInfoEl.hidden = false;
+        const tooltipLines = [meta.name];
+        if (meta.author) tooltipLines.push(`Tác giả: ${meta.author}`);
+        if (meta.description) tooltipLines.push(meta.description);
+        if (meta.version) tooltipLines.push(`Phiên bản gói: ${meta.version}`);
+        if (meta.compatibleAppVersion) {
+          tooltipLines.push(`Phiên bản tương thích: ${meta.compatibleAppVersion}`);
+        }
+        if (currentThemeState.themeDir) tooltipLines.push(`Vị trí thư mục: ${currentThemeState.themeDir}`);
+        packInfoEl.title = tooltipLines.join('\n');
+
+        if (packIconEl) {
+          if (meta.iconUrl) {
+            packIconEl.src = meta.iconUrl;
+            packIconEl.hidden = false;
+          } else {
+            packIconEl.removeAttribute('src');
+            packIconEl.hidden = true;
+          }
+        }
+
+        if (packNameEl) {
+          packNameEl.textContent = meta.name;
+        }
+
+        if (packVersionEl) {
+          if (meta.version) {
+            packVersionEl.textContent = `v${meta.version.replace(/^v/i, '')}`;
+            packVersionEl.hidden = false;
+          } else {
+            packVersionEl.textContent = '';
+            packVersionEl.hidden = true;
+          }
+        }
+
+        if (packSubEl) {
+          const subText = meta.author ? `Tác giả: ${meta.author}` : meta.description;
+          if (subText) {
+            packSubEl.textContent = subText;
+            packSubEl.hidden = false;
+          } else {
+            packSubEl.textContent = '';
+            packSubEl.hidden = true;
+          }
+        }
+
+        // pack version warning
+        if (packWarnEl) {
+          if (currentThemeState.compatibility && !currentThemeState.compatibility.compatible) {
+            packWarnEl.textContent = `Yêu cầu phiên bản ${currentThemeState.compatibility.requiredVersion}`;
+            packWarnEl.hidden = false;
+          } else {
+            packWarnEl.textContent = '';
+            packWarnEl.hidden = true;
+          }
+        }
+      } else {
+        packInfoEl.hidden = true;
+        packInfoEl.removeAttribute('title');
+      }
+    }
+
+    if (toggleBtn) {
+      toggleBtn.hidden = !currentThemeState.hasTheme;
+      toggleBtn.textContent = currentThemeState.enabled ? 'Trạng thái: Bật' : 'Trạng thái: Tắt';
+    }
+
+    if (reloadBtn) {
+      reloadBtn.hidden = !currentThemeState.hasTheme;
+    }
+
+    if (selectBtn) {
+      selectBtn.textContent = currentThemeState.hasTheme
+        ? 'Đổi thư mục giao diện'
+        : 'Chọn thư mục giao diện';
+    }
+
+    if (removeBtn) {
+      removeBtn.hidden = !currentThemeState.hasTheme;
     }
 
     applyColorScheme(getSavedThemeMode());
   };
 
-  window.__applySavedCustomTheme = applySavedCustomTheme;
+  window.__applySavedCustomTheme = () => applyThemeState(currentThemeState);
 
-  const revertCustomThemeToDefault = () => {
-    localStorage.removeItem('uit_custom_theme_css');
-    localStorage.removeItem('uit_custom_theme_name');
-    localStorage.removeItem('uit_custom_theme_path');
-    localStorage.removeItem('uit_custom_theme_active');
-    applySavedCustomTheme();
-  };
-
-  // 6. Mount custom titlebar
   const bindTitlebarThemeMenu = () => {
     const importBtn = document.getElementById('cd-import-theme-btn');
     const themeDropdown = document.getElementById('cd-theme-dropdown');
     const schemeBtn = document.getElementById('cd-theme-scheme-btn');
-    const customCssBtn = document.getElementById('cd-theme-custom-btn');
-    const fileInput = document.getElementById('cd-theme-file-input');
+    const toggleBtn = document.getElementById('cd-theme-toggle-btn');
+    const reloadBtn = document.getElementById('cd-theme-reload-btn');
+    const selectBtn = document.getElementById('cd-theme-select-btn');
+    const removeBtn = document.getElementById('cd-theme-remove-btn');
 
     if (importBtn && themeDropdown && importBtn.dataset.bound !== '1') {
       importBtn.dataset.bound = '1';
@@ -1082,51 +1191,79 @@
 
     if (schemeBtn && schemeBtn.dataset.bound !== '1') {
       schemeBtn.dataset.bound = '1';
-      schemeBtn.addEventListener('click', (e) => {
+      schemeBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const currentMode = getSavedThemeMode();
         const nextMode = THEME_MODES[(THEME_MODES.indexOf(currentMode) + 1) % THEME_MODES.length];
         localStorage.setItem('uit_theme_mode', nextMode);
 
-        // If an active custom CSS does not define [data-theme] selectors, pause it so the selected palette takes effect.
-        const savedCss = localStorage.getItem('uit_custom_theme_css') || '';
-        if (savedCss && localStorage.getItem('uit_custom_theme_active') !== '0' && !/\[data-theme\s*=/.test(savedCss)) {
-          localStorage.setItem('uit_custom_theme_active', '0');
-          applySavedCustomTheme();
-          return;
+        // Pause an active theme pack if it does not support the chosen color scheme
+        if (currentThemeState.hasTheme && currentThemeState.enabled && !themeSupportsMode(currentThemeState, nextMode)) {
+          if (window.uitTheme && typeof window.uitTheme.setEnabled === 'function') {
+            const updated = await window.uitTheme.setEnabled(false);
+            if (updated) {
+              applyThemeState(updated);
+              return;
+            }
+          }
         }
 
         applyColorScheme(nextMode);
       });
     }
 
-    if (customCssBtn && fileInput && customCssBtn.dataset.bound !== '1') {
-      customCssBtn.dataset.bound = '1';
-      customCssBtn.addEventListener('click', (e) => {
+    if (toggleBtn && toggleBtn.dataset.bound !== '1') {
+      toggleBtn.dataset.bound = '1';
+      toggleBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!window.uitTheme || typeof window.uitTheme.setEnabled !== 'function') return;
+        const updated = await window.uitTheme.setEnabled(!currentThemeState.enabled);
+        if (updated) {
+          applyThemeState(updated);
+        }
+      });
+    }
+
+    if (reloadBtn && reloadBtn.dataset.bound !== '1') {
+      reloadBtn.dataset.bound = '1';
+      reloadBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         closeThemeDropdown();
-        if (localStorage.getItem('uit_custom_theme_css')) {
-          revertCustomThemeToDefault();
-          return;
+        if (!window.uitTheme || typeof window.uitTheme.reload !== 'function') return;
+        const updated = await window.uitTheme.reload();
+        if (updated) {
+          applyThemeState(updated);
         }
-        fileInput.click();
       });
+    }
 
-      fileInput.addEventListener('change', (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          if (typeof ev.target?.result === 'string') {
-            localStorage.setItem('uit_custom_theme_css', ev.target.result);
-            localStorage.setItem('uit_custom_theme_name', ensureCssExtension(file.name));
-            localStorage.setItem('uit_custom_theme_active', '1');
-            localStorage.removeItem('uit_custom_theme_path');
-            applySavedCustomTheme();
+    if (selectBtn && selectBtn.dataset.bound !== '1') {
+      selectBtn.dataset.bound = '1';
+      selectBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        closeThemeDropdown();
+        if (!window.uitTheme || typeof window.uitTheme.selectFolder !== 'function') return;
+        const res = await window.uitTheme.selectFolder();
+        if (res && !res.canceled && res.state) {
+          const suggestedScheme = res.state.metadata?.defaultScheme;
+          if (res.newlyApplied && ['light', 'dark', 'system'].includes(suggestedScheme)) {
+            localStorage.setItem('uit_theme_mode', suggestedScheme);
           }
-        };
-        reader.readAsText(file);
-        fileInput.value = '';
+          applyThemeState(res.state);
+        }
+      });
+    }
+
+    if (removeBtn && removeBtn.dataset.bound !== '1') {
+      removeBtn.dataset.bound = '1';
+      removeBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        closeThemeDropdown();
+        if (!window.uitTheme || typeof window.uitTheme.clear !== 'function') return;
+        const updated = await window.uitTheme.clear();
+        if (updated) {
+          applyThemeState(updated);
+        }
       });
     }
   };
@@ -1252,7 +1389,7 @@
       }
     }
 
-    applySavedCustomTheme();
+    applyThemeState(currentThemeState);
   };
 
   mountTitlebar();
@@ -1521,7 +1658,7 @@
   };
 
   window.__bindTrangChuControls = () => {
-    applySavedCustomTheme();
+    applyThemeState(currentThemeState);
     const greetingEl = document.getElementById('cd-user-greeting');
     if (greetingEl) greetingEl.textContent = getGreetingByHour();
     if (cachedProfile) {
@@ -1598,7 +1735,7 @@
         });
       });
 
-      applySavedCustomTheme();
+      applyThemeState(currentThemeState);
       if (cachedProfile) applyProfile(cachedProfile);
       updateFirstYearNavState();
     }
@@ -1656,7 +1793,7 @@
     document.documentElement?.classList.toggle('uit-custom-shell', !excluded);
     mountTitlebar();
     if (!excluded) mountShell();
-    applySavedCustomTheme();
+    applyThemeState(currentThemeState);
 
     const sidebar = document.getElementById('cd-sidebar');
 
@@ -1777,7 +1914,7 @@
         updateSidebarVersionDisplay();
       }
       if (hasCustomTheme && !document.getElementById('cd-custom-theme-style')) {
-        applySavedCustomTheme();
+        applyThemeState(currentThemeState);
       }
       if (!document.documentElement.getAttribute('data-theme')) {
         applyColorScheme(getSavedThemeMode());
