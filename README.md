@@ -4,9 +4,9 @@ A desktop wrapper for the [UIT Portal website](https://portal.uit.edu.vn/) built
 
 ## Features
 
-- New desktop UI
+- Custom desktop UI and navigation 
 - Quick search (`Ctrl+K`)
-- Light, dark, and system color schemes
+- Light, dark, and system themes
 - Support for custom CSS theme packs
 - Integrated webview navigation for other UIT services (Moodle, ĐRL, UIT Forum)
 
@@ -60,7 +60,7 @@ Reference local images and fonts inside `theme.css` using paths relative to the 
 
 **Supported file formats:** `.png`, `.svg`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`, `.avif`, `.ico`, `.woff2`, `.woff`, `.ttf`, `.otf`, `.eot`, `.css`
 
-### Example `theme.json`
+### Example for `theme.json`
 
 ```json
 {
@@ -80,6 +80,10 @@ Reference local images and fonts inside `theme.css` using paths relative to the 
 
 - `compatible_app_version`: Accepts semver comparison operators (such as `<=1.0.0`, `>=1.0.0`, or `^1.0.0`) to declare forward or backward compatibility with the app.
 - `description` and `icon` are optional.
+
+## Disclaimer
+
+This is an unofficial, community-developed project and is not affiliated with or endorsed by UIT.
 
 ## License
 
