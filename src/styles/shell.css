@@ -1,45 +1,19 @@
-:root {
-  /* Base colors */
-  --col-pri-bg: #0d1117;
-  --col-pri-box: #161b22;
-  --col-sec-box: #21262d;
-  --col-out-box: #30363d;
-
-  /* Navigation & Header */
-  --col-pri-nav: var(--col-pri-box);
-  --col-sec-nav: var(--col-sec-box);
-  --col-out-nav: var(--col-out-box);
-
-  /* Typography */
-  --col-pri-text: #c9d1d9;
-  --col-sec-text: #8b949e;
-  --col-head-text: #f0f6fc;
-  --col-hi-text: #ffffff;
-
-  /* Accents */
-  --col-accent: #58a6ff;
-  --col-accent-soft: rgba(88, 166, 255, 0.15);
-  --col-danger: #f85149;
-
-  /* Notification / Announcement Card */
-  --col-pri-notification: rgba(245, 158, 11, 0.12);
-  --col-out-notification: rgba(245, 158, 11, 0.4);
-  --col-accent-notification: #fbbf24;
-  --col-text-notification: var(--col-pri-text);
-
-  /* Scrollbar */
-  --col-accent-scroll: var(--col-out-nav);
+/* Match page and container scrollbars to the sidebar scrollbar */
+html.uit-custom-shell *,
+body.with-custom-shell * {
+  scrollbar-width: auto !important;
+  scrollbar-color: auto !important;
 }
 
-/* Match page and container scrollbars to the sidebar scrollbar */
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
 html.uit-custom-shell body > div.flex.min-h-screen::-webkit-scrollbar,
 html.uit-custom-shell *::-webkit-scrollbar,
 body.with-custom-shell > div.flex.min-h-screen::-webkit-scrollbar,
-body.with-custom-shell *::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+body.with-custom-shell *::-webkit-scrollbar,
+[role="tablist"]::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
 }
 
 html::-webkit-scrollbar-track,
@@ -47,8 +21,9 @@ body::-webkit-scrollbar-track,
 html.uit-custom-shell body > div.flex.min-h-screen::-webkit-scrollbar-track,
 html.uit-custom-shell *::-webkit-scrollbar-track,
 body.with-custom-shell > div.flex.min-h-screen::-webkit-scrollbar-track,
-body.with-custom-shell *::-webkit-scrollbar-track {
-  background: transparent;
+body.with-custom-shell *::-webkit-scrollbar-track,
+[role="tablist"]::-webkit-scrollbar-track {
+  background: transparent !important;
 }
 
 html::-webkit-scrollbar-thumb,
@@ -56,9 +31,10 @@ body::-webkit-scrollbar-thumb,
 html.uit-custom-shell body > div.flex.min-h-screen::-webkit-scrollbar-thumb,
 html.uit-custom-shell *::-webkit-scrollbar-thumb,
 body.with-custom-shell > div.flex.min-h-screen::-webkit-scrollbar-thumb,
-body.with-custom-shell *::-webkit-scrollbar-thumb {
-  background-color: var(--col-accent-scroll);
-  border-radius: 4px;
+body.with-custom-shell *::-webkit-scrollbar-thumb,
+[role="tablist"]::-webkit-scrollbar-thumb {
+  background-color: var(--col-accent-scroll) !important;
+  border-radius: 4px !important;
 }
 
 /* Custom Window Title Bar */
@@ -70,16 +46,28 @@ body.with-custom-shell *::-webkit-scrollbar-thumb {
   height: 36px !important;
   background-color: var(--col-pri-nav) !important;
   border-bottom: 1px solid var(--col-out-nav) !important;
+  box-shadow: var(--shadow-nav, none) !important;
   color: var(--col-head-text) !important;
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
   padding: 0 138px 0 14px !important;
   z-index: 2147483647 !important;
   box-sizing: border-box !important;
   font-family: 'Segoe UI', system-ui, sans-serif !important;
   user-select: none !important;
   -webkit-app-region: drag !important;
+}
+
+#cd-titlebar-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
 }
 
 #cd-titlebar-icon {
@@ -99,387 +87,149 @@ body.with-custom-shell *::-webkit-scrollbar-thumb {
   text-overflow: ellipsis !important;
 }
 
-#cd-titlebar-controls {
-  margin-left: auto !important;
-  height: 100% !important;
-  display: flex !important;
-  align-items: stretch !important;
-  gap: 0 !important;
-  flex-shrink: 0 !important;
-  -webkit-app-region: no-drag !important;
-}
-
-.cd-titlebar-btn {
-  width: 46px !important;
-  height: 100% !important;
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  outline: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
+/* Webview Navigation Controls */
+#cd-webview-nav-controls {
   display: inline-flex !important;
   align-items: center !important;
-  justify-content: center !important;
-  flex-shrink: 0 !important;
-  color: var(--col-sec-text) !important;
-  cursor: pointer !important;
-  transition: background-color 0.15s ease, color 0.15s ease !important;
+  height: 36px !important;
+  margin-left: -6px !important;
   -webkit-app-region: no-drag !important;
 }
 
-.cd-titlebar-btn svg {
-  display: block !important;
-  transition: color 0.15s ease, stroke 0.15s ease !important;
+#cd-webview-nav-controls[hidden],
+html.uit-webview-active #cd-toggle-sidebar-btn,
+html.uit-webview-active #cd-refresh-btn,
+html.uit-webview-active #cd-search-wrap,
+html.uit-webview-active #cd-search-toggle-btn {
+  display: none !important;
 }
 
-.cd-titlebar-btn:hover {
-  background-color: color-mix(in srgb, var(--col-head-text) 10%, transparent) !important;
+#cd-webview-nav-controls .cd-titlebar-btn {
+  width: 34px !important;
+}
+
+/* Titlebar Search Bar */
+#cd-search-wrap {
+  position: absolute !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: clamp(180px, 34vw, 460px) !important;
+  /* Right side reserves 138px (window controls) + 184px (4 buttons) + 12px gap = 334px per half */
+  max-width: calc(100% - 668px) !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  z-index: 1 !important;
+  -webkit-app-region: no-drag !important;
+}
+
+#cd-search-icon {
+  position: absolute !important;
+  left: 12px !important;
+  width: 14px !important;
+  height: 14px !important;
+  color: var(--col-sec-text) !important;
+  pointer-events: none !important;
+  transition: color 0.15s ease !important;
+}
+
+#cd-search-input {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  background-color: transparent !important;
+  color: var(--col-sec-text) !important;
   border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 12px 0 34px !important;
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  line-height: 36px !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease !important;
+  -webkit-app-region: no-drag !important;
+}
+
+#cd-search-input::placeholder {
+  color: var(--col-sec-text) !important;
+  opacity: 0.85 !important;
+  transition: color 0.15s ease !important;
+}
+
+#cd-search-wrap:hover #cd-search-input {
+  background-color: color-mix(in srgb, var(--col-head-text) 10%, transparent) !important;
   color: var(--col-head-text) !important;
 }
 
-.cd-titlebar-btn:active {
-  background-color: color-mix(in srgb, var(--col-head-text) 16%, transparent) !important;
+#cd-search-wrap:hover #cd-search-icon,
+#cd-search-wrap:hover #cd-search-input::placeholder {
+  color: var(--col-head-text) !important;
+}
+
+#cd-search-input:focus {
+  background-color: color-mix(in srgb, var(--col-head-text) 14%, transparent) !important;
   color: var(--col-hi-text) !important;
+  box-shadow: inset 0 -2px 0 var(--col-accent) !important;
 }
 
-html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-sidebar-btn,
-html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-header-btn {
-  display: none !important;
+#cd-search-wrap:focus-within #cd-search-icon {
+  color: var(--col-accent) !important;
 }
 
-/* Lock root viewport so scrollbars stay strictly below the titlebar / header */
-html,
-body {
-  height: 100vh !important;
-  max-height: 100vh !important;
-  margin: 0 !important;
-  overflow: hidden !important;
-}
-
-html:not(.uit-custom-shell) body:not(.with-custom-shell) {
-  position: fixed !important;
-  top: 36px !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  height: auto !important;
-  max-height: none !important;
-  padding-top: 0 !important;
+#cd-search-results {
+  position: absolute !important;
+  top: calc(100% + 6px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: max(100%, min(340px, calc(100vw - 24px))) !important;
+  max-width: calc(100vw - 24px) !important;
+  max-height: 340px !important;
   overflow-y: auto !important;
-  overflow-x: hidden !important;
-  box-sizing: border-box !important;
+  z-index: 2147483647 !important;
+  -webkit-app-region: no-drag !important;
 }
 
-html.uit-custom-shell,
-html.uit-custom-shell body,
-html:has(body.with-custom-shell),
-body.with-custom-shell {
-  background-color: var(--col-pri-bg) !important;
-  color: var(--col-pri-text) !important;
-  padding: 0 !important;
+/* Switch to compact search toggle before calc(100% - 668px) gets too narrow */
+@media (max-width: 780px) {
+  #cd-search-toggle-btn {
+    display: inline-flex !important;
+  }
+
+  #cd-search-wrap {
+    display: none !important;
+  }
+
+  #cd-titlebar.is-compact-search-open #cd-search-wrap {
+    display: flex !important;
+    position: fixed !important;
+    top: 36px !important;
+    left: 8px !important;
+    right: 8px !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: none !important;
+    height: 38px !important;
+    background-color: var(--col-pri-nav) !important;
+    border: 1px solid var(--col-out-nav) !important;
+    border-radius: 8px !important;
+    box-shadow: var(--shadow-dropdown, 0 10px 28px rgba(0, 0, 0, 0.45)) !important;
+  }
+
+  #cd-titlebar.is-compact-search-open #cd-search-input {
+    border-radius: 8px !important;
+  }
 }
 
-/* Scrollable page container positioned below titlebar and header */
-html.uit-custom-shell body > div.flex.min-h-screen,
-body.with-custom-shell > div.flex.min-h-screen {
-  position: fixed !important;
-  top: 120px !important;
-  left: 260px !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  height: auto !important;
-  min-height: 0 !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  background-color: var(--col-pri-bg) !important;
-  transition: top 0.2s ease, left 0.2s ease;
-}
-
-html.uit-custom-shell body.cd-header-hidden > div.flex.min-h-screen,
-body.with-custom-shell.cd-header-hidden > div.flex.min-h-screen {
-  top: 36px !important;
-}
-
-html.uit-custom-shell body.cd-sidebar-hidden > div.flex.min-h-screen,
-body.with-custom-shell.cd-sidebar-hidden > div.flex.min-h-screen {
-  left: 0 !important;
-}
-
-/* Hide original Next.js sidebar, top banner, top navbar, and UMA assistant elements */
-html.uit-custom-shell body > div.sticky.top-0.z-40,
-html.uit-custom-shell body > div.flex.min-h-screen > div.hidden.shrink-0,
-html.uit-custom-shell body > div.flex.min-h-screen > div.flex.min-w-0 > header.sticky.top-0.z-30,
-body.with-custom-shell > div.sticky.top-0.z-40,
-body.with-custom-shell > div.flex.min-h-screen > div.hidden.shrink-0,
-body.with-custom-shell > div.flex.min-h-screen > div.flex.min-w-0 > header.sticky.top-0.z-30,
-[data-uma-nhung],
-iframe[src*="uma.uit.edu.vn"],
-[id*="uma-"],
-[class*="uma-"] {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-}
-
-/* Toggle between custom /trang-chu view and native React subpages */
-body.is-trang-chu main#main-content {
-  display: none !important;
-}
-
-body:not(.is-trang-chu) #cd-trang-chu-view {
-  display: none !important;
-}
-
-#cd-uit-brand {
-  max-height: calc(100% - 20px);
-  user-select: none;
-  -webkit-user-drag: none;
-  -moz-user-select: none;
-}
-
-/* Fixed Custom Sidebar */
-#cd-sidebar {
-  position: fixed;
-  top: 36px;
-  left: 0;
-  bottom: 0;
-  width: 260px;
-  background-color: var(--col-pri-nav);
-  border-right: 1px solid var(--col-out-nav);
-  display: flex;
-  flex-direction: column;
-  z-index: 50;
-  box-sizing: border-box;
-  user-select: none;
-  -webkit-user-drag: none;
-  -moz-user-select: none;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  transition: transform 0.2s ease;
-}
-
-body.with-custom-shell.cd-sidebar-hidden #cd-sidebar {
-  transform: translateX(-100%);
-  pointer-events: none;
-}
-
-#cd-sidebar::before {
-  content: '';
-  position: fixed;
-  width: 253.5px;
-  top: 75%;
-  bottom: 42px;
-  pointer-events: none;
-  background-image: linear-gradient(to bottom, transparent, var(--col-pri-nav) 90%);
-}
-
-.cd-brand {
-  height: 84px;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  padding: 0 24px;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--col-accent);
-  border-bottom: 1px solid var(--col-out-nav);
-  box-sizing: border-box;
-}
-
-.cd-nav {
-  display: flex;
-  flex-direction: column;
-  padding: 12px 0 54px 0;
-  overflow-y: auto;
-  flex: 1;
-  box-sizing: border-box;
-}
-
-.nav-group {
-  padding: 14px 24px 6px 24px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--col-sec-text);
-  letter-spacing: 0.5px;
-}
-
-.cd-nav a {
-  padding: 9px 24px;
-  padding-left: 40px !important;
-  color: var(--col-pri-text);
-  text-decoration: none;
-  font-size: 0.88rem;
-  font-weight: 500;
-  border-left: 3px solid transparent;
-  transition: background-color 0.15s, color 0.15s;
-}
-
-.cd-nav a:hover, .cd-nav a.active {
-  background-color: var(--col-sec-nav);
-  color: var(--col-hi-text);
-  border-left: 3px solid var(--col-accent);
-}
-
-.cd-nav a.active {
-  pointer-events: none;
-}
-
-.cd-nav::-webkit-scrollbar {
-  width: 6px;
-}
-
-.cd-nav::-webkit-scrollbar-thumb {
-  background-color: var(--col-accent-scroll);
-  border-radius: 4px;
-}
-
-/* Fixed Bottom Sidebar Version Footer */
-#cd-sidebar-footer {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 260px;
-  height: 42px;
-  padding: 0 16px;
-  background-color: var(--col-pri-nav);
-  border-top: 1px solid var(--col-out-nav);
-  border-right: 1px solid var(--col-out-nav);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 60;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  user-select: none;
-  transition: transform 0.2s ease;
-}
-
-body.with-custom-shell.cd-sidebar-hidden #cd-sidebar-footer {
-  transform: translateX(-100%);
-  pointer-events: none;
-}
-
-#cd-version-info {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--col-sec-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Fixed Custom Top Header */
-#cd-header {
-  position: fixed;
-  top: 36px;
-  left: 260px;
-  right: 0;
-  height: 84px;
-  background-color: var(--col-pri-nav);
-  border-bottom: 1px solid var(--col-out-nav);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 0 32px;
-  z-index: 45;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  user-select: none;
-  -webkit-user-drag: none;
-  -moz-user-select: none;
-  transition: left 0.2s ease;
-}
-
-#cd-header img {
-  user-select: none;
-  -webkit-user-drag: none;
-  -moz-user-select: none;
-}
-
-body.with-custom-shell.cd-sidebar-hidden #cd-header {
-  left: 0;
-}
-
-body.with-custom-shell.cd-header-hidden #cd-header {
-  display: none !important;
-}
-
-/* Merge .cd-brand and #cd-header into one continuous bar when both are visible */
-body.with-custom-shell:not(.cd-sidebar-hidden):not(.cd-header-hidden) #cd-sidebar {
-  border-right-color: transparent !important;
-}
-
-body.with-custom-shell:not(.cd-sidebar-hidden):not(.cd-header-hidden) #cd-sidebar .cd-nav {
-  border-right: 1px solid var(--col-out-nav);
-  margin-right: -1px;
-}
-
-#cd-user-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--col-out-nav);
-  background-color: var(--col-sec-nav);
-}
-
-#cd-user-name {
-  margin: 0 0 2px 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--col-hi-text);
-}
-
-#cd-user-meta {
-  margin: 0;
-  color: var(--col-sec-text);
-  font-size: 0.85rem;
-}
-
-/* Header Theme Importer & Three-Dot Menu Controls */
-#cd-theme-controls {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.cd-header-btn {
-  background-color: var(--col-sec-nav);
-  color: var(--col-pri-text);
-  border: 1px solid var(--col-out-nav);
-  border-radius: 8px;
-  padding: 7px 14px;
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.cd-header-btn:hover {
-  background-color: var(--col-out-nav);
-  border-color: var(--col-accent);
-  color: var(--col-hi-text);
-}
-
-.cd-header-btn-danger:hover {
-  border-color: var(--col-danger);
-  color: var(--col-danger);
-}
-
-.cd-header-icon-btn {
-  padding: 7px 9px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#cd-more-menu-wrap {
-  position: relative;
-  display: inline-flex;
+@media (max-width: 560px) {
+  #cd-titlebar-title {
+    display: none !important;
+  }
 }
 
 .cd-dropdown-menu {
@@ -491,7 +241,7 @@ body.with-custom-shell:not(.cd-sidebar-hidden):not(.cd-header-hidden) #cd-sideba
   border: 1px solid var(--col-out-box);
   border-radius: 10px;
   padding: 6px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-dropdown, 0 10px 28px rgba(0, 0, 0, 0.45));
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -530,233 +280,807 @@ body.with-custom-shell:not(.cd-sidebar-hidden):not(.cd-header-hidden) #cd-sideba
   color: var(--col-danger);
 }
 
+/* Titlebar Dropdown Menus (styled to match titlebar buttons) */
+#cd-theme-menu-wrap,
+#cd-account-menu-wrap {
+  position: relative !important;
+  height: 100% !important;
+  display: inline-flex !important;
+  align-items: stretch !important;
+  -webkit-app-region: no-drag !important;
+}
+
+.cd-titlebar-dropdown,
+#cd-account-dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  min-width: 185px !important;
+  max-width: 240px !important;
+  background-color: var(--col-pri-nav) !important;
+  border: 1px solid var(--col-out-nav) !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: var(--shadow-nav, 0 8px 24px rgba(0, 0, 0, 0.35)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  z-index: 2147483647 !important;
+  -webkit-app-region: no-drag !important;
+}
+
+#cd-theme-dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  min-width: 235px !important;
+  max-width: 300px !important;
+  background-color: var(--col-pri-nav) !important;
+  border: 1px solid var(--col-out-nav) !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: var(--shadow-nav, 0 8px 24px rgba(0, 0, 0, 0.35)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  z-index: 2147483647 !important;
+  -webkit-app-region: no-drag !important;
+}
+
+.cd-titlebar-dropdown[hidden],
+#cd-theme-dropdown[hidden],
+#cd-account-dropdown[hidden] {
+  display: none !important;
+}
+
+#cd-theme-pack-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px 14px !important;
+  background-color: var(--col-sec-nav) !important;
+  border-bottom: 1px solid var(--col-out-nav) !important;
+  box-sizing: border-box !important;
+}
+
+#cd-theme-pack-info[hidden] {
+  display: none !important;
+}
+
+#cd-theme-pack-icon {
+  width: 32px !important;
+  height: 32px !important;
+  object-fit: cover !important;
+  flex-shrink: 0 !important;
+}
+
+#cd-theme-pack-icon[hidden] {
+  display: none !important;
+}
+
+.cd-theme-pack-meta {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.cd-theme-pack-title-row {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+
+.cd-theme-pack-name {
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  color: var(--col-head-text) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.cd-theme-pack-version {
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.68rem !important;
+  font-weight: 500 !important;
+  color: var(--col-accent) !important;
+  flex-shrink: 0 !important;
+}
+
+.cd-theme-pack-version[hidden] {
+  display: none !important;
+}
+
+.cd-theme-pack-sub {
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.7rem !important;
+  color: var(--col-sec-text) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.cd-theme-pack-sub[hidden] {
+  display: none !important;
+}
+
+.cd-theme-pack-warn {
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.68rem !important;
+  color: var(--col-danger) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.cd-theme-pack-warn[hidden] {
+  display: none !important;
+}
+
+.cd-titlebar-menu-item,
+.cd-theme-menu-item {
+  width: 100% !important;
+  height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 14px !important;
+  font-family: 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  line-height: 34px !important;
+  color: var(--col-sec-text) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+  -webkit-app-region: no-drag !important;
+}
+
+.cd-titlebar-menu-item[hidden],
+.cd-theme-menu-item[hidden] {
+  display: none !important;
+}
+
+.cd-titlebar-menu-item:hover,
+.cd-theme-menu-item:hover {
+  background-color: color-mix(in srgb, var(--col-head-text) 10%, transparent) !important;
+  color: var(--col-head-text) !important;
+}
+
+.cd-titlebar-menu-item:active,
+.cd-theme-menu-item:active {
+  background-color: color-mix(in srgb, var(--col-head-text) 16%, transparent) !important;
+  color: var(--col-hi-text) !important;
+}
+
+.cd-titlebar-menu-item-danger {
+  color: var(--col-danger) !important;
+}
+
+.cd-titlebar-menu-item-danger:hover {
+  background-color: color-mix(in srgb, var(--col-danger) 12%, transparent) !important;
+  color: var(--col-danger) !important;
+}
+
+.cd-titlebar-menu-item-danger:active {
+  background-color: color-mix(in srgb, var(--col-danger) 18%, transparent) !important;
+  color: var(--col-danger) !important;
+}
+
+.cd-search-item {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: none !important;
+  text-align: left !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+.cd-search-item:hover,
+.cd-search-item.is-selected {
+  background-color: var(--col-sec-nav) !important;
+}
+
+.cd-search-item-title {
+  font-size: 0.82rem !important;
+  font-weight: 500 !important;
+  color: var(--col-hi-text) !important;
+}
+
+.cd-search-item-sub {
+  font-size: 0.72rem !important;
+  color: var(--col-sec-text) !important;
+}
+
+#cd-titlebar-controls {
+  margin-left: auto !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  flex-shrink: 0 !important;
+  -webkit-app-region: no-drag !important;
+}
+
+.cd-titlebar-btn {
+  width: 46px !important;
+  height: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  color: var(--col-sec-text) !important;
+  cursor: pointer !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+  -webkit-app-region: no-drag !important;
+}
+
+.cd-titlebar-btn[hidden] {
+  display: none !important;
+}
+
+.cd-titlebar-btn svg {
+  display: block !important;
+  transition: color 0.15s ease, stroke 0.15s ease !important;
+}
+
+.cd-titlebar-btn:hover,
+.cd-titlebar-btn[aria-expanded="true"] {
+  background-color: color-mix(in srgb, var(--col-head-text) 10%, transparent) !important;
+  border: none !important;
+  color: var(--col-head-text) !important;
+}
+
+.cd-titlebar-btn:active {
+  background-color: color-mix(in srgb, var(--col-head-text) 16%, transparent) !important;
+  color: var(--col-hi-text) !important;
+}
+
+body.cd-sidebar-hidden #cd-toggle-sidebar-btn {
+  color: var(--col-accent) !important;
+}
+
+html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-theme-menu-wrap,
+html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-account-menu-wrap,
+html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-toggle-sidebar-btn,
+html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-search-wrap,
+html:not(.uit-custom-shell):not(:has(body.with-custom-shell)) #cd-search-toggle-btn,
+html:has(> body:not(.with-custom-shell)) #cd-search-wrap,
+html:has(> body:not(.with-custom-shell)) #cd-search-toggle-btn {
+  display: none !important;
+}
+
+/* Lock root viewport so scrollbars stay strictly below the titlebar */
+html,
+body {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+html:not(.uit-custom-shell):not(#_#_) > body:not(.with-custom-shell):not(#_#_) {
+  position: fixed !important;
+  top: 36px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: calc(100vh - 36px) !important;
+  max-height: calc(100vh - 36px) !important;
+  margin: 0 !important;
+  padding-top: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  transform: translate3d(0, 0, 0) !important;
+}
+
+html.uit-custom-shell,
+html.uit-custom-shell body,
+html:has(body.with-custom-shell),
+body.with-custom-shell {
+  --cd-status-banner-height: 0px;
+  background-color: var(--col-pri-bg) !important;
+  color: var(--col-pri-text) !important;
+  padding: 0 !important;
+}
+
+html.uit-custom-shell body:has(> div[role="status"]:not([hidden])),
+body.with-custom-shell:has(> div[role="status"]:not([hidden])) {
+  --cd-status-banner-height: 37px;
+}
+
+/* Portal server status/update header positioned directly below the custom titlebar */
+html.uit-custom-shell body > div[role="status"],
+body.with-custom-shell > div[role="status"] {
+  position: fixed !important;
+  top: 36px !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  margin: 0 !important;
+}
+
+/* Scrollable page container positioned below titlebar (and status header if present) */
+html.uit-custom-shell body > div.flex.min-h-screen,
+body.with-custom-shell > div.flex.min-h-screen {
+  position: fixed !important;
+  top: calc(36px + var(--cd-status-banner-height, 0px)) !important;
+  left: 260px !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  /* Keep the portal content (and its modal portals) above the custom sidebar. */
+  z-index: 31 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  background-color: var(--col-pri-bg) !important;
+  transition: left 0.2s ease, top 0.15s ease;
+}
+
+html.uit-custom-shell body.cd-sidebar-hidden > div.flex.min-h-screen,
+body.with-custom-shell.cd-sidebar-hidden > div.flex.min-h-screen {
+  left: 0 !important;
+}
+
+/* Hide original Next.js sidebar, top banner, top navbar, and UMA assistant elements */
+html.uit-custom-shell body > div.sticky.top-0.z-40,
+html.uit-custom-shell body > div.flex.min-h-screen > div.hidden.shrink-0,
+html.uit-custom-shell body > div.flex.min-h-screen > div.flex.min-w-0 > header.sticky.top-0.z-30,
+body.with-custom-shell > div.sticky.top-0.z-40,
+body.with-custom-shell > div.flex.min-h-screen > div.hidden.shrink-0,
+body.with-custom-shell > div.flex.min-h-screen > div.flex.min-w-0 > header.sticky.top-0.z-30,
+[data-uma-nhung],
+iframe[src*="uma.uit.edu.vn"],
+[id*="uma-"],
+[class*="uma-"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Toggle between custom /trang-chu view and native React subpages */
+body.is-trang-chu main#main-content {
+  display: none !important;
+}
+
+body:not(.is-trang-chu) #cd-trang-chu-view {
+  display: none !important;
+}
+
+/* Fixed Custom Sidebar. Portal content is at z-index 31 so its modal overlays
+   can cover and block this sidebar; the sidebar itself stays at 30. */
+#cd-sidebar {
+  position: fixed;
+  top: calc(36px + var(--cd-status-banner-height, 0px));
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  background-color: var(--col-pri-nav);
+  border-right: 1px solid var(--col-out-nav);
+  box-shadow: var(--shadow-nav, none);
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-drag: none;
+  -moz-user-select: none;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  transition: transform 0.2s ease, top 0.15s ease;
+}
+
+body.with-custom-shell.cd-sidebar-hidden #cd-sidebar {
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+
+#cd-sidebar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 253.5px;
+  top: 75%;
+  bottom: 42px;
+  pointer-events: none;
+  background-image: linear-gradient(to bottom, transparent, var(--col-pri-nav) 90%);
+}
+
+.cd-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0 28px 0;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.nav-group {
+  padding: 14px 24px 6px 24px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--col-sec-text);
+  letter-spacing: 0.5px;
+}
+
+.cd-nav a {
+  padding: 9px 24px;
+  padding-left: 40px !important;
+  color: var(--col-pri-text);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.cd-nav a:hover, .cd-nav a.active {
+  background-color: var(--col-sec-nav);
+  color: var(--col-hi-text);
+  border-left: 3px solid var(--col-accent);
+}
+
+.cd-nav a.active {
+  pointer-events: none;
+}
+
+.nav-group.cd-nav-disabled,
+.cd-nav a.cd-nav-disabled {
+  display: none !important;
+}
+
+.cd-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cd-nav::-webkit-scrollbar-thumb {
+  background-color: var(--col-accent-scroll);
+  border-radius: 4px;
+}
+
+/* Bottom Sidebar Version Footer */
+#cd-sidebar-footer {
+  height: 42px;
+  flex-shrink: 0;
+  padding: 0 16px;
+  background-color: var(--col-pri-nav);
+  border-top: 1px solid var(--col-out-nav);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+#cd-version-info {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--col-sec-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Modal/backdrop baseline. Runtime modal handling marks active portal nodes. */
+body.with-custom-shell [data-slot="dialog-overlay"],
+body.with-custom-shell [data-slot="alert-dialog-overlay"],
+body.with-custom-shell [data-slot="sheet-overlay"],
+body.with-custom-shell [data-slot="drawer-overlay"],
+body.with-custom-shell [data-radix-dialog-overlay],
+body.with-custom-shell [data-radix-alert-dialog-overlay],
+body.with-custom-shell [data-uit-modal-overlay="1"] {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10000 !important;
+  padding: auto;
+  margin: 37px 0 !important;
+}
+
+body.with-custom-shell [role="dialog"],
+body.with-custom-shell [role="alertdialog"],
+body.with-custom-shell [aria-modal="true"],
+body.with-custom-shell dialog[open] {
+  z-index: 10001 !important;
+  max-height: calc(100vh - 72px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Fullscreen dialogs and vertical drawers remain below the titlebar. */
+body.with-custom-shell [role="dialog"].fixed.inset-0,
+body.with-custom-shell [role="alertdialog"].fixed.inset-0,
+body.with-custom-shell [aria-modal="true"].fixed.inset-0,
+body.with-custom-shell [data-slot="sheet-content"],
+body.with-custom-shell [data-slot="drawer-content"].inset-y-0 {
+  top: 36px !important;
+  bottom: 0 !important;
+  height: calc(100vh - 36px) !important;
+  max-height: calc(100vh - 36px) !important;
+  padding-top: 24px !important;
+}
+
+/* Ordinary fixed dialogs are centered against the real window viewport. */
+body.with-custom-shell [role="dialog"].fixed[class*="top-1/2"],
+body.with-custom-shell [role="dialog"].fixed[class*="top-[50%]"],
+body.with-custom-shell [role="alertdialog"].fixed[class*="top-1/2"],
+body.with-custom-shell [role="alertdialog"].fixed[class*="top-[50%]"],
+body.with-custom-shell [aria-modal="true"].fixed[class*="top-1/2"],
+body.with-custom-shell [aria-modal="true"].fixed[class*="top-[50%]"] {
+  top: 50% !important;
+}
+
+/* Popovers, selects, dropdowns, tooltips inside or outside modals */
+body.with-custom-shell [data-radix-popper-content-wrapper],
+body.with-custom-shell [data-slot="select-content"],
+body.with-custom-shell [data-slot="popover-content"],
+body.with-custom-shell [data-slot="dropdown-menu-content"],
+body.with-custom-shell [data-slot="context-menu-content"],
+body.with-custom-shell [data-slot="tooltip-content"] {
+  z-index: 10010 !important;
+}
+
 /* Theme overrides for all native subpages (/sinh-vien/*) */
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) main,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) main,
 body.with-custom-shell:not(.is-trang-chu) main#main-content {
   padding: 24px 32px !important;
   background-color: var(--col-pri-bg) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-background"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-slate-950"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-gray-950"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-zinc-950"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-background"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-950"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-950"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-950"] {
   background-color: var(--col-pri-bg) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-card"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-popover"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-white"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-slate-900"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-gray-900"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-zinc-900"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-card"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-popover"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-white"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-900"] {
   background-color: var(--col-pri-box) !important;
   border-color: var(--col-out-box) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-muted"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-secondary"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-slate-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-slate-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-slate-200"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-slate-800"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-gray-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-gray-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-gray-200"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-gray-800"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-zinc-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-zinc-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-zinc-200"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-zinc-800"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-neutral-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-neutral-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-stone-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-stone-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .hover\:bg-accent:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-muted"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-secondary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-200"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-slate-800"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-200"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-gray-800"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-200"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-zinc-800"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-neutral-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-neutral-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-stone-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-stone-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .hover\:bg-accent:hover {
   background-color: var(--col-sec-box) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-emerald-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-emerald-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-emerald-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-green-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-green-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-green-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-teal-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-teal-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-teal-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-cyan-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-cyan-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-cyan-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-sky-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-sky-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-blue-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-blue-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-indigo-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-indigo-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-purple-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-purple-500/"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-emerald-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-emerald-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-emerald-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-green-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-green-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-green-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-teal-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-teal-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-teal-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-cyan-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-cyan-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-cyan-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-sky-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-sky-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-blue-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-blue-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-indigo-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-indigo-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-purple-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-purple-500/"] {
   background-color: var(--col-sec-box) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-red-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-red-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-red-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-rose-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-rose-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-rose-500/"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-red-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-red-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-red-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-rose-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-rose-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-rose-500/"] {
   background-color: color-mix(in srgb, var(--col-danger) 14%, var(--col-sec-box)) !important;
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-primary/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-accent/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-blue-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-sky-500/"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-primary/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-accent/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-blue-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-sky-500/"] {
   background-color: var(--col-accent-soft) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-amber-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-yellow-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-yellow-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-yellow-500/"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-orange-50"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-orange-100"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-orange-500/"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-amber-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-yellow-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-yellow-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-yellow-500/"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-orange-50"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-orange-100"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-orange-500/"] {
   background-color: var(--col-pri-notification) !important;
   border-color: var(--col-out-notification) !important;
   color: var(--col-text-notification) !important;
 }
 
 /* Radix UI / shadcn Tabs */
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [role="tablist"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [role="tablist"] {
   background-color: var(--col-sec-box) !important;
   border: 1px solid var(--col-out-box) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [role="tab"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [role="tab"] {
   color: var(--col-sec-text) !important;
+  border: 1px solid transparent !important;
+  box-sizing: border-box !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [role="tab"]:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [role="tab"]:hover {
   color: var(--col-hi-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [role="tab"][data-state="active"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [role="tab"][aria-selected="true"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [role="tab"][data-state="active"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [role="tab"][aria-selected="true"] {
   background-color: var(--col-pri-box) !important;
   color: var(--col-accent) !important;
-  border: 1px solid var(--col-out-box) !important;
+  border-color: var(--col-out-box) !important;
 }
 
 /* Typography */
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .text-foreground,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-slate-900"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-gray-900"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) h1,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) h2,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) h3,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) h4,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) th {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .text-foreground,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-slate-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-gray-900"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) h1,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) h2,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) h3,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) h4,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) th {
   color: var(--col-head-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .text-card-foreground,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .text-popover-foreground,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) td {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .text-card-foreground,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .text-popover-foreground,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) td {
   color: var(--col-pri-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .text-muted-foreground {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .text-muted-foreground {
   color: var(--col-sec-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-primary"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-blue-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-sky-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-emerald-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-green-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-teal-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .hover\:text-primary:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-primary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-blue-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-sky-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-emerald-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-green-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-teal-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .hover\:text-primary:hover {
   color: var(--col-accent) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-red-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-rose-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-destructive"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-red-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-rose-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-destructive"] {
   color: var(--col-danger) !important;
 }
 
 /* Solid accent and danger badges/buttons */
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .bg-primary,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) button.bg-primary,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) a.bg-primary {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .bg-primary,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) button.bg-primary,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) a.bg-primary {
   background-color: var(--col-accent) !important;
   color: var(--col-pri-bg) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .bg-primary *,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-primary-foreground"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .bg-primary *,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-primary-foreground"] {
   color: var(--col-pri-bg) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .bg-destructive,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-red-600"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .bg-destructive,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="bg-red-600"] {
   background-color: var(--col-danger) !important;
   color: var(--col-hi-text) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .bg-destructive *,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-destructive-foreground"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .bg-destructive *,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="text-destructive-foreground"] {
   color: var(--col-hi-text) !important;
 }
 
 /* Borders, Accent Stripes, Tables, and Form Controls */
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="border-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .divide-border > :not([hidden]) ~ :not([hidden]),
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) table,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) th,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) td {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="border-"]:not([role="tab"]),
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) .divide-border > :not([hidden]) ~ :not([hidden]),
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) table,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) th,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) td {
   border-color: var(--col-out-box) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="border-primary"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="border-l-primary"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="border-blue-"],
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="border-sky-"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="border-primary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="border-l-primary"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="border-blue-"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) [class*="border-sky-"] {
   border-color: var(--col-accent) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) thead,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) thead tr,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) tbody tr:hover {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) thead,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) thead tr,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) tbody tr:hover {
   background-color: var(--col-sec-box) !important;
 }
 
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) input,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) select,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) textarea,
-body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) button[role="combobox"] {
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) input,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) select,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) textarea,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar):not([role="status"]) button[role="combobox"] {
   background-color: var(--col-sec-box) !important;
   color: var(--col-pri-text) !important;
   border-color: var(--col-out-box) !important;
 }
 
 /*fix stuff*/
-body.with-custom-shell.route-sinh-vien-hoc-bong:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .bg-destructive,
-body.with-custom-shell.route-sinh-vien-hoc-bong:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-red-600"] {
+body.with-custom-shell.route-sinh-vien-hoc-bong:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .bg-destructive,
+body.with-custom-shell.route-sinh-vien-hoc-bong:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-red-600"] {
   background-color: var(--col-danger) !important;
   color: var(--col-pri-bg) !important;
 }
 
-body.with-custom-shell.route-sinh-vien-hoc-bong:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) .bg-destructive *,
-body.with-custom-shell.route-sinh-vien-hoc-bong:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="bg-red-600"] *,
-body.with-custom-shell.route-sinh-vien-hoc-bong:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-header):not(#cd-titlebar) [class*="text-destructive-foreground"] {
+body.with-custom-shell.route-sinh-vien-hoc-bong:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) .bg-destructive *,
+body.with-custom-shell.route-sinh-vien-hoc-bong:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="bg-red-600"] *,
+body.with-custom-shell.route-sinh-vien-hoc-bong:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="text-destructive-foreground"] {
   color: var(--col-pri-bg) !important;
 }
 
@@ -796,8 +1120,8 @@ body.cd-route-loading #cd-trang-chu-view {
 
 #cd-route-loader {
   position: sticky;
-  top: 96px;
-  height: calc(100vh - 96px);
+  top: 0;
+  height: calc(100vh - 36px - var(--cd-status-banner-height, 0px));
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -811,11 +1135,6 @@ body.cd-route-loading #cd-trang-chu-view {
   opacity: 1;
   transition: opacity 0.18s ease;
   pointer-events: none;
-}
-
-body.cd-header-hidden #cd-route-loader {
-  top: 32px;
-  height: calc(100vh - 32px);
 }
 
 #cd-route-loader.is-hiding {
@@ -842,4 +1161,35 @@ body.cd-header-hidden #cd-route-loader {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Custom Card & Shortcut Widget Overrides */
+#cd-trang-chu-view #cd-user-card,
+#cd-trang-chu-view .cd-stat-card,
+#cd-trang-chu-view .cd-widget {
+  box-shadow: var(--shadow-card, none);
+}
+
+#cd-trang-chu-view .cd-shortcut-item {
+  transform: none;
+  color: var(--col-pri-text);
+  transition: none;
+}
+
+#cd-trang-chu-view .cd-shortcut-item:hover {
+  transform: none;
+  color: var(--col-pri-text);
+}
+
+#cd-trang-chu-view .cd-shortcut-icon-box {
+  background-color: var(--col-pri-widget, var(--col-sec-box));
+  border: 1px solid var(--col-out-box);
+  box-shadow: var(--shadow-widget, 0 2px 8px rgba(0, 0, 0, 0.18));
+  transition: background-color 0.15s ease;
+}
+
+#cd-trang-chu-view .cd-shortcut-item:hover .cd-shortcut-icon-box {
+  border-color: var(--col-out-box);
+  background-color: var(--col-sec-widget, var(--col-out-box));
+  box-shadow: var(--shadow-widget, 0 2px 8px rgba(0, 0, 0, 0.18));
 }

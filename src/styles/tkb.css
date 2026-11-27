@@ -1,0 +1,6 @@
+/* Hide the "Đề cương" badge/link container inside weekly schedule table items */
+body.route-sinh-vien-tkb #main-content [role="tabpanel"][id$="-content-lich-tuan"] [style*="grid-area"] div:has(> a[aria-label="Tải đề cương môn học"]),
+body.route-sinh-vien-tkb #main-content [role="tabpanel"][id$="-content-lich-tuan"] [style*="grid-area"] div:has(> a[download]),
+body.route-sinh-vien-tkb #main-content [role="tabpanel"][id$="-content-lich-tuan"] [style*="grid-area"] a[aria-label="Tải đề cương môn học"] {
+  display: none !important;
+}

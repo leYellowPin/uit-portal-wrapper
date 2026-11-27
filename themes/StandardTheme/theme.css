@@ -1,0 +1,377 @@
+/* ==========================================================================
+   STANDARD THEME - 5mKh04
+   ========================================================================== */
+
+:root,
+[data-theme="dark"] {
+  /* Base colors */
+  --col-pri-bg: #070a10;
+  --col-pri-box: #0b0f18;
+  --col-sec-box: #101624;
+  --col-out-box: #1e283a;
+
+  /* Navigation & Header */
+  --col-pri-nav: #080b12;
+  --col-sec-nav: #111827;
+  --col-out-nav: #1e283a;
+
+  /* Shortcut Widgets */
+  --col-pri-widget: #0f1522;
+  --col-sec-widget: #161f32;
+
+  /* Typography */
+  --col-pri-text: #cbd5e1;
+  --col-sec-text: #7b89a0;
+  --col-head-text: #f1f5f9;
+  --col-hi-text: #ffffff;
+
+  /* Accents */
+  --col-accent: #3b82f6;
+  --col--accent: var(--col-accent);
+  --col-accent-soft: rgba(59, 130, 246, 0.14);
+  --col-danger: #f43f5e;
+
+  /* Notification / Announcement Card */
+  --col-pri-notification: rgba(59, 130, 246, 0.08);
+  --col-out-notification: rgba(59, 130, 246, 0.28);
+  --col-accent-notification: #60a5fa;
+  --col-text-notification: var(--col-pri-text);
+
+  /* Drop Shadows */
+  --shadow-dropdown: 0 12px 32px rgba(0, 0, 0, 0.65);
+  --shadow-theme-dropdown: 0 12px 28px rgba(0, 0, 0, 0.6);
+  --shadow-widget: none;
+  --shadow-card: none;
+  --shadow-nav: none;
+
+  /* Scrollbar */
+  --col-accent-scroll: #1e283a;
+
+  /* Profile Banner & Watermark Tokens */
+  --banner-bg: linear-gradient(20deg, #02c4f51a 0%, #131f3803 50%, #ce0eec2e 200%), url("./assets/low-poly-grid-dark.svg");
+  --banner-avatar-border: rgba(255, 255, 255, 0.16);
+  --banner-pill-bg: rgba(10, 14, 23, 0.55);
+  --banner-pill-border: rgba(123, 137, 160, 0.35);
+  --banner-watermark: url("./assets/overlay.png");
+  --banner-watermark-opacity: 0.065;
+  --banner-watermark-filter: none;
+
+  /* Schedule Status Dots */
+  --dot-ongoing: #10b981;
+  --dot-completed: #ed6a6a;
+  --dot-upcoming: var(--col-sec-text);
+}
+
+[data-theme="light"] {
+  /* Base colors */
+  --col-pri-bg: #eef3f8;
+  --col-pri-box: #ffffff;
+  --col-sec-box: #f4f7fb;
+  --col-out-box: #d4dfec;
+
+  /* Navigation & Header */
+  --col-pri-nav: #f8fafd;
+  --col-sec-nav: #e9eff7;
+  --col-out-nav: #d4dfec;
+
+  /* Shortcut Widgets */
+  --col-pri-widget: #f4f7fb;
+  --col-sec-widget: #e6eef8;
+
+  /* Typography */
+  --col-pri-text: #1e293b;
+  --col-sec-text: #5b6b82;
+  --col-head-text: #0f172a;
+  --col-hi-text: #020617;
+
+  /* Accents */
+  --col-accent: #2563eb;
+  --col--accent: var(--col-accent);
+  --col-accent-soft: rgba(37, 99, 235, 0.1);
+  --col-danger: #e11d48;
+
+  /* Notification / Announcement Card */
+  --col-pri-notification: rgba(37, 99, 235, 0.06);
+  --col-out-notification: rgba(37, 99, 235, 0.26);
+  --col-accent-notification: #2563eb;
+  --col-text-notification: var(--col-pri-text);
+
+  /* Drop Shadows */
+  --shadow-dropdown: 0 10px 28px rgba(15, 23, 42, 0.12);
+  --shadow-theme-dropdown: 0 10px 24px rgba(15, 23, 42, 0.1);
+  --shadow-widget: none;
+  --shadow-card: none;
+  --shadow-nav: none;
+
+  /* Scrollbar */
+  --col-accent-scroll: #c5d3e3;
+
+  /* Profile Banner & Watermark Tokens */
+  --banner-bg: linear-gradient(20deg, #02c4f523 0%, #b8c4e003 50%, #ec0ed242 200%), url("./assets/low-poly-grid-light.svg");
+  --banner-avatar-border: rgba(15, 23, 42, 0.14);
+  --banner-pill-bg: rgba(255, 255, 255, 0.78);
+  --banner-pill-border: rgba(100, 116, 139, 0.32);
+  --banner-watermark-opacity: 1;
+  --banner-watermark-filter: none;
+
+  /* Schedule Status Dots */
+  --dot-ongoing: #059669;
+  --dot-completed: #ed6a6a;
+  --dot-upcoming: #7c3aed;
+}
+
+/* Fonts */
+@font-face {
+  font-family: "_display";
+  src: url("./fonts/BaiJamjuree-Bold.woff2") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: "_mono";
+  src: url("./fonts/Exo2-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+[data-theme="dark"] #cd-trang-chu-view, 
+[data-theme="dark"] #main-content {
+  background-image: url("./assets/low-poly-grid-dark.svg");
+  background-size: cover;
+  background-attachment: fixed;
+}
+[data-theme="light"] #cd-trang-chu-view, 
+[data-theme="light"] #main-content {
+  background-image: url("./assets/stacked-waves-light.svg");
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.with-custom-shell h1 {
+  font-family: "_display";
+}
+body.with-custom-shell div {
+  font-family: "_display";
+}
+body.with-custom-shell p,
+body.with-custom-shell a,
+body.with-custom-shell span,
+body.with-custom-shell li
+{
+  font-family: "_mono" !important;
+}
+
+/* Titlebar icon */
+[data-theme="light"] #cd-titlebar-icon {
+  filter: invert(100%);
+}
+
+/* 1. Shell dropdowns and search results (shell.css) */
+#cd-search-results,
+.cd-dropdown-menu,
+.cd-dropdown-item,
+.cd-search-item {
+  border-radius: 0 !important;
+}
+
+#cd-search-results {
+  background-color: var(--col-pri-nav) !important;
+  border: 1px solid var(--col-out-nav) !important;
+  box-shadow: var(--shadow-dropdown) !important;
+}
+
+/* 2. Top Profile & Overview Unified Frame (trang-chu.css) */
+body.with-custom-shell #cd-trang-chu-view #cd-user-card {
+  background-color: var(--col-pri-box) !important;
+  border: 1px solid var(--col-out-box) !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view #cd-user-top {
+  position: relative !important;
+  padding: 24px 28px !important;
+  margin: 0 !important;
+  border: none !important;
+  background-image: var(--banner-bg) !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view #cd-user-top::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background-image: var(--banner-watermark) !important;
+  background-repeat: no-repeat !important;
+  background-position: 52% 50% !important;
+  background-size: 270px auto !important;
+  opacity: var(--banner-watermark-opacity) !important;
+  filter: var(--banner-watermark-filter) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view #cd-user-top > * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view #cd-user-avatar {
+  border-radius: 50% !important;
+  border: 2px solid var(--banner-avatar-border) !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view #cd-user-name {
+  color: var(--col-hi-text) !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view .cd-user-meta-pill {
+  height: 24px !important;
+  padding: 0 10px !important;
+  border-radius: 0 !important;
+  border: 1px solid var(--banner-pill-border) !important;
+  background-color: var(--banner-pill-bg) !important;
+  color: var(--col-pri-text) !important;
+  font-size: 0.75rem !important;
+}
+
+/* 3. Flush 4-Column Stat Cells inside #cd-user-card */
+body.with-custom-shell #cd-trang-chu-view .cd-user-stats {
+  gap: 0 !important;
+  padding: 0 !important;
+  border-top: 1px solid var(--col-out-box) !important;
+  background-color: var(--col-pri-box) !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view .cd-user-stat-card {
+  background-color: transparent !important;
+  border: none !important;
+  border-right: 1px solid var(--col-out-box) !important;
+  border-radius: 0 !important;
+  padding: 20px 24px !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view .cd-user-stat-card:last-child {
+  border-right: none !important;
+}
+
+@media (max-width: 1150px) {
+  body.with-custom-shell #cd-trang-chu-view .cd-user-stat-card:nth-child(2n) {
+    border-right: none !important;
+  }
+  body.with-custom-shell #cd-trang-chu-view .cd-user-stat-card:nth-child(-n+2) {
+    border-bottom: 1px solid var(--col-out-box) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body.with-custom-shell #cd-trang-chu-view .cd-user-stat-card {
+    border-right: none !important;
+  }
+  body.with-custom-shell #cd-trang-chu-view .cd-user-stat-card:not(:last-child) {
+    border-bottom: 1px solid var(--col-out-box) !important;
+  }
+}
+
+body.with-custom-shell #cd-trang-chu-view .cd-user-stat-value,
+body.with-custom-shell #cd-trang-chu-view .cd-stat-card h2 {
+  color: var(--col-hi-text) !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view .cd-user-stat-progress,
+body.with-custom-shell #cd-trang-chu-view .cd-user-stat-progress-bar {
+  border-radius: 0 !important;
+}
+
+/* 4. Today's Schedule (Single Outer Border + Borderless Rows) */
+body.with-custom-shell #cd-trang-chu-view #cd-widget-schedule,
+body.with-custom-shell #cd-trang-chu-view .cd-widget,
+body.with-custom-shell #cd-trang-chu-view .cd-stat-card,
+body.with-custom-shell #cd-trang-chu-view .cd-card-btn {
+  background-color: var(--col-pri-box) !important;
+  border: 1px solid var(--col-out-box) !important;
+  border-radius: 0 !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view .cd-card-btn {
+  background-color: var(--banner-pill-bg) !important;
+  border-color: var(--banner-pill-border) !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view .cd-card-btn:hover {
+  background-color: var(--col-sec-box) !important;
+  border-color: var(--col-accent) !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view #cd-schedule-overview {
+  background-color: transparent !important;
+  border-right: 1px solid var(--col-out-box) !important;
+}
+
+@media (max-width: 900px) {
+  body.with-custom-shell #cd-trang-chu-view #cd-schedule-overview {
+    border-right: none !important;
+    border-bottom: 1px solid var(--col-out-box) !important;
+  }
+}
+
+body.with-custom-shell #cd-trang-chu-view #cd-schedule-content {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 20px 28px !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view #cd-widget-schedule ul {
+  gap: 14px !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view #cd-schedule-content li {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 4px 0 !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view #cd-schedule-content li span[class*="rounded"]:not(.cd-tkb-status-dot),
+body.with-custom-shell #cd-trang-chu-view #cd-schedule-content li [class*="badge"] {
+  border-radius: 0 !important;
+}
+
+/* Schedule Status Dots (Đang học, Đã học, Chưa học) */
+body.with-custom-shell #cd-trang-chu-view .cd-tkb-status-dot[data-status="ongoing"] {
+  background-color: var(--dot-ongoing) !important;
+}
+body.with-custom-shell #cd-trang-chu-view .cd-tkb-status-dot[data-status="completed"] {
+  background-color: var(--dot-completed) !important;
+}
+body.with-custom-shell #cd-trang-chu-view .cd-tkb-status-dot[data-status="upcoming"] {
+  background-color: var(--dot-upcoming) !important;
+}
+
+/* 5. Announcements & Web Shortcuts */
+body.with-custom-shell #cd-trang-chu-view #cd-announcements-content article,
+body.with-custom-shell #cd-trang-chu-view .cd-shortcut-item,
+body.with-custom-shell #cd-trang-chu-view .cd-shortcut-icon-box {
+  border-radius: 0 !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view .cd-shortcut-icon-box {
+  background-color: var(--col-sec-box) !important;
+  border: 1px solid var(--col-out-box) !important;
+}
+
+body.with-custom-shell #cd-trang-chu-view .cd-shortcut-item:hover .cd-shortcut-icon-box {
+  background-color: var(--col-accent-soft) !important;
+  border-color: var(--col-accent) !important;
+}
+
+/* 6. Subpages (/sinh-vien/*) Sharp Corners */
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [class*="rounded-"]:not(.rounded-full):not(.cd-tkb-status-dot),
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [role="tablist"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) [role="tab"],
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) input,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) select,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) textarea,
+body.with-custom-shell:not(.is-trang-chu) > div:not(#cd-sidebar):not(#cd-titlebar) button {
+  border-radius: 0 !important;
+}

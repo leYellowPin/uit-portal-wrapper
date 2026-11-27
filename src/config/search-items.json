@@ -1,0 +1,245 @@
+{
+    "items": [
+        {
+            "title": "Trang chủ",
+            "sub": "Tổng quan",
+            "href": "/trang-chu",
+            "tabMatch": null,
+            "keywords": ""
+        },
+        {
+            "title": "Thông tin cá nhân",
+            "sub": "Tổng quan > Hồ sơ cá nhân",
+            "href": "/sinh-vien/ho-so",
+            "tabMatch": "Cá nhân",
+            "keywords": ["thong tin ca nhan", "tong quan", "cccd cmnd ngay sinh gioi tinh dan toc ho chieu"]
+        },
+        {
+            "title": "Thông tin gia đình",
+            "sub": "Tổng quan > Hồ sơ cá nhân",
+            "href": "/sinh-vien/ho-so",
+            "tabMatch": "Gia đình",
+            "keywords": ["thong tin ca nhan", "tong quan", "cha me phu huynh nguoi than anh chi em"]
+        },
+        {
+            "title": "Thông tin học vụ",
+            "sub": "Tổng quan > Hồ sơ cá nhân",
+            "href": "/sinh-vien/ho-so",
+            "tabMatch": "Học vụ",
+            "keywords": ["thong tin ca nhan", "tong quan", "tien do hoc tap", "ho so nhap hoc thpt"]
+        },
+        {
+            "title": "Hồ sơ scan",
+            "sub": "Tổng quan > Hồ sơ cá nhân",
+            "href": "/sinh-vien/ho-so",
+            "tabMatch": "Hồ sơ scan",
+            "keywords": ["thong tin ca nhan", "tong quan", "ho so scan", "anh chup giay to anh the cccd khai sinh hoc ba thpt thanh tich khen thuong"]
+        },
+        {
+            "title": "Thông tin sức khỏe",
+            "sub": "Tổng quan > Hồ sơ cá nhân",
+            "href": "/sinh-vien/ho-so",
+            "tabMatch": "Sức khỏe",
+            "keywords": ["thong tin ca nhan", "tong quan", "suc khoe chieu cao can nang huyet ap tong quat nang khieu the thao thanh tich"]
+        },
+        {
+            "title": "Tài khoản ngân hàng",
+            "sub": "Tổng quan > Hồ sơ cá nhân",
+            "href": "/sinh-vien/ho-so",
+            "tabMatch": "Cá nhân",
+            "keywords": ["thong tin ca nhan", "tong quan", "ngan hang", "atm", "pvcombank", "hoc bong"]
+        },
+        {
+            "title": "Khen thưởng",
+            "sub": "Tổng quan > Hồ sơ cá nhân",
+            "href": "/sinh-vien/ho-so",
+            "tabMatch": "Khen thưởng",
+            "keywords": ["thong tin ca nhan", "tong quan"]
+        },
+        {
+            "title": "Tài khoản trường cấp",
+            "sub": "Tổng quan > Hồ sơ cá nhân",
+            "href": "/sinh-vien/ho-so",
+            "tabMatch": "Tài khoản",
+            "keywords": ["thong tin ca nhan", "tong quan", "tai khoan da duoc cap", "tk", "mac dinh", "mat khau", "mk", "365 ms microsoft gmail email sinh vien mail dang nhap"]
+        },
+        {
+            "title": "Bảo hiểm y tế",
+            "sub": "Tổng quan > Hồ sơ cá nhân",
+            "href": "/sinh-vien/ho-so",
+            "tabMatch": "BHYT",
+            "keywords": ["thong tin ca nhan", "tong quan", "bao hiem y te", "bao hiem tai nan", "bhtn", "bhyt"]
+        },
+        {
+            "title": "Thời khóa biểu theo ĐKHP",
+            "sub": "Học vụ > Thời khóa biểu",
+            "href": "/sinh-vien/tkb",
+            "tabMatch": "Theo ĐKHP",
+            "keywords": ["tkb", "thoi khoa bieu", "hoc vu", "dkhp", "de cuong mon hoc", "google calendar"]
+        },
+        {
+            "title": "Lịch tuần",
+            "sub": "Học vụ > Thời khóa biểu",
+            "href": "/sinh-vien/tkb",
+            "tabMatch": "Lịch tuần",
+            "keywords": ["tkb", "hoc vu", "thoi khoa bieu", "lich tuan", "mon hoc hom nay"]
+        },
+        {
+            "title": "Lịch sinh hoạt lớp",
+            "sub": "Học vụ > Lịch sinh hoạt",
+            "href": "/sinh-vien/tkb",
+            "tabMatch": "Sinh hoạt lớp",
+            "keywords": "hoc vu"
+        },
+        {
+            "title": "Lịch sinh hoạt đoàn",
+            "sub": "Học vụ > Lịch sinh hoạt",
+            "href": "/sinh-vien/tkb",
+            "tabMatch": "Sinh hoạt đoàn",
+            "keywords": "hoc vu"
+        },
+        {
+            "title": "Lịch gặp CVHT",
+            "sub": "Học vụ > Lịch sinh hoạt",
+            "href": "/sinh-vien/tkb",
+            "tabMatch": "CVHT",
+            "keywords": ["hoc vu", "lich gap mat cvht", "lich sinh hoat", "co van hoc tap"]
+        },
+        {
+            "title": "Điểm môn học",
+            "sub": "Học vụ > Bảng điểm",
+            "href": "/sinh-vien/bang-diem",
+            "tabMatch": "Chi tiết môn học",
+            "keywords": ["chi tiet mon hoc", "hoc vu", "bang diem mon hoc", "gpa", "diem thi", "hoc ki", "giua hoc ki", "cuoi ki", "hk", "gk", "ck", "hoc ki he"]
+        },
+        {
+            "title": "Điểm tổng kết",
+            "sub": "Học vụ > Bảng điểm",
+            "href": "/sinh-vien/bang-diem",
+            "tabMatch": "Tổng kết theo kỳ",
+            "keywords": ["bang diem tong ket", "hoc vu", "hoc ki", "giua hoc ki", "giua ki", "cuoi hoc ki", "cuoi ki", "gpa", "hk", "gk", "ck", "hoc ki he"]
+        },
+        {
+            "title": "Bảng điểm theo CTĐT",
+            "sub": "Học vụ > Bảng điểm",
+            "href": "/sinh-vien/bang-diem",
+            "tabMatch": "Theo CTĐT",
+            "keywords": ["danh sach mon hoc", "hoc vu", "tien do tin chi", "thong ke mon hoc", "ngoai ngu", "gpa", "ctdt"]
+        },
+        {
+            "title": "Đăng ký bảng điểm",
+            "sub": "Yêu cầu giấy tờ",
+            "href": "/sinh-vien/xin-bang-diem",
+            "tabMatch": null,
+            "keywords": ["dang ky", "yeu cau giay to", "bang diem mon hoc", "gpa", "ctdt"]
+        },
+        {
+            "title": "Điểm rèn luyện",
+            "sub": "Học vụ",
+            "href": "/sinh-vien/diem-ren-luyen",
+            "tabMatch": null,
+            "keywords": ["hoc vu", "drl"]
+        },
+        {
+            "title": "Đăng ký giấy xác nhận sinh viên",
+            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
+            "href": "/sinh-vien/giay-xac-nhan",
+            "tabMatch": "XNSV",
+            "keywords": ["yeu cau giay to", "dang ky", "xnsv"]
+        },
+        {
+            "title": "Đăng ký xác nhận chứng chỉ",
+            "sub": "Yêu cầu giấy tờ",
+            "href": "/sinh-vien/xac-nhan-chung-chi",
+            "tabMatch": null,
+            "keywords": ["yeu cau giay to", "dang ky", "cc", "vb"]
+        },
+        {
+            "title": "Đăng ký gửi xe",
+            "sub": "Yêu cầu giấy tờ",
+            "href": "/sinh-vien/gui-xe",
+            "tabMatch": null,
+            "keywords": ["yeu cau giay to", "dang ky"]
+        },
+        {
+            "title": "Đăng ký ngoại trú / tạm trú",
+            "sub": "Yêu cầu giấy tờ",
+            "href": "/sinh-vien/ngoai-tru",
+            "tabMatch": null,
+            "keywords": ["yeu cau giay to", "dang ky"]
+        },
+        {
+            "title": "Đăng ký giấy xác nhận vay vốn ngân hàng",
+            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
+            "href": "/sinh-vien/giay-xac-nhan",
+            "tabMatch": "VVNH",
+            "keywords": ["yeu cau giay to", "dang ky", "vvnh"]
+        },
+        {
+            "title": "Đăng ký giấy giới thiệu",
+            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
+            "href": "/sinh-vien/giay-xac-nhan",
+            "tabMatch": "GGT",
+            "keywords": ["yeu cau giay to", "dang ky", "ggt"]
+        },
+        {
+            "title": "Đăng ký giấy xác nhận thành tích",
+            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
+            "href": "/sinh-vien/giay-xac-nhan",
+            "tabMatch": "XNTT",
+            "keywords": ["yeu cau giay to", "dang ky", "xntt"]
+        },
+        {
+            "title": "Đăng ký giấy xác nhận Điểm rèn luyện",
+            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
+            "href": "/sinh-vien/giay-xac-nhan",
+            "tabMatch": "Giấy xác nhận Điểm rèn luyện",
+            "keywords": ["yeu cau giay to", "dang ky", "drl"]
+        },
+        {
+            "title": "Đăng ký giấy xác nhận Ưu đãi giáo dục",
+            "sub": "Yêu cầu giấy tờ > Giấy xác nhận",
+            "href": "/sinh-vien/giay-xac-nhan",
+            "tabMatch": "Giấy xác nhận Ưu đãi giáo dục",
+            "keywords": ["yeu cau giay to", "dang ky", "uu dai giao duc"]
+        },
+        {
+            "title": "Đăng ký đề tài NCKH",
+            "sub": "Yêu cầu giấy tờ",
+            "href": "/sinh-vien/de-tai-sinh-vien",
+            "tabMatch": null,
+            "keywords": ["yeu cau giay to", "dang ky", "de tai", "nghien cuu khoa hoc"]
+        },
+        {
+            "title": "Đăng ký bảo hiểm",
+            "sub": "Yêu cầu giấy tờ",
+            "href": "/sinh-vien/bao-hiem",
+            "tabMatch": null,
+            "keywords": ["yeu cau giay to", "bao hiem", "y te", "tai nan", "bhyt", "bhtn", "dang ky mua"]
+        },
+        {
+            "title": "Đảng viên",
+            "sub": "Khác",
+            "href": "/sinh-vien/dang-vien",
+            "tabMatch": null,
+            "keywords": "khac"
+        },
+        {
+            "title": "Khảo sát",
+            "sub": "Khác",
+            "href": "/sinh-vien/khao-sat",
+            "tabMatch": null,
+            "keywords": ["khac", "ho tro", "helpdesk", "help", "ticket"]
+        },
+        {
+            "title": "Yêu cầu hỗ trợ",
+            "sub": "Khác",
+            "href": "/sinh-vien/ho-tro",
+            "tabMatch": null,
+            "keywords": ["khac", "ho tro", "helpdesk", "help", "ticket"]
+        }
+    ],
+    "excludeTitles": [
+        "Bảng điểm", "Thời khóa biểu", "Điểm rèn luyện", "Lịch sinh hoạt"
+    ]
+}

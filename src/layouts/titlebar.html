@@ -1,15 +1,154 @@
 <div id="cd-titlebar">
-  <img id="cd-titlebar-icon" alt="UIT" />
-  <span id="cd-titlebar-title">UIT Portal Wrapper</span>
-  <div id="cd-titlebar-controls">
-    <button type="button" id="cd-refresh-btn" class="cd-titlebar-btn" title="Refresh Page">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-    </button>
-    <button type="button" id="cd-toggle-sidebar-btn" class="cd-titlebar-btn" title="Toggle Sidebar">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-    </button>
-    <button type="button" id="cd-toggle-header-btn" class="cd-titlebar-btn" title="Toggle Header">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
-    </button>
+  <div id="cd-titlebar-left">
+    <div id="cd-webview-nav-controls" hidden>
+      <button type="button" id="cd-webview-back-btn" class="cd-titlebar-btn" title="Quay lại" aria-label="Quay lại">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <button type="button" id="cd-webview-reload-btn" class="cd-titlebar-btn" title="Tải lại trang" aria-label="Tải lại trang">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+      </button>
+      <button type="button" id="cd-webview-home-btn" class="cd-titlebar-btn" title="Về Cổng thông tin" aria-label="Về Cổng thông tin">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </button>
+    </div>
+    <img id="cd-titlebar-icon" alt="" />
+    <span id="cd-titlebar-title">CỔNG THÔNG TIN SINH VIÊN</span>
   </div>
+
+  <div id="cd-search-wrap">
+    <svg id="cd-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input
+      type="text"
+      id="cd-search-input"
+      placeholder="Tìm trang hoặc mục (Ctrl+K)"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <div id="cd-search-results" class="cd-dropdown-menu" hidden></div>
+  </div>
+
+  <div id="cd-titlebar-controls">
+    <button
+      type="button"
+      id="cd-search-toggle-btn"
+      class="cd-titlebar-btn"
+      title="Tìm kiếm (Ctrl+K)"
+      aria-label="Tìm kiếm"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+      hidden
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </button>
+    <div id="cd-theme-menu-wrap">
+      <button
+        type="button"
+        id="cd-import-theme-btn"
+        class="cd-titlebar-btn"
+        title="Gói giao diện"
+        aria-label="Gói giao diện"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+          <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+          <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+          <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+        </svg>
+      </button>
+      <div id="cd-theme-dropdown" class="cd-titlebar-dropdown" hidden>
+        <div id="cd-theme-pack-info" class="cd-theme-pack-info" hidden>
+          <img id="cd-theme-pack-icon" class="cd-theme-pack-icon" alt="" hidden />
+          <div class="cd-theme-pack-meta">
+            <div class="cd-theme-pack-title-row">
+              <span id="cd-theme-pack-name" class="cd-theme-pack-name"></span>
+              <span id="cd-theme-pack-version" class="cd-theme-pack-version" hidden></span>
+            </div>
+            <div id="cd-theme-pack-sub" class="cd-theme-pack-sub" hidden></div>
+            <div id="cd-theme-pack-warn" class="cd-theme-pack-warn" hidden></div>
+          </div>
+        </div>
+        <button type="button" id="cd-theme-scheme-btn" class="cd-titlebar-menu-item cd-theme-menu-item">
+          Bảng màu: Thiết bị
+        </button>
+        <button type="button" id="cd-theme-toggle-btn" class="cd-titlebar-menu-item cd-theme-menu-item" hidden>
+          Trạng thái: Bật
+        </button>
+        <button type="button" id="cd-theme-reload-btn" class="cd-titlebar-menu-item cd-theme-menu-item" hidden>
+          Tải lại gói giao diện
+        </button>
+        <button type="button" id="cd-theme-select-btn" class="cd-titlebar-menu-item cd-theme-menu-item">
+          Chọn thư mục giao diện
+        </button>
+        <button type="button" id="cd-theme-remove-btn" class="cd-titlebar-menu-item cd-theme-menu-item cd-titlebar-menu-item-danger" hidden>
+          Gỡ gói giao diện
+        </button>
+      </div>
+    </div>
+    <button type="button" id="cd-toggle-sidebar-btn" class="cd-titlebar-btn" title="Ẩn/hiện thanh bên" aria-label="Ẩn/hiện thanh bên">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <line x1="9" y1="3" x2="9" y2="21"/>
+      </svg>
+    </button>
+    <button type="button" id="cd-refresh-btn" class="cd-titlebar-btn" title="Tải lại trang" aria-label="Tải lại trang">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+    </button>
+    <div id="cd-account-menu-wrap">
+      <button
+        type="button"
+        id="cd-account-menu-btn"
+        class="cd-titlebar-btn"
+        title="Quản lý tài khoản"
+        aria-label="Quản lý tài khoản"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
+      <div id="cd-account-dropdown" class="cd-titlebar-dropdown" hidden>
+        <button type="button" id="cd-change-password-btn" class="cd-titlebar-menu-item">
+          Đổi mật khẩu
+        </button>
+        <button type="button" id="cd-logout-btn" class="cd-titlebar-menu-item cd-titlebar-menu-item-danger">
+          Đăng xuất
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <template id="cd-search-item-template">
+    <button type="button" class="cd-search-item">
+      <span class="cd-search-item-title"></span>
+      <span class="cd-search-item-sub"></span>
+    </button>
+  </template>
+
+  <template id="cd-search-empty-template">
+    <div class="cd-search-item">
+      <span class="cd-search-item-sub">Không tìm thấy kết quả</span>
+    </div>
+  </template>
 </div>

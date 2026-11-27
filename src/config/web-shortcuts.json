@@ -1,0 +1,40 @@
+{
+  "shortcuts": [
+    {
+      "id": "uit-portal",
+      "name": "Cổng thông tin",
+      "url": "https://portal.uit.edu.vn",
+      "icon": "shortcut-portal.png"
+    },
+    {
+      "id": "uit-drl",
+      "name": "Điểm rèn luyện",
+      "url": "https://drl.uit.edu.vn",
+      "icon": "shortcut-drl.png"
+    },
+    {
+      "id": "uit-dkhp",
+      "name": "ĐKHP",
+      "url": "https://dkhp.uit.edu.vn",
+      "icon": "shortcut-dkhp.png"
+    },
+        {
+      "id": "uit-wecode",
+      "name": "Wecode",
+      "url": "https://khmt.uit.edu.vn/wecode25/it00x/login",
+      "icon": "shortcut-wecode.png"
+    },
+    {
+      "id": "uit-moodle",
+      "name": "LMS",
+      "url": "https://courses.uit.edu.vn",
+      "icon": "shortcut-moodle.png"
+    },
+    {
+      "id": "uit-forum",
+      "name": "Forum",
+      "url": "https://forum.uit.edu.vn",
+      "icon": "shortcut-forum.png"
+    }
+  ]
+}

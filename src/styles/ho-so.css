@@ -3,6 +3,30 @@ body.route-sinh-vien-ho-so #main-content > div > div:nth-child(2) {
   display: none !important;
 }
 
+body.route-sinh-vien-ho-so #main-content [role="tab"][hidden],
+body.route-sinh-vien-ho-so #main-content [role="tab"][data-cd-hidden-tab="1"] {
+  display: none !important;
+}
+
+/* Ensure remade /sinh-vien/ho-so header has no outer card fill/border and hides original student info block */
+body.with-custom-shell.route-sinh-vien-ho-so #main-content [data-cd-hoso-header="1"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+body.with-custom-shell.route-sinh-vien-ho-so #main-content > div > div:first-child:not([data-cd-hoso-header="1"]):not(:has([role="tablist"], form)) {
+  display: none !important;
+}
+
+body.with-custom-shell.route-sinh-vien-ho-so #main-content [data-cd-hoso-header="1"] > :not(#cd-hoso-breadcrumb):not(#cd-hoso-header-row),
+body.with-custom-shell.route-sinh-vien-ho-so #main-content [data-cd-hoso-header="1"] [data-cd-hoso-hidden="1"] {
+  display: none !important;
+}
+
 body.with-custom-shell.route-sinh-vien-ho-so #main-content#main-content#main-content#main-content > div > form > div:last-child {
   background: linear-gradient(to bottom, transparent, var(--col-pri-bg) 50%) !important;
   filter: none !important;

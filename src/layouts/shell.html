@@ -1,5 +1,4 @@
 <aside id="cd-sidebar">
-  <div class="cd-brand"><img id="cd-uit-brand" src="../assets/uit-logo-detail.webp"></div>
   <nav class="cd-nav">
     <div class="nav-group">TỔNG QUAN</div>
     <a href="/trang-chu">Trang chủ</a>
@@ -35,46 +34,18 @@
     <a href="/sinh-vien/kham-suc-khoe">Khám sức khỏe</a>
     <a href="/sinh-vien/thoi-hoc-bao-luu">Thôi học / Bảo lưu</a>
     <a href="/sinh-vien/bao-hiem">Bảo hiểm</a>
-    <a href="/sinh-vien/de-tai-sinh-vien">Đề tài NCKH</a>
-    <a href="/sinh-vien/dang-vien">Đảng viên</a>
+
+    <div class="nav-group">NGHIÊN CỨU KHOA HỌC</div>
+    <a href="/sinh-vien/de-tai-sinh-vien">Đề tài sinh viên</a>
+    <a href="/sinh-vien/bai-bao-khoa-hoc">Bài báo khoa học</a>
 
     <div class="nav-group">KHÁC</div>
     <a href="/khao-sat">Khảo sát</a>
+    <a href="/sinh-vien/dang-vien">Đảng viên</a>
     <a href="/sinh-vien/ho-tro">Hỗ trợ</a>
-    <br><br><br><br><br>
+    <br><br><br>
   </nav>
+  <div id="cd-sidebar-footer">
+    <span id="cd-version-info"></span>
+  </div>
 </aside>
-
-<header id="cd-header">
-  <img id="cd-user-avatar" src="" alt="Avatar" />
-  <div class="cd-user-info">
-    <h1 id="cd-user-name">Đang tải dữ liệu...</h1>
-    <p id="cd-user-meta">...</p>
-  </div>
-  <div id="cd-theme-controls">
-    <input type="file" id="cd-theme-file-input" accept=".css,text/css" hidden />
-    <button type="button" id="cd-import-theme-btn" class="cd-header-btn" title="Import custom .css file">
-      Import CSS
-    </button>
-    <button type="button" id="cd-reset-theme-btn" class="cd-header-btn cd-header-btn-danger" title="Reset to default theme" style="display: none;">
-      Reset
-    </button>
-    <div id="cd-more-menu-wrap">
-      <button type="button" id="cd-more-menu-btn" class="cd-header-btn cd-header-icon-btn" title="More options" aria-haspopup="true" aria-expanded="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
-      </button>
-      <div id="cd-more-dropdown" class="cd-dropdown-menu" hidden>
-        <button type="button" id="cd-change-password-btn" class="cd-dropdown-item" onclick="window.location.href='https://portal.uit.edu.vn/api/auth/change-password'">
-          Change password
-        </button>
-        <button type="button" id="cd-logout-btn" class="cd-dropdown-item cd-dropdown-item-danger" onclick="window.location.href='/api/auth/logout'">
-          Logout
-        </button>
-      </div>
-    </div>
-  </div>
-</header>
-
-<div id="cd-sidebar-footer">
-  <span id="cd-version-info"></span>
-</div>
